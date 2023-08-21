@@ -1,0 +1,89 @@
+source: RISC-V ISA - Sv32: Page-Based 32-bit Virtual-Memory Systems
+
+VPN - virtual page number
+PPN - physical page number
+ASID - address space identifier (TLB checks this)
+	Now we do not have to do full TLB flush on context switch
+TLB - translation lookaside buffer (Virtual -> Physical)
+
+
+--- sv39 ---
+
+page size = 4096 B
+pte size = 8 bytes
+levels = 3 (0, 1, 2)
+
+VPN [27 bit] -> PPN [44 bit]
+
+Virtual address: 27 + 12 bit -> { VPN[2] ... VPN[1] ... VPN[0] ... pgoff }
+	38-30: VPN[2]
+	29-21: VPN[1]
+	20-12: VPN[0]
+	11-0: pgoff
+
+Physical address: 44 + 12 bit -> { PPN[2] ... PPN[1] ... PPN[0] ... pgoff }
+	55-30: PPN[2]
+	29-21: PPN[1]
+	20-12: PPN[0]
+	11-0: pgoff
+
+Page table entry: 64 bit -> { N ... PBMT ... Reserved ... PPN[2] ... PPN[1] ... PPN[0] ... RSW ... DAGUXWRV }
+	63: N - svnapot extension
+	62-61: PBMT - svpbmt extension
+	60-54: Reserved - reserved
+	53-28: PPN[2] - physical page number (level 0)
+	27-19: PPN[1] - physical page number (level 1)
+	18-10: PPN[0] - physical page number (level 2)
+	9-8: RSW - reserved for supervisor software use
+	7: D - dirty (sth was stored to this page)
+	6: A - accessed (sth was read from this page)
+	5: G - global (for every ASID)
+	4: U - user mode
+	3: X - execute
+	2: W - write
+	1: R - read
+	0: V - valid
+
+
+--- Virtual address translation process ---
+
+/* step 0 - sv39 */
+#define PAGESIZE (2 << 12)
+#define PTESIZE 8
+#define LEVELS 3
+
+/* step 1 - get root pte address */
+long a = satp.ppn * PAGESIZE
+long i = LEVELS - 1;
+
+/* step 2 - get pte value */
+long pte = *(a + va.vpn[i] * PTESIZE);
+
+/* step 3 - check pte validity */
+if (pte.v == 0) page_fault("V bit not set");
+if (pte.r == 0 && pte.w == 1) page_fault("page must be readable if writeable");
+
+/* step 4 - check if pte is leaf */
+if (pte.x == 1 || pte.r == 1) {
+	goto step 5;	// pte is leaf
+} else {
+	i--;
+	if (i < 0) page_fault("no more levels to check");
+	a = pte.ppn * PAGESIZE;
+	goto step 2;	// pte is not leaf
+}
+
+/* step 5 - check pte permissions */
+if (fail) page_fault("permission denied");
+
+/* step 6 - check page alignment */
+if (i > 0 && pte.ppn[i-1:0] != 0) page_fault("not aligned");
+
+/* step 7 - update A and D bits */
+if (action == load && pte.A == 0) page_fault("update A bit");
+if (action == store && pte.D == 0) page_fault("update D bit");
+
+/* step 8 - calculate pa */
+pa.pgoff = va.pgoff
+if (i > 0) pa.ppn[i-1:0] = va.ppn[i-1:0];
+pa.ppn[LEVELS-1:i] = pte.ppn[LEVELS-1:i];

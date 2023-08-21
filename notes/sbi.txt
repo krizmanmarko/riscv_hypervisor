@@ -1,0 +1,85 @@
+https://www.scs.stanford.edu/~zyedidia/docs/riscv/riscv-sbi.pdf
+
+=== Abbreviations ===
+
+SBI: Supervisor Binary Interface
+SEE: Supervisor Execution Environment
+EID: Extension ID
+FID: Function ID
+HSM: Hart State Management
+PMU: Performance Monitoring Unit
+IPI: Inter Processor Interrupt
+ASID: Address Space Identifier
+VMID: Virtual Machine Identifier
+
+
+=== ECALL ===
+
+--- args ---
+a6: Function ID
+a7: Extension ID
+
+# Base extension (EID=0x10) - retval in a0, a1
+EID=0x10,FID=0 -> struct sbiret sbi_get_spec_version(void);
+EID=0x10,FID=1 -> struct sbiret sbi_get_impl_id(void);
+EID=0x10,FID=2 -> struct sbiret sbi_get_impl_version(void);
+EID=0x10,FID=3 -> struct sbiret sbi_probe_extension(long extension_id);
+EID=0x10,FID=4 -> struct sbiret sbi_get_mvendorid(void);
+EID=0x10,FID=5 -> struct sbiret sbi_get_marchid(void);
+EID=0x10,FID=6 -> struct sbiret sbi_get_mimpid(void);
+
+# Legacy replacements
+
+# Timer extension (TIME)
+EID=0x54494D45,FID=0 -> struct sbiret sbi_set_timer(uint64_t stime_value)
+
+# IPI extension (sPI / s-mode IPI)
+EID=0x735049,FID=0 -> struct sbiret sbi_send_ipi(unsigned long hart_mask, unsigned long hart_mask_base)
+
+# RFENCE extension (RFNC)
+EID=0x52464E43,FID=0 -> struct sbiret sbi_remote_fence_i(unsigned long hart_mask, unsigned long hart_mask_base) // can act as full TLB flush
+EID=0x52464E43,FID=1 -> struct sbiret sbi_remote_sfence_vma(unsigned long hart_mask, unsigned long hart_mask_base, unsigned long start_addr, unsigned long size)
+EID=0x52464E43,FID=2 -> struct sbiret sbi_remote_sfence_vma_asid(unsigned long hart_mask, unsigned long hart_mask_base, unsigned long start_addr, unsigned long size, unsigned long asid)
+EID=0x52464E43,FID=3 -> struct sbiret sbi_remote_hfence_gvma_vmid(unsigned long hart_mask, unsigned long hart_mask_base, unsigned long start_addr, unsigned long size, unsigned long vmid)
+EID=0x52464E43,FID=4 -> struct sbiret sbi_remote_hfence_gvma(unsigned long hart_mask, unsigned long hart_mask_base, unsigned long start_addr, unsigned long size)
+EID=0x52464E43,FID=5 -> struct sbiret sbi_remote_hfence_vvma_asid(unsigned long hart_mask, unsigned long hart_mask_base, unsigned long start_addr, unsigned long size, unsigned long asid)
+EID=0x52464E43,FID=6 -> struct sbiret sbi_remote_hfence_vvma(unsigned long hart_mask, unsigned long hart_mask_base, unsigned long start_addr, unsigned long size)
+
+# Hart state management extension (HSM)
+EID=0x48534D,FID=0 -> struct sbiret sbi_hart_start(unsigned long hartid, unsigned long start_addr, unsigned long opaque)
+EID=0x48534D,FID=1 -> struct sbiret sbi_hart_stop(void) 
+EID=0x48534D,FID=2 -> struct sbiret sbi_hart_get_status(unsigned long hartid)
+EID=0x48534D,FID=3 -> struct sbiret sbi_hart_suspend(uint32_t suspend_type, unsigned long resume_addr, unsigned long opaque)
+
+# Legacy extensions (EID=0x00-0x0f) - retval only in a0
+EID=0x00 -> long sbi_set_timer(uint64_t stime_value)
+EID=0x01 -> long sbi_console_putchar(int ch)
+EID=0x02 -> long sbi_console_getchar(void)
+EID=0x03 -> long sbi_clear_ipi(void) // deprecated (S-mode can do this as well)
+EID=0x04 -> long sbi_send_ipi(const unsigned long *hart_mask)
+EID=0x05 -> long sbi_remote_fence_i(const unsigned long *hart_mask)
+EID=0x06 -> long sbi_remote_sfence_vma(const unsigned long *hart_mask, unsigned long start, unsigned long size)
+EID=0x07 -> long sbi_remote_sfence_vma_asid(const unsigned long *hart_mask, unsigned long start, unsigned long size, unsigned long asid)
+EID=0x08 -> void sbi_shutdown(void)
+
+--- retval ---
+struct sbiret {
+	long error;	// a0
+	long value;	// a1
+};
+
+error codes:
+	 0 - SBI_SUCCESS
+	-1 - SBI_ERR_FAILED
+	-2 - SBI_ERR_NOT_SUPPORTED (if FID, EID doesn't exist)
+	-3 - SBI_ERR_INVALID_PARAM
+	-4 - SBI_ERR_DENIED
+	-5 - SBI_ERR_INVALID_ADDRESS
+	-6 - SBI_ERR_ALREADY_AVAILABLE
+	-7 - SBI_ERR_ALREADY_STARTED
+	-8 - SBI_ERR_ALREADY_STOPPED
+
+
+--- extras ---
+
+- Does not clobber registers (except a0, a1)

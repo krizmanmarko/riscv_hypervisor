@@ -1,0 +1,88 @@
+Interrupts (https://arxiv.org/pdf/2103.14951.pdf, 2.1 Hypervisor extension)
+===========================================================================
+
+ENTRY: (https://stackoverflow.com/questions/61913210/risc-v-interrupt-handling-flow)
+mepc <- interrupted pc
+mstatus <- previous privilege level
+mcause <- interrupt cause
+
+
+3 interrupt pins on each hart
+- external
+- timer
+- software
+
+each hart has it's own configuration bitmap
+	- mip (M-mode interrupts)
+	- sip (S-mode interrupts)
+
+
+--- CLINT (core local interruptor)
+https://github.com/pulp-platform/clint
+handles:
+	M-mode timer interrupt
+	software interrupts
+
+--- PLIC (Platform local interrupt controller)
+external interrupts
+
+Using extensions:
+	- interrupts per privilege level
+	- local interrupts (for each hart)
+
+
+registers
+=========
+
+name	ABI	description
+--------------------------------------------
+x0	zero	hard-wired zero
+x1	ra	return address
+x2	sp	stack pointer
+x3	gp	global pointer
+x4	tp	thread pointer
+x5	t0	tmp
+x6	t1	tmp
+x7	t2	tmp
+x8	s0/fp	saved register/frame pointer
+x9	s1	saved register
+x10	a0	arg / retval
+x11	a1	arg / retval
+x12	a2	arg
+x13	a3	arg
+x14	a4	arg
+x15	a5	arg
+x16	a6	arg
+x17	a7	arg
+x18	s2	saved register
+x19	s3	saved register
+x20	s4	saved register
+x21	s5	saved register
+x22	s6	saved register
+x23	s7	saved register
+x24	s8	saved register
+x25	s9	saved register
+x26	s10	saved register
+x27	s11	saved register
+x28	t3	tmp
+x29	t4	tmp
+x30	t5	tmp
+x31	t6	tmp
+
+
+CSR (check out SiFive (yt): Part I: An Introduction to the RISC-V Architecture)
+===============================================================================
+
+mstatus: machine status
+mcause: machine interrupt cause
+mie: machine interrupt enable
+mip: machine interrupt pending
+mtvec: machine trap vector
+mepc: holds pc when interrupt happens
+
+
+Boot process
+============
+first routine at 0x1000
+openSBI start is here 0x80000000
+my first instruction is 0x80100000 (defined by elf binary entry point)
