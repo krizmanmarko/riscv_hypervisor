@@ -4,35 +4,37 @@
 
 int main();
 
-__attribute__ ((aligned(16))) char stack0[4096 * NR_CPUS];
+__attribute__ ((aligned(16))) char stack0[4096 * DTB_NR_CPUS];
 
 void
 start(unsigned long hartid, void *dtb)
 {
 	// check support for H extension
-	uint64 misa = r_misa();
+	uint64 misa;
+	R_MISA(&misa);
 	if ((misa & MISA_EXT_H) == 0) {
+		while (1);
 		// exit with fail("hypervisor extension not supported")
 	}
 
 	// Prepare for first mret
-	uint64 x = r_mstatus();
-	x &= ~MSTATUS_MPP;
-	x |= RISCV_HS_MODE;
+	uint64 mstatus;
+	R_MSTATUS(&mstatus);
+	mstatus &= ~MSTATUS_MPP;
+	mstatus |= RISCV_HS_MODE;
 
 	// set context for mret
-	w_mstatus(x);
-	w_mepc((uint64) main);	// requires gcc -mcmodel=medany
+	W_MSTATUS(mstatus);
+	W_MEPC((uint64) main);	// requires gcc -mcmodel=medany
 
 	// delegate interrupts and exceptions to S
-	w_medeleg(0xffff);
-	w_mideleg(0xffff);
+	W_MEDELEG(0xffff);
+	W_MIDELEG(0xffff);
 
-	w_satp(0);
+	W_SATP(0);
 
-	w_pmpaddr0(0x3fffffffffffff);
-	w_pmpcfg0(0xf);
-
+	W_PMPADDR0(0x3fffffffffffff);
+	W_PMPCFG0(0xf);
 
 	asm volatile("mret");
 }

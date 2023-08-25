@@ -11,12 +11,46 @@
 #define S_MODE (1 << 11)
 #define U_MODE (0 << 11)
 
+
+// All mode common register fields
+#define STATUS_SIE (1 << 1)		// Supervisor Interrupt Enable
+#define STATUS_MIE (1 << 3)		// Machine Interrupt Enable
+#define STATUS_SPIE (1 << 5)		// Supervisor Previous Interrupt Enable
+#define STATUS_UBE (1 << 6)		// User is big-endian (no effect on fetch)
+#define STATUS_MPIE (1 << 7)		// Machine Previous Interrupt Enable
+#define STATUS_SPP (1 << 8)		// Supervisor Previous Privilege
+#define STATUS_VS (0b11 << 9)		// Vector extension state
+#define STATUS_MPP (0b11 << 11)		// Machine Previous Privilege
+#define STATUS_FS (0b11 << 13)		// Floating-point Unit State
+#define STATUS_XS (0b11 << 15)		// User Mode extensions
+#define STATUS_MPRV (1 << 17)		// Modify Privilege (set effective privilege)
+#define STATUS_SUM (1 << 18)		// Permit Supervisor User Memory access
+#define STATUS_MXR (1 << 19)		// Make Executable Readable
+#define STATUS_TVM (1 << 20)		// Trap Virtual Memory
+#define STATUS_TW (1 << 21)		// Timeout Wait
+#define STATUS_TSR (1 << 22)		// Trap SRET
+#define STATUS_UXL (0b11 << 32)		// User XLEN
+#define STATUS_SXL (0b11 << 34)		// Supervisor XLEN
+#define STATUS_SBE (1 << 36)		// Supervisor is big-endian (no effect on fetch)
+#define STATUS_MBE (1 << 37)		// Machine is big-endian (no effect on fetch)
+#define STATUS_SD (1 << 63)		// Something dirty (in FS, VS or XS)
+
+#define TVEC_MODE_DIRECT 0
+#define TVEC_MODE_VECTORED 1
+
 #define INT_SUPERVISOR_SW 1
 #define INT_MACHINE_SW 3
 #define INT_SUPERVISOR_TIM 5
 #define INT_MACHINE_TIM 7
 #define INT_SUPERVISOR_EXT 9
 #define INT_MACHINE_EXT 11
+
+#define INT_SSI (1 << INT_SUPERVISOR_SW)
+#define INT_MSI (1 << INT_MACHINE_SW)
+#define INT_STI (1 << INT_SUPERVISOR_TIM)
+#define INT_MTI (1 << INT_MACHINE_TIM)
+#define INT_SEI (1 << INT_SUPERVISOR_EXT)
+#define INT_MEI (1 << INT_MACHINE_EXT)
 
 #define EXC_INSTRUCTION_ADDR_MISALIGNED 0
 #define EXC_INSTRUCTION_ACCESS_FAULT 1
@@ -33,9 +67,67 @@
 #define EXC_LOAD_PAGE_FAULT 13
 #define EXC_STORE_OR_AMO_PAGE_FAULT 15
 
+#define EDELEG_INSTRUCTION_ADDR_MISALIGNED (1 << EXC_INSTRUCTION_ADDR_MISALIGNED)
+#define EDELEG_INSTRUCTION_ACCESS_FAULT (1 << EXC_INSTRUCTION_ACCESS_FAULT)
+#define EDELEG_ILLEGAL_INSTRUCTION (1 << EXC_ILLEGAL_INSTRUCTION)
+#define EDELEG_BREAKPOINT (1 << EXC_BREAKPOINT)
+#define EDELEG_LOAD_ADDR_MISALIGNED (1 << EXC_LOAD_ADDR_MISALIGNED)
+#define EDELEG_LOAD_ACCESS_FAULT (1 << EXC_LOAD_ACCESS_FAULT)
+#define EDELEG_STORE_OR_AMO_ADDRESS_MISALIGNED (1 << EXC_STORE_OR_AMO_ADDRESS_MISALIGNED)
+#define EDELEG_STORE_OR_AMO_ACCESS_FAULT (1 << EXC_STORE_OR_AMO_ACCESS_FAULT)
+#define EDELEG_ECALL_FROM_U (1 << EXC_ECALL_FROM_U)
+#define EDELEG_ECALL_FROM_S (1 << EXC_ECALL_FROM_S)
+#define EDELEG_ECALL_FROM_M (1 << EXC_ECALL_FROM_M)
+#define EDELEG_INSTRUCTION_PAGE_FAULT (1 << EXC_INSTRUCTION_PAGE_FAULT)
+#define EDELEG_LOAD_PAGE_FAULT (1 << EXC_LOAD_PAGE_FAULT)
+#define EDELEG_STORE_OR_AMO_PAGE_FAULT (1 << EXC_STORE_OR_AMO_PAGE_FAULT)
+
+#define COUNT_CY (1 << 0)	// Cycle
+#define COUNT_TM (1 << 1)	// Time
+#define COUNT_IR (1 << 2)	// Instret
+#define COUNT_HPM3 (1 << 3)	// Hardware Performance Monitor
+#define COUNT_HPM4 (1 << 4)	// Hardware Performance Monitor
+#define COUNT_HPM5 (1 << 5)	// Hardware Performance Monitor
+#define COUNT_HPM6 (1 << 6)	// Hardware Performance Monitor
+#define COUNT_HPM7 (1 << 7)	// Hardware Performance Monitor
+#define COUNT_HPM8 (1 << 8)	// Hardware Performance Monitor
+#define COUNT_HPM9 (1 << 9)	// Hardware Performance Monitor
+#define COUNT_HPM10 (1 << 10)	// Hardware Performance Monitor
+#define COUNT_HPM11 (1 << 11)	// Hardware Performance Monitor
+#define COUNT_HPM12 (1 << 12)	// Hardware Performance Monitor
+#define COUNT_HPM13 (1 << 13)	// Hardware Performance Monitor
+#define COUNT_HPM14 (1 << 14)	// Hardware Performance Monitor
+#define COUNT_HPM15 (1 << 15)	// Hardware Performance Monitor
+#define COUNT_HPM16 (1 << 16)	// Hardware Performance Monitor
+#define COUNT_HPM17 (1 << 17)	// Hardware Performance Monitor
+#define COUNT_HPM18 (1 << 18)	// Hardware Performance Monitor
+#define COUNT_HPM19 (1 << 19)	// Hardware Performance Monitor
+#define COUNT_HPM20 (1 << 20)	// Hardware Performance Monitor
+#define COUNT_HPM21 (1 << 21)	// Hardware Performance Monitor
+#define COUNT_HPM22 (1 << 22)	// Hardware Performance Monitor
+#define COUNT_HPM23 (1 << 23)	// Hardware Performance Monitor
+#define COUNT_HPM24 (1 << 24)	// Hardware Performance Monitor
+#define COUNT_HPM25 (1 << 25)	// Hardware Performance Monitor
+#define COUNT_HPM26 (1 << 26)	// Hardware Performance Monitor
+#define COUNT_HPM27 (1 << 27)	// Hardware Performance Monitor
+#define COUNT_HPM28 (1 << 28)	// Hardware Performance Monitor
+#define COUNT_HPM29 (1 << 29)	// Hardware Performance Monitor
+#define COUNT_HPM30 (1 << 30)	// Hardware Performance Monitor
+#define COUNT_HPM31 (1 << 31)	// Hardware Performance Monitor
+
+#define CAUSE_INT (1 << 63)
+
+#define ENVCFG_FIOM (1 << 0)		// Fence of I/O Implies Memory
+
+#define ATP_PPN (0xfffffffffff << 0)	// 44-bit physical page number
+#define ATP_ASID (0xffff << 44)		// Virtual Machine Identifier
+#define ATP_MODE (0b1111 << 60)
+#define ATP_MODE_Sv39 8
+
 
 // Machine ISA Register (WARL)
-
+#define R_MISA(uint64ptr) asm volatile("csrr %0, misa" : "=r" (*uint64ptr))
+#define W_MISA(value) asm volatile("csrw misa, %0" : : "r" (value));
 #define MISA_EXT_A (1 << 0)	// Atomic extension
 #define MISA_EXT_C (1 << 2)	// Compressed extension
 #define MISA_EXT_D (1 << 3)	// Double-precision floating-point extension
@@ -46,495 +138,285 @@
 #define MISA_EXT_S (1 << 18)	// Supervisor mode implemented
 #define MISA_EXT_U (1 << 20)	// User mode implemented
 
-static inline uint64
-r_misa()
-{
-	uint64 x;
-	asm volatile("csrr %0, misa" : "=r" (x));
-	return x;
-}
-
-static inline void
-w_misa(uint64 x)
-{
-	asm volatile("csrw misa, %0" :: "r" (x));
-}
-
-
 // Machine Vendor, Architecture, Implementation and Hart ID Registers
-
-static inline uint32
-r_mvendorid()
-{
-	uint32 x;
-	asm volatile("csrr %0, mvendorid" : "=r" (x));
-	return x;
-}
-
-static inline uint64
-r_marchid()
-{
-	uint64 x;
-	asm volatile("csrr %0, marchid" : "=r" (x));
-	return x;
-}
-
-static inline uint64
-r_mimpid()
-{
-	uint64 x;
-	asm volatile("csrr %0, mimpid" : "=r" (x));
-	return x;
-}
-
-static inline uint64
-r_mhartid()
-{
-	uint64 x;
-	asm volatile("csrr %0, mhartid" : "=r" (x));
-	return x;
-}
-
+#define R_MVENDORID(uint32ptr) asm volatile("csrr %0, mvendorid" : "=r" (uint32ptr))
+#define R_MARCHID(uint64ptr) asm volatile("csrr %0, marchid" : "=r" (*uint64ptr))
+#define R_MIMPID(uint64ptr) asm volatile("csrr %0, mimpid" : "=r" (*uint64ptr))
+#define R_MHARTID(uint64ptr) asm volatile("csrr %0, mhartid" : "=r" (*uint64ptr))
 
 // Machine Status Register (WARL)
-
-#define MSTATUS_SIE (1 << 1)		// Supervisor Interrupt Enable
-#define MSTATUS_MIE (1 << 3)		// Machine Interrupt Enable
-#define MSTATUS_SPIE (1 << 5)		// Supervisor Previous Interrupt Enable
-#define MSTATUS_UBE (1 << 6)		// User is big-endian (no effect on fetch)
-#define MSTATUS_MPIE (1 << 7)		// Machine Previous Interrupt Enable
-#define MSTATUS_SPP (1 << 8)		// Supervisor Previous Privilege
-#define MSTATUS_VS (0b11 << 9)		// Vector extension state
-#define MSTATUS_MPP (0b11 << 11)	// Machine Previous Privilege
-#define MSTATUS_FS (0b11 << 13)		// Floating-point Unit State
-#define MSTATUS_XS (0b11 << 15)		// User Mode extensions
-#define MSTATUS_MPRV (1 << 17)		// Modify Privilege (set effective privilege)
-#define MSTATUS_SUM (1 << 18)		// Permit Supervisor User Memory access
-#define MSTATUS_MXR (1 << 19)		// Make Executable Readable
-#define MSTATUS_TVM (1 << 20)		// Trap Virtual Memory
-#define MSTATUS_TW (1 << 21)		// Timeout Wait
-#define MSTATUS_TSR (1 << 22)		// Trap SRET
-#define MSTATUS_UXL (0b11 << 32)	// User XLEN
-#define MSTATUS_SXL (0b11 << 34)	// Supervisor XLEN
-#define MSTATUS_SBE (1 << 36)		// Supervisor is big-endian (no effect on fetch)
-#define MSTATUS_MBE (1 << 37)		// Machine is big-endian (no effect on fetch)
-#define MSTATUS_SD (1 << 63)		// Something dirty (in FS, VS or XS)
-
-static inline uint64
-r_mstatus()
-{
-	uint64 x;
-	asm volatile("csrr %0, mstatus" : "=r" (x));
-	return x;
-}
-
-static inline void
-w_mstatus(uint64 x)
-{
-	asm volatile("csrw mstatus, %0" :: "r" (x));
-}
-
+#define R_MSTATUS(uint64ptr) asm volatile("csrr %0, mstatus" : "=r" (*uint64ptr))
+#define W_MSTATUS(value) asm volatile("csrw mstatus, %0" : : "r" (value))
+#define MSTATUS_SIE STATUS_SIE
+#define MSTATUS_MIE STATUS_MIE
+#define MSTATUS_SPIE STATUS_SPIE
+#define MSTATUS_UBE STATUS_UBE
+#define MSTATUS_MPIE STATUS_MPIE
+#define MSTATUS_SPP STATUS_SPP
+#define MSTATUS_VS STATUS_VS
+#define MSTATUS_MPP STATUS_MPP
+#define MSTATUS_FS STATUS_FS
+#define MSTATUS_XS STATUS_XS
+#define MSTATUS_MPRV STATUS_MPRV
+#define MSTATUS_SUM STATUS_SUM
+#define MSTATUS_MXR STATUS_MXR
+#define MSTATUS_TVM STATUS_TVM
+#define MSTATUS_TW STATUS_TW
+#define MSTATUS_TSR STATUS_TSR
+#define MSTATUS_UXL STATUS_UXL
+#define MSTATUS_SXL STATUS_SXL
+#define MSTATUS_SBE STATUS_SBE
+#define MSTATUS_MBE STATUS_MBE
+#define MSTATUS_SD STATUS_SD
 
 // Machine Trap-Vector Base-Address Register (WARL)
-
-#define MTVEC_MODE_DIRECT 0
-#define MTVEC_MODE_VECTORED 1
-
-static inline uint64
-r_mtvec()
-{
-	uint64 x;
-	asm volatile("csrr %0, mtvec" : "=r" (x));
-	return x;
-}
-
-static inline void
-w_mtvec(uint64 x)
-{
-	asm volatile("csrw mtvec, %0" :: "r" (x));
-}
-
+#define R_MTVEC(uint64ptr) asm volatile("csrr %0, mtvec" : "=r" (*uint64ptr))
+#define W_MTVEC(value) asm volatile("csrw mtvec, %0" : : "r" (value))
 
 // Machine Interrupt Pending Register
-
-#define MIP_SSIP (1 << INT_SUPERVISOR_SW)
-#define MIP_MSIP (1 << INT_MACHINE_SW)
-#define MIP_STIP (1 << INT_SUPERVISOR_TIM)
-#define MIP_MTIP (1 << INT_MACHINE_TIM)
-#define MIP_SEIP (1 << INT_SUPERVISOR_EXT)
-#define MIP_MEIP (1 << INT_MACHINE_EXT)
-
-static inline uint64
-r_mip()
-{
-	uint64 x;
-	asm volatile("csrr %0, mip" : "=r" (x));
-	return x;
-}
-
-static inline void
-w_mip(uint64 x)
-{
-	asm volatile("csrw mip, %0" :: "r" (x));
-}
-
+#define R_MIP(uint64ptr) asm volatile("csrr %0, mip" : "=r" (*uint64ptr))
+#define W_MIP(value) asm volatile("csrw mip, %0" : : "r" (value))
+#define MIP_SSIP INT_SSI
+#define MIP_MSIP INT_MSI
+#define MIP_STIP INT_STI
+#define MIP_MTIP INT_MTI
+#define MIP_SEIP INT_SEI
+#define MIP_MEIP INT_MEI
 
 // Machine Interrupt Enable Register
-
-#define MIE_SSIE (1 << INT_SUPERVISOR_SW)
-#define MIE_MSIE (1 << INT_MACHINE_SW)
-#define MIE_STIE (1 << INT_SUPERVISOR_TIM)
-#define MIE_MTIE (1 << INT_MACHINE_TIM)
-#define MIE_SEIE (1 << INT_SUPERVISOR_EXT)
-#define MIE_MEIE (1 << INT_MACHINE_EXT)
-
-static inline uint64
-r_mie()
-{
-	uint64 x;
-	asm volatile("csrr %0, mie" : "=r" (x));
-	return x;
-}
-
-static inline void
-w_mie(uint64 x)
-{
-	asm volatile("csrw mie, %0" :: "r" (x));
-}
-
+#define R_MIE(uint64ptr) asm volatile("csrr %0, mie" : "=r" (*uint64ptr))
+#define W_MIE(value) asm volatile("csrw mie, %0" : : "r" (value))
+#define MIE_SSIE INT_SSI
+#define MIE_MSIE INT_MSI
+#define MIE_STIE INT_STI
+#define MIE_MTIE INT_MTI
+#define MIE_SEIE INT_SEI
+#define MIE_MEIE INT_MEI
 
 // Machine Exception Delegation Register
-
-#define MEDELEG_INSTRUCTION_ADDR_MISALIGNED (1 << EXC_INSTRUCTION_ADDR_MISALIGNED)
-#define MEDELEG_INSTRUCTION_ACCESS_FAULT (1 << EXC_INSTRUCTION_ACCESS_FAULT)
-#define MEDELEG_ILLEGAL_INSTRUCTION (1 << EXC_ILLEGAL_INSTRUCTION)
-#define MEDELEG_BREAKPOINT (1 << EXC_BREAKPOINT)
-#define MEDELEG_LOAD_ADDR_MISALIGNED (1 << EXC_LOAD_ADDR_MISALIGNED)
-#define MEDELEG_LOAD_ACCESS_FAULT (1 << EXC_LOAD_ACCESS_FAULT)
-#define MEDELEG_STORE_OR_AMO_ADDRESS_MISALIGNED (1 << EXC_STORE_OR_AMO_ADDRESS_MISALIGNED)
-#define MEDELEG_STORE_OR_AMO_ACCESS_FAULT (1 << EXC_STORE_OR_AMO_ACCESS_FAULT)
-#define MEDELEG_ECALL_FROM_U (1 << EXC_ECALL_FROM_U)
-#define MEDELEG_ECALL_FROM_S (1 << EXC_ECALL_FROM_S)
-#define MEDELEG_ECALL_FROM_M (1 << EXC_ECALL_FROM_M)
-#define MEDELEG_INSTRUCTION_PAGE_FAULT (1 << EXC_INSTRUCTION_PAGE_FAULT)
-#define MEDELEG_LOAD_PAGE_FAULT (1 << EXC_LOAD_PAGE_FAULT)
-#define MEDELEG_STORE_OR_AMO_PAGE_FAULT (1 << EXC_STORE_OR_AMO_PAGE_FAULT)
-
-static inline uint64
-r_medeleg()
-{
-	uint64 x;
-	asm volatile("csrr %0, medeleg" : "=r" (x));
-	return x;
-}
-
-static inline void
-w_medeleg(uint64 x)
-{
-	asm volatile("csrw medeleg, %0" :: "r" (x));
-}
-
+#define R_MEDELEG(uint64ptr) asm volatile("csrr %0, medeleg" : "=r" (*uint64ptr))
+#define W_MEDELEG(value) asm volatile("csrw medeleg, %0" : : "r" (value))
+#define MEDELEG_INSTRUCTION_ADDR_MISALIGNED EDELEG_INSTRUCTION_ADDR_MISALIGNED
+#define MEDELEG_INSTRUCTION_ACCESS_FAULT EDELEG_INSTRUCTION_ACCESS_FAULT
+#define MEDELEG_ILLEGAL_INSTRUCTION EDELEG_ILLEGAL_INSTRUCTION
+#define MEDELEG_BREAKPOINT EDELEG_BREAKPOINT
+#define MEDELEG_LOAD_ADDR_MISALIGNED EDELEG_LOAD_ADDR_MISALIGNED
+#define MEDELEG_LOAD_ACCESS_FAULT EDELEG_LOAD_ACCESS_FAULT
+#define MEDELEG_STORE_OR_AMO_ADDRESS_MISALIGNED EDELEG_STORE_OR_AMO_ADDRESS_MISALIGNED
+#define MEDELEG_STORE_OR_AMO_ACCESS_FAULT EDELEG_STORE_OR_AMO_ACCESS_FAULT
+#define MEDELEG_ECALL_FROM_U EDELEG_ECALL_FROM_U
+#define MEDELEG_ECALL_FROM_S EDELEG_ECALL_FROM_S
+#define MEDELEG_ECALL_FROM_M EDELEG_ECALL_FROM_M
+#define MEDELEG_INSTRUCTION_PAGE_FAULT EDELEG_INSTRUCTION_PAGE_FAULT
+#define MEDELEG_LOAD_PAGE_FAULT EDELEG_LOAD_PAGE_FAULT
+#define MEDELEG_STORE_OR_AMO_PAGE_FAULT EDELEG_STORE_OR_AMO_PAGE_FAULT
 
 // Machine Interrupt Delegation Register
-
-#define MIDELEG_SSI (1 << INT_SUPERVISOR_SW)
-#define MIDELEG_MSI (1 << INT_MACHINE_SW)
-#define MIDELEG_STI (1 << INT_SUPERVISOR_TIM)
-#define MIDELEG_MTI (1 << INT_MACHINE_TIM)
-#define MIDELEG_SEI (1 << INT_SUPERVISOR_EXT)
-#define MIDELEG_MEI (1 << INT_MACHINE_EXT)
-
-static inline uint64
-r_mideleg()
-{
-	uint64 x;
-	asm volatile("csrr %0, mideleg" : "=r" (x));
-	return x;
-}
-
-static inline void
-w_mideleg(uint64 x)
-{
-	asm volatile("csrw mideleg, %0" :: "r" (x));
-}
-
+#define R_MIDELEG(uint64ptr) asm volatile("csrr %0, mideleg" : "=r" (*uint64ptr))
+#define W_MIDELEG(value) asm volatile("csrw mideleg, %0" : : "r" (value))
+#define MIDELEG_SSI INT_SSI
+#define MIDELEG_MSI INT_MSI
+#define MIDELEG_STI INT_STI
+#define MIDELEG_MTI INT_MTI
+#define MIDELEG_SEI INT_SEI
+#define MIDELEG_MEI INT_MEI
 
 // Machine Counter-Enable Register
-
-#define MCOUNTEREN_CY (1 << 0)		// Cycle
-#define MCOUNTEREN_TM (1 << 1)		// Time
-#define MCOUNTEREN_IR (1 << 2)		// Instret
-#define MCOUNTEREN_HPM3 (1 << 3)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM4 (1 << 4)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM5 (1 << 5)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM6 (1 << 6)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM7 (1 << 7)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM8 (1 << 8)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM9 (1 << 9)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM10 (1 << 10)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM11 (1 << 11)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM12 (1 << 12)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM13 (1 << 13)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM14 (1 << 14)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM15 (1 << 15)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM16 (1 << 16)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM17 (1 << 17)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM18 (1 << 18)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM19 (1 << 19)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM20 (1 << 20)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM21 (1 << 21)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM22 (1 << 22)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM23 (1 << 23)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM24 (1 << 24)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM25 (1 << 25)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM26 (1 << 26)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM27 (1 << 27)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM28 (1 << 28)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM29 (1 << 29)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM30 (1 << 30)	// Hardware Performance Monitor
-#define MCOUNTEREN_HPM31 (1 << 31)	// Hardware Performance Monitor
-
-static inline uint32
-r_mcounteren()
-{
-	uint32 x;
-	asm volatile("csrr %0, mcounteren" : "=r" (x));
-	return x;
-}
-
-static inline void
-w_mcounteren(uint32 x)
-{
-	asm volatile("csrw mcounteren, %0" :: "r" (x));
-}
-
+#define R_MCOUNTEREN(uint32ptr) asm volatile("csrr %0, mcounteren" : "=r" (uint32ptr));
+#define W_MCOUNTEREN(value) asm volatile("csrw mcounteren, %0" : : "r" ((uint32) value));
+#define MCOUNTEREN_CY COUNT_CY
+#define MCOUNTEREN_TM COUNT_TM
+#define MCOUNTEREN_IR COUNT_IR
+#define MCOUNTEREN_HPM3 COUNT_HPM3
+#define MCOUNTEREN_HPM4 COUNT_HPM4
+#define MCOUNTEREN_HPM5 COUNT_HPM5
+#define MCOUNTEREN_HPM6 COUNT_HPM6
+#define MCOUNTEREN_HPM7 COUNT_HPM7
+#define MCOUNTEREN_HPM8 COUNT_HPM8
+#define MCOUNTEREN_HPM9 COUNT_HPM9
+#define MCOUNTEREN_HPM10 COUNT_HPM10
+#define MCOUNTEREN_HPM11 COUNT_HPM11
+#define MCOUNTEREN_HPM12 COUNT_HPM12
+#define MCOUNTEREN_HPM13 COUNT_HPM13
+#define MCOUNTEREN_HPM14 COUNT_HPM14
+#define MCOUNTEREN_HPM15 COUNT_HPM15
+#define MCOUNTEREN_HPM16 COUNT_HPM16
+#define MCOUNTEREN_HPM17 COUNT_HPM17
+#define MCOUNTEREN_HPM18 COUNT_HPM18
+#define MCOUNTEREN_HPM19 COUNT_HPM19
+#define MCOUNTEREN_HPM20 COUNT_HPM20
+#define MCOUNTEREN_HPM21 COUNT_HPM21
+#define MCOUNTEREN_HPM22 COUNT_HPM22
+#define MCOUNTEREN_HPM23 COUNT_HPM23
+#define MCOUNTEREN_HPM24 COUNT_HPM24
+#define MCOUNTEREN_HPM25 COUNT_HPM25
+#define MCOUNTEREN_HPM26 COUNT_HPM26
+#define MCOUNTEREN_HPM27 COUNT_HPM27
+#define MCOUNTEREN_HPM28 COUNT_HPM28
+#define MCOUNTEREN_HPM29 COUNT_HPM29
+#define MCOUNTEREN_HPM30 COUNT_HPM30
+#define MCOUNTEREN_HPM31 COUNT_HPM31
 
 // Machine Counter-Inhibit CSR
-
-#define MCOUNTINHIBIT_CY (1 << 0)	// Cycle
-#define MCOUNTINHIBIT_IR (1 << 2)	// Instret
-#define MCOUNTINHIBIT_HPM3 (1 << 3)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM4 (1 << 4)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM5 (1 << 5)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM6 (1 << 6)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM7 (1 << 7)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM8 (1 << 8)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM9 (1 << 9)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM10 (1 << 10)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM11 (1 << 11)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM12 (1 << 12)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM13 (1 << 13)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM14 (1 << 14)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM15 (1 << 15)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM16 (1 << 16)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM17 (1 << 17)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM18 (1 << 18)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM19 (1 << 19)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM20 (1 << 20)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM21 (1 << 21)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM22 (1 << 22)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM23 (1 << 23)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM24 (1 << 24)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM25 (1 << 25)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM26 (1 << 26)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM27 (1 << 27)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM28 (1 << 28)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM29 (1 << 29)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM30 (1 << 30)	// Hardware Performance Monitor
-#define MCOUNTINHIBIT_HPM31 (1 << 31)	// Hardware Performance Monitor
-
-static inline uint32
-r_mcountinhibit()
-{
-	uint32 x;
-	asm volatile("csrr %0, mcountinhibit" : "=r" (x));
-	return x;
-}
-
-static inline void
-w_mcountinhibit(uint32 x)
-{
-	asm volatile("csrw mcountinhibit, %0" :: "r" (x));
-}
-
+#define R_MCOUNTINHIBIT(uint32ptr) asm volatile("csrr %0, mcountinhibit" : "=r" (uint32ptr));
+#define W_MCOUNTINHIBIT(value) asm volatile("csrw mcountinhibit, %0" : : "r" ((uint32) value));
+#define MCOUNTINHIBIT_CY COUNT_CY
+#define MCOUNTINHIBIT_IR COUNT_IR
+#define MCOUNTINHIBIT_HPM3 COUNT_HPM3
+#define MCOUNTINHIBIT_HPM4 COUNT_HPM4
+#define MCOUNTINHIBIT_HPM5 COUNT_HPM5
+#define MCOUNTINHIBIT_HPM6 COUNT_HPM6
+#define MCOUNTINHIBIT_HPM7 COUNT_HPM7
+#define MCOUNTINHIBIT_HPM8 COUNT_HPM8
+#define MCOUNTINHIBIT_HPM9 COUNT_HPM9
+#define MCOUNTINHIBIT_HPM10 COUNT_HPM10
+#define MCOUNTINHIBIT_HPM11 COUNT_HPM11
+#define MCOUNTINHIBIT_HPM12 COUNT_HPM12
+#define MCOUNTINHIBIT_HPM13 COUNT_HPM13
+#define MCOUNTINHIBIT_HPM14 COUNT_HPM14
+#define MCOUNTINHIBIT_HPM15 COUNT_HPM15
+#define MCOUNTINHIBIT_HPM16 COUNT_HPM16
+#define MCOUNTINHIBIT_HPM17 COUNT_HPM17
+#define MCOUNTINHIBIT_HPM18 COUNT_HPM18
+#define MCOUNTINHIBIT_HPM19 COUNT_HPM19
+#define MCOUNTINHIBIT_HPM20 COUNT_HPM20
+#define MCOUNTINHIBIT_HPM21 COUNT_HPM21
+#define MCOUNTINHIBIT_HPM22 COUNT_HPM22
+#define MCOUNTINHIBIT_HPM23 COUNT_HPM23
+#define MCOUNTINHIBIT_HPM24 COUNT_HPM24
+#define MCOUNTINHIBIT_HPM25 COUNT_HPM25
+#define MCOUNTINHIBIT_HPM26 COUNT_HPM26
+#define MCOUNTINHIBIT_HPM27 COUNT_HPM27
+#define MCOUNTINHIBIT_HPM28 COUNT_HPM28
+#define MCOUNTINHIBIT_HPM29 COUNT_HPM29
+#define MCOUNTINHIBIT_HPM30 COUNT_HPM30
+#define MCOUNTINHIBIT_HPM31 COUNT_HPM31
 
 // Machine Scratch
-
-static inline uint64
-r_mscratch()
-{
-	uint64 x;
-	asm volatile("csrr %0, mscratch" : "=r" (x));
-	return x;
-}
-
-static inline void
-w_mscratch(uint64 x)
-{
-	asm volatile("csrw mscratch, %0" :: "r" (x));
-}
-
+#define R_MSCRATCH(uint64ptr) asm volatile("csrr %0, mscratch" : "=r" (*uint64ptr))
+#define W_MSCRATCH(value) asm volatile("csrw mscratch, %0" : : "r" (value))
 
 // Machine Exception Program Counter
-
-static inline uint64
-r_mepc()
-{
-	uint64 x;
-	asm volatile("csrr %0, mepc" : "=r" (x));
-	return x;
-}
-
-static inline void
-w_mepc(uint64 x)
-{
-	asm volatile("csrw mepc, %0" :: "r" (x));
-}
-
+#define R_MEPC(uint64ptr) asm volatile("csrr %0, mepc" : "=r" (*uint64ptr))
+#define W_MEPC(value) asm volatile("csrw mepc, %0" : : "r" (value))
 
 // Machine Cause Register
-
-#define MCAUSE_INT (1 << 63)
-
-static inline uint64
-r_mcause()
-{
-	uint64 x;
-	asm volatile("csrr %0, mcause" : "=r" (x));
-	return x;
-}
-
-static inline void
-w_mcause(uint64 x)
-{
-	asm volatile("csrw mcause, %0" :: "r" (x));
-}
-
+#define R_MCAUSE(uint64ptr) asm volatile("csrr %0, mcause" : "=r" (*uint64ptr))
+#define W_MCAUSE(value) asm volatile("csrw mcause, %0" : : "r" (value))
 
 // Machine Trap Value Register
+#define R_MTVAL(uint64ptr) asm volatile("csrr %0, mtval" : "=r" (*uint64ptr))
+#define W_MTVAL(value) asm volatile("csrw mtval, %0" : : "r" (value))
 
-static inline uint64
-r_mtval()
-{
-	uint64 x;
-	asm volatile("csrr %0, mtval" : "=r" (x));
-	return x;
-}
-
-static inline void
-w_mtval(uint64 x)
-{
-	asm volatile("csrw mtval, %0" :: "r" (x));
-}
-
-
-// Machine Configuration Pointer Register
-
-/* Not accessible in qemu-virt
-static inline uint64
-r_mconfigptr()
-{
-	uint64 x;
-	asm volatile("csrr %0, mconfigptr" : "=r" (x));
-	return x;
-}
-*/
-
+// Machine Configuration Pointer Register - not accessible in qemu-virt
+// #define R_MCONFIGPTR(uint64ptr) asm volatile("csrr %0, mconfigptr" : "=r" (*uint64ptr))
 
 // Machine Environment Configuration Register
-
-#define MENVCFG_FIOM (1 << 0)		// Fence of I/O Implies Memory
-
-static inline uint64
-r_menvcfg()
-{
-	uint64 x;
-	asm volatile("csrr %0, menvcfg" : "=r" (x));
-	return x;
-}
-
-static inline void
-w_menvcfg(uint64 x)
-{
-	asm volatile("csrw menvcfg, %0" :: "r" (x));
-}
-
+#define R_MENVCFG(uint64ptr) asm volatile("csrr %0, menvcfg" : "=r" (*uint64ptr))
+#define W_MENVCFG(value) asm volatile("csrw menvcfg, %0" : : "r" (value))
+#define MENVCFG_FIOM ENVCFG_FIOM
 
 // Physical Memory Protection - PMP
-
-static inline void
-w_pmpcfg0(uint64 x)
-{
-	asm volatile("csrw pmpcfg0, %0" : : "r" (x));
-}
-
-static inline void
-w_pmpaddr0(uint64 x)
-{
-	asm volatile("csrw pmpaddr0, %0" : : "r" (x));
-}
+#define W_PMPCFG0(value) asm volatile("csrw pmpcfg0, %0" : : "r" (value))
+#define W_PMPADDR0(value) asm volatile("csrw pmpaddr0, %0" : : "r" (value))
 
 
-// ... TODO
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
+// Supervisor Status Register
+#define R_SSTATUS(uint64ptr) asm volatile("csrr %0, sstatus" : "=r" (*uint64ptr))
+#define W_SSTATUS(value) asm volatile("csrw sstatus, %0" : : "r" (value))
+#define SSTATUS_SIE STATUS_SIE
+#define SSTATUS_SPIE STATUS_SPIE
+#define SSTATUS_UBE STATUS_UBE
+#define SSTATUS_SPP STATUS_SPP
+#define SSTATUS_VS STATUS_VS
+#define SSTATUS_FS STATUS_FS
+#define SSTATUS_XS STATUS_XS
+#define SSTATUS_SUM STATUS_SUM
+#define SSTATUS_MXR STATUS_MXR
+#define SSTATUS_UXL STATUS_UXL
+#define SSTATUS_SD STATUS_SD
 
-static inline uint64
-r_satp()
-{
-	uint64 x;
-	asm volatile("csrr %0, satp" : "=r" (x));
-	return x;
-}
+// Supervisor Trap Vector Base Address Register
+#define R_STVEC(uint64ptr) asm volatile("csrr %0, stvec" : "=r" (*uint64ptr))
+#define W_STVEC(value) asm volatile("csrw stvec, %0" : : "r" (value))
 
-static inline void
-w_satp(uint64 x)
-{
-	asm volatile("csrw satp, %0" : : "r" (x));
-}
+// Supervisor Interrupt Pending Register
+#define R_SIP(uint64ptr) asm volatile("csrr %0, sip" : "=r" (*uint64ptr))
+#define W_SIP(value) asm volatile("csrw sip, %0" : : "r" (value))
+#define SIP_SSIP INT_SSI
+#define SIP_STIP INT_STI
+#define SIP_SEIP INT_SEI
 
-static inline uint64
-r_stvec()
-{
-	uint64 x;
-	asm volatile("csrr %0, stvec" : "=r" (x));
-	return x;
-}
+// Supervisor Interrupt Enable Register
+#define R_SIE(uint64ptr) asm volatile("csrr %0, sie" : "=r" (*uint64ptr))
+#define W_SIE(value) asm volatile("csrw sie, %0" : : "r" (value))
+#define SIE_SSIE INT_SSI
+#define SIE_STIE INT_STI
+#define SIE_SEIE INT_SEI
 
-static inline void
-w_stvec(uint64 x)
-{
-	asm volatile("csrw stvec, %0" : : "r" (x));
-}
+// Supervisor Counter-Enable Register
+#define R_SCOUNTEREN(uint32ptr) asm volatile("csrr %0, scounteren" : "=r" (uint32ptr));
+#define W_SCOUNTEREN(value) asm volatile("csrw scounteren, %0" : : "r" ((uint32) value));
+#define SCOUNTEREN_CY COUNT_CY
+#define SCOUNTEREN_TM COUNT_TM
+#define SCOUNTEREN_IR COUNT_IR
+#define SCOUNTEREN_HPM3 COUNT_HPM3
+#define SCOUNTEREN_HPM4 COUNT_HPM4
+#define SCOUNTEREN_HPM5 COUNT_HPM5
+#define SCOUNTEREN_HPM6 COUNT_HPM6
+#define SCOUNTEREN_HPM7 COUNT_HPM7
+#define SCOUNTEREN_HPM8 COUNT_HPM8
+#define SCOUNTEREN_HPM9 COUNT_HPM9
+#define SCOUNTEREN_HPM10 COUNT_HPM10
+#define SCOUNTEREN_HPM11 COUNT_HPM11
+#define SCOUNTEREN_HPM12 COUNT_HPM12
+#define SCOUNTEREN_HPM13 COUNT_HPM13
+#define SCOUNTEREN_HPM14 COUNT_HPM14
+#define SCOUNTEREN_HPM15 COUNT_HPM15
+#define SCOUNTEREN_HPM16 COUNT_HPM16
+#define SCOUNTEREN_HPM17 COUNT_HPM17
+#define SCOUNTEREN_HPM18 COUNT_HPM18
+#define SCOUNTEREN_HPM19 COUNT_HPM19
+#define SCOUNTEREN_HPM20 COUNT_HPM20
+#define SCOUNTEREN_HPM21 COUNT_HPM21
+#define SCOUNTEREN_HPM22 COUNT_HPM22
+#define SCOUNTEREN_HPM23 COUNT_HPM23
+#define SCOUNTEREN_HPM24 COUNT_HPM24
+#define SCOUNTEREN_HPM25 COUNT_HPM25
+#define SCOUNTEREN_HPM26 COUNT_HPM26
+#define SCOUNTEREN_HPM27 COUNT_HPM27
+#define SCOUNTEREN_HPM28 COUNT_HPM28
+#define SCOUNTEREN_HPM29 COUNT_HPM29
+#define SCOUNTEREN_HPM30 COUNT_HPM30
+#define SCOUNTEREN_HPM31 COUNT_HPM31
+
+// Supervisor Scratch Register
+#define R_SSCRATCH(uint64ptr) asm volatile("csrr %0, sscratch" : "=r" (*uint64ptr))
+#define W_SSCRATCH(value) asm volatile("csrw sscratch, %0" : : "r" (value))
+
+// Supervisor Exception Program Counter
+#define R_SEPC(uint64ptr) asm volatile("csrr %0, sepc" : "=r" (*uint64ptr))
+#define W_SEPC(value) asm volatile("csrw sepc, %0" : : "r" (value))
+
+// Supervisor Cause Register
+#define R_SCAUSE(uint64ptr) asm volatile("csrr %0, scause" : "=r" (*uint64ptr))
+#define W_SCAUSE(value) asm volatile("csrw scause, %0" : : "r" (value))
+
+// Supervisor Trap Value Register
+#define R_STVAL(uint64ptr) asm volatile("csrr %0, stval" : "=r" (*uint64ptr))
+#define W_STVAL(value) asm volatile("csrw stval, %0" : : "r" (value))
+
+// Supervisor Environment Configuration Register
+#define R_SENVCFG(uint64ptr) asm volatile("csrr %0, senvcfg" : "=r" (*uint64ptr))
+#define W_SENVCFG(value) asm volatile("csrw senvcfg, %0" : : "r" (value))
+#define SENVCFG_FIOM ENVCFG_FIOM
+
+// Supervisor Address Translation and Protection Register
+#define R_SATP(uint64ptr) asm volatile("csrr %0, satp" : "=r" (*uint64ptr))
+#define W_SATP(value) asm volatile("csrw satp, %0" : : "r" (value))
+#define SATP_PPN ATP_PPN
+#define SATP_ASID ATP_ASID
+#define SATP_MODE ATP_MODE
+
 
 #endif // RISCV_H
