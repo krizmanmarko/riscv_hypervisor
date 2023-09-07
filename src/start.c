@@ -14,27 +14,51 @@ start(unsigned long hartid, void *dtb)
 	R_MISA(&misa);
 	if ((misa & MISA_EXT_H) == 0) {
 		while (1);
-		// exit with fail("hypervisor extension not supported")
+		// TODO exit with fail("hypervisor extension not supported")
 	}
+
+	// setup memory
+	W_PMPCFG0(PMPCFG_A_TOR | PMPCFG_R | PMPCFG_W | PMPCFG_X);
+	W_PMPADDR0(0x3fffffffffffff);
+	W_SATP(ATP_MODE_BARE);
+
+	// delegate exceptions (do not delegate M exceptions)
+	uint64 exceptions = MEDELEG_INSTRUCTION_ADDR_MISALIGNED
+		| MEDELEG_INSTRUCTION_ACCESS_FAULT
+		| MEDELEG_ILLEGAL_INSTRUCTION
+		| MEDELEG_BREAKPOINT
+		| MEDELEG_LOAD_ADDR_MISALIGNED
+		| MEDELEG_LOAD_ACCESS_FAULT
+		| MEDELEG_STORE_OR_AMO_ADDRESS_MISALIGNED
+		| MEDELEG_STORE_OR_AMO_ACCESS_FAULT
+		| MEDELEG_ECALL_FROM_U
+		| MEDELEG_ECALL_FROM_S
+		| MEDELEG_INSTRUCTION_PAGE_FAULT
+		| MEDELEG_STORE_OR_AMO_PAGE_FAULT;
+	W_MEDELEG(exceptions);
+
+	// delegate interrupts (do not delegate M interrupts)
+	uint64 interrupts = INT_HSSI
+		| INT_VSSI
+		| INT_HSTI
+		| INT_VSTI
+		| INT_HSEI
+		| INT_VSEI
+		| INT_SGEI;
+	W_MIDELEG(interrupts);
 
 	// Prepare for first mret
 	uint64 mstatus;
 	R_MSTATUS(&mstatus);
 	mstatus &= ~MSTATUS_MPP;
-	mstatus |= RISCV_HS_MODE;
-
-	// set context for mret
+	mstatus |= STATUS_MPP_S;	// S-mode
+	mstatus &= ~MSTATUS_MPV;	// V = 0 -> HS-mode
 	W_MSTATUS(mstatus);
 	W_MEPC((uint64) main);	// requires gcc -mcmodel=medany
 
-	// delegate interrupts and exceptions to S
-	W_MEDELEG(0xffff);
-	W_MIDELEG(0xffff);
-
-	W_SATP(0);
-
-	W_PMPADDR0(0x3fffffffffffff);
-	W_PMPCFG0(0xf);
+	// Testing purposes
+	W_MTVEC((uint64) 0x1000);
+	W_STVEC((uint64) 0x2000);
 
 	asm volatile("mret");
 }

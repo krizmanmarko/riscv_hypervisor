@@ -1,5 +1,6 @@
 #ifndef RISCV_H
-#define RISCV_H
+#define RISCV_H // target: riscv64 (qemu-virt)
+
 
 #include "types.h"
 
@@ -7,33 +8,37 @@
 // WLRL - write legal, read legal
 // WPRI - reserved writes preserve values, reads ignore values (ignored)
 
-#define M_MODE (3 << 11)
-#define S_MODE (1 << 11)
-#define U_MODE (0 << 11)
-
+#define M_MODE 3
+#define S_MODE 1
+#define U_MODE 0
 
 // All mode common register fields
-#define STATUS_SIE (1 << 1)		// Supervisor Interrupt Enable
-#define STATUS_MIE (1 << 3)		// Machine Interrupt Enable
-#define STATUS_SPIE (1 << 5)		// Supervisor Previous Interrupt Enable
-#define STATUS_UBE (1 << 6)		// User is big-endian (no effect on fetch)
-#define STATUS_MPIE (1 << 7)		// Machine Previous Interrupt Enable
-#define STATUS_SPP (1 << 8)		// Supervisor Previous Privilege
-#define STATUS_VS (0b11 << 9)		// Vector extension state
-#define STATUS_MPP (0b11 << 11)		// Machine Previous Privilege
-#define STATUS_FS (0b11 << 13)		// Floating-point Unit State
-#define STATUS_XS (0b11 << 15)		// User Mode extensions
-#define STATUS_MPRV (1 << 17)		// Modify Privilege (set effective privilege)
-#define STATUS_SUM (1 << 18)		// Permit Supervisor User Memory access
-#define STATUS_MXR (1 << 19)		// Make Executable Readable
-#define STATUS_TVM (1 << 20)		// Trap Virtual Memory
-#define STATUS_TW (1 << 21)		// Timeout Wait
-#define STATUS_TSR (1 << 22)		// Trap SRET
-#define STATUS_UXL (0b11 << 32)		// User XLEN
-#define STATUS_SXL (0b11 << 34)		// Supervisor XLEN
-#define STATUS_SBE (1 << 36)		// Supervisor is big-endian (no effect on fetch)
-#define STATUS_MBE (1 << 37)		// Machine is big-endian (no effect on fetch)
-#define STATUS_SD (1 << 63)		// Something dirty (in FS, VS or XS)
+#define STATUS_SIE (1UL << 1)		// Supervisor Interrupt Enable
+#define STATUS_MIE (1UL << 3)		// Machine Interrupt Enable
+#define STATUS_SPIE (1UL << 5)		// Supervisor Previous Interrupt Enable
+#define STATUS_UBE (1UL << 6)		// User is big-endian (no effect on fetch)
+#define STATUS_MPIE (1UL << 7)		// Machine Previous Interrupt Enable
+#define STATUS_SPP (1UL << 8)		// Supervisor Previous Privilege
+#define STATUS_SPP_S (S_MODE << 8)
+#define STATUS_SPP_U (U_MODE << 8)
+#define STATUS_VS (0b11UL << 9)		// Vector extension state
+#define STATUS_MPP (0b11UL << 11)	// Machine Previous Privilege
+#define STATUS_MPP_M (M_MODE << 11)
+#define STATUS_MPP_S (S_MODE << 11)
+#define STATUS_MPP_U (U_MODE << 11)
+#define STATUS_FS (0b11UL << 13)	// Floating-point Unit State
+#define STATUS_XS (0b11UL << 15)	// User Mode extensions
+#define STATUS_MPRV (1UL << 17)		// Modify Privilege (set effective privilege)
+#define STATUS_SUM (1UL << 18)		// Permit Supervisor User Memory access
+#define STATUS_MXR (1UL << 19)		// Make Executable Readable
+#define STATUS_TVM (1UL << 20)		// Trap Virtual Memory
+#define STATUS_TW (1UL << 21)		// Timeout Wait
+#define STATUS_TSR (1UL << 22)		// Trap SRET
+#define STATUS_UXL (0b11UL << 32)	// User XLEN
+#define STATUS_SXL (0b11UL << 34)	// Supervisor XLEN
+#define STATUS_SBE (1UL << 36)		// Supervisor is big-endian (no effect on fetch)
+#define STATUS_MBE (1UL << 37)		// Machine is big-endian (no effect on fetch)
+#define STATUS_SD (1UL << 63)		// Something dirty (in FS, VS or XS)
 
 #define TVEC_MODE_DIRECT 0
 #define TVEC_MODE_VECTORED 1
@@ -45,12 +50,12 @@
 #define INT_SUPERVISOR_EXT 9
 #define INT_MACHINE_EXT 11
 
-#define INT_SSI (1 << INT_SUPERVISOR_SW)
-#define INT_MSI (1 << INT_MACHINE_SW)
-#define INT_STI (1 << INT_SUPERVISOR_TIM)
-#define INT_MTI (1 << INT_MACHINE_TIM)
-#define INT_SEI (1 << INT_SUPERVISOR_EXT)
-#define INT_MEI (1 << INT_MACHINE_EXT)
+#define INT_SSI (1UL << INT_SUPERVISOR_SW)
+#define INT_MSI (1UL << INT_MACHINE_SW)
+#define INT_STI (1UL << INT_SUPERVISOR_TIM)
+#define INT_MTI (1UL << INT_MACHINE_TIM)
+#define INT_SEI (1UL << INT_SUPERVISOR_EXT)
+#define INT_MEI (1UL << INT_MACHINE_EXT)
 
 #define EXC_INSTRUCTION_ADDR_MISALIGNED 0
 #define EXC_INSTRUCTION_ACCESS_FAULT 1
@@ -67,76 +72,77 @@
 #define EXC_LOAD_PAGE_FAULT 13
 #define EXC_STORE_OR_AMO_PAGE_FAULT 15
 
-#define EDELEG_INSTRUCTION_ADDR_MISALIGNED (1 << EXC_INSTRUCTION_ADDR_MISALIGNED)
-#define EDELEG_INSTRUCTION_ACCESS_FAULT (1 << EXC_INSTRUCTION_ACCESS_FAULT)
-#define EDELEG_ILLEGAL_INSTRUCTION (1 << EXC_ILLEGAL_INSTRUCTION)
-#define EDELEG_BREAKPOINT (1 << EXC_BREAKPOINT)
-#define EDELEG_LOAD_ADDR_MISALIGNED (1 << EXC_LOAD_ADDR_MISALIGNED)
-#define EDELEG_LOAD_ACCESS_FAULT (1 << EXC_LOAD_ACCESS_FAULT)
-#define EDELEG_STORE_OR_AMO_ADDRESS_MISALIGNED (1 << EXC_STORE_OR_AMO_ADDRESS_MISALIGNED)
-#define EDELEG_STORE_OR_AMO_ACCESS_FAULT (1 << EXC_STORE_OR_AMO_ACCESS_FAULT)
-#define EDELEG_ECALL_FROM_U (1 << EXC_ECALL_FROM_U)
-#define EDELEG_ECALL_FROM_S (1 << EXC_ECALL_FROM_S)
-#define EDELEG_ECALL_FROM_M (1 << EXC_ECALL_FROM_M)
-#define EDELEG_INSTRUCTION_PAGE_FAULT (1 << EXC_INSTRUCTION_PAGE_FAULT)
-#define EDELEG_LOAD_PAGE_FAULT (1 << EXC_LOAD_PAGE_FAULT)
-#define EDELEG_STORE_OR_AMO_PAGE_FAULT (1 << EXC_STORE_OR_AMO_PAGE_FAULT)
+#define EDELEG_INSTRUCTION_ADDR_MISALIGNED (1UL << EXC_INSTRUCTION_ADDR_MISALIGNED)
+#define EDELEG_INSTRUCTION_ACCESS_FAULT (1UL << EXC_INSTRUCTION_ACCESS_FAULT)
+#define EDELEG_ILLEGAL_INSTRUCTION (1UL << EXC_ILLEGAL_INSTRUCTION)
+#define EDELEG_BREAKPOINT (1UL << EXC_BREAKPOINT)
+#define EDELEG_LOAD_ADDR_MISALIGNED (1UL << EXC_LOAD_ADDR_MISALIGNED)
+#define EDELEG_LOAD_ACCESS_FAULT (1UL << EXC_LOAD_ACCESS_FAULT)
+#define EDELEG_STORE_OR_AMO_ADDRESS_MISALIGNED (1UL << EXC_STORE_OR_AMO_ADDRESS_MISALIGNED)
+#define EDELEG_STORE_OR_AMO_ACCESS_FAULT (1UL << EXC_STORE_OR_AMO_ACCESS_FAULT)
+#define EDELEG_ECALL_FROM_U (1UL << EXC_ECALL_FROM_U)
+#define EDELEG_ECALL_FROM_S (1UL << EXC_ECALL_FROM_S)
+#define EDELEG_ECALL_FROM_M (1UL << EXC_ECALL_FROM_M)
+#define EDELEG_INSTRUCTION_PAGE_FAULT (1UL << EXC_INSTRUCTION_PAGE_FAULT)
+#define EDELEG_LOAD_PAGE_FAULT (1UL << EXC_LOAD_PAGE_FAULT)
+#define EDELEG_STORE_OR_AMO_PAGE_FAULT (1UL << EXC_STORE_OR_AMO_PAGE_FAULT)
 
-#define COUNT_CY (1 << 0)	// Cycle
-#define COUNT_TM (1 << 1)	// Time
-#define COUNT_IR (1 << 2)	// Instret
-#define COUNT_HPM3 (1 << 3)	// Hardware Performance Monitor
-#define COUNT_HPM4 (1 << 4)	// Hardware Performance Monitor
-#define COUNT_HPM5 (1 << 5)	// Hardware Performance Monitor
-#define COUNT_HPM6 (1 << 6)	// Hardware Performance Monitor
-#define COUNT_HPM7 (1 << 7)	// Hardware Performance Monitor
-#define COUNT_HPM8 (1 << 8)	// Hardware Performance Monitor
-#define COUNT_HPM9 (1 << 9)	// Hardware Performance Monitor
-#define COUNT_HPM10 (1 << 10)	// Hardware Performance Monitor
-#define COUNT_HPM11 (1 << 11)	// Hardware Performance Monitor
-#define COUNT_HPM12 (1 << 12)	// Hardware Performance Monitor
-#define COUNT_HPM13 (1 << 13)	// Hardware Performance Monitor
-#define COUNT_HPM14 (1 << 14)	// Hardware Performance Monitor
-#define COUNT_HPM15 (1 << 15)	// Hardware Performance Monitor
-#define COUNT_HPM16 (1 << 16)	// Hardware Performance Monitor
-#define COUNT_HPM17 (1 << 17)	// Hardware Performance Monitor
-#define COUNT_HPM18 (1 << 18)	// Hardware Performance Monitor
-#define COUNT_HPM19 (1 << 19)	// Hardware Performance Monitor
-#define COUNT_HPM20 (1 << 20)	// Hardware Performance Monitor
-#define COUNT_HPM21 (1 << 21)	// Hardware Performance Monitor
-#define COUNT_HPM22 (1 << 22)	// Hardware Performance Monitor
-#define COUNT_HPM23 (1 << 23)	// Hardware Performance Monitor
-#define COUNT_HPM24 (1 << 24)	// Hardware Performance Monitor
-#define COUNT_HPM25 (1 << 25)	// Hardware Performance Monitor
-#define COUNT_HPM26 (1 << 26)	// Hardware Performance Monitor
-#define COUNT_HPM27 (1 << 27)	// Hardware Performance Monitor
-#define COUNT_HPM28 (1 << 28)	// Hardware Performance Monitor
-#define COUNT_HPM29 (1 << 29)	// Hardware Performance Monitor
-#define COUNT_HPM30 (1 << 30)	// Hardware Performance Monitor
-#define COUNT_HPM31 (1 << 31)	// Hardware Performance Monitor
+#define COUNT_CY (1UL << 0)	// Cycle
+#define COUNT_TM (1UL << 1)	// Time
+#define COUNT_IR (1UL << 2)	// Instret
+#define COUNT_HPM3 (1UL << 3)	// Hardware Performance Monitor
+#define COUNT_HPM4 (1UL << 4)	// Hardware Performance Monitor
+#define COUNT_HPM5 (1UL << 5)	// Hardware Performance Monitor
+#define COUNT_HPM6 (1UL << 6)	// Hardware Performance Monitor
+#define COUNT_HPM7 (1UL << 7)	// Hardware Performance Monitor
+#define COUNT_HPM8 (1UL << 8)	// Hardware Performance Monitor
+#define COUNT_HPM9 (1UL << 9)	// Hardware Performance Monitor
+#define COUNT_HPM10 (1UL << 10)	// Hardware Performance Monitor
+#define COUNT_HPM11 (1UL << 11)	// Hardware Performance Monitor
+#define COUNT_HPM12 (1UL << 12)	// Hardware Performance Monitor
+#define COUNT_HPM13 (1UL << 13)	// Hardware Performance Monitor
+#define COUNT_HPM14 (1UL << 14)	// Hardware Performance Monitor
+#define COUNT_HPM15 (1UL << 15)	// Hardware Performance Monitor
+#define COUNT_HPM16 (1UL << 16)	// Hardware Performance Monitor
+#define COUNT_HPM17 (1UL << 17)	// Hardware Performance Monitor
+#define COUNT_HPM18 (1UL << 18)	// Hardware Performance Monitor
+#define COUNT_HPM19 (1UL << 19)	// Hardware Performance Monitor
+#define COUNT_HPM20 (1UL << 20)	// Hardware Performance Monitor
+#define COUNT_HPM21 (1UL << 21)	// Hardware Performance Monitor
+#define COUNT_HPM22 (1UL << 22)	// Hardware Performance Monitor
+#define COUNT_HPM23 (1UL << 23)	// Hardware Performance Monitor
+#define COUNT_HPM24 (1UL << 24)	// Hardware Performance Monitor
+#define COUNT_HPM25 (1UL << 25)	// Hardware Performance Monitor
+#define COUNT_HPM26 (1UL << 26)	// Hardware Performance Monitor
+#define COUNT_HPM27 (1UL << 27)	// Hardware Performance Monitor
+#define COUNT_HPM28 (1UL << 28)	// Hardware Performance Monitor
+#define COUNT_HPM29 (1UL << 29)	// Hardware Performance Monitor
+#define COUNT_HPM30 (1UL << 30)	// Hardware Performance Monitor
+#define COUNT_HPM31 (1UL << 31)	// Hardware Performance Monitor
 
-#define CAUSE_INT (1 << 63)
+#define CAUSE_INT (1UL << 63)
 
-#define ENVCFG_FIOM (1 << 0)		// Fence of I/O Implies Memory
+#define ENVCFG_FIOM (1UL << 0)		// Fence of I/O Implies Memory
 
-#define ATP_PPN (0xfffffffffff << 0)	// 44-bit physical page number
-#define ATP_ASID (0xffff << 44)		// Virtual Machine Identifier
-#define ATP_MODE (0b1111 << 60)
-#define ATP_MODE_Sv39 8
+#define ATP_PPN (0xfffffffffffUL << 0)	// 44-bit physical page number
+#define ATP_ASID (0xffffUL << 44)		// Virtual Machine Identifier
+#define ATP_MODE (0b1111UL << 60)
+#define ATP_MODE_BARE (0b0000UL << 60)
+#define ATP_MODE_Sv39 (0b0100UL << 60)
 
 
 // Machine ISA Register (WARL)
 #define R_MISA(uint64ptr) asm volatile("csrr %0, misa" : "=r" (*uint64ptr))
 #define W_MISA(value) asm volatile("csrw misa, %0" : : "r" (value));
-#define MISA_EXT_A (1 << 0)	// Atomic extension
-#define MISA_EXT_C (1 << 2)	// Compressed extension
-#define MISA_EXT_D (1 << 3)	// Double-precision floating-point extension
-#define MISA_EXT_F (1 << 5)	// Single-precision floating-point extension
-#define MISA_EXT_H (1 << 7)	// Hypervisor extension
-#define MISA_EXT_I (1 << 8)	// RV32I/64I/128I base ISA
-#define MISA_EXT_M (1 << 12)	// Integer Multiply/Divide extension
-#define MISA_EXT_S (1 << 18)	// Supervisor mode implemented
-#define MISA_EXT_U (1 << 20)	// User mode implemented
+#define MISA_EXT_A (1UL << 0)	// Atomic extension
+#define MISA_EXT_C (1UL << 2)	// Compressed extension
+#define MISA_EXT_D (1UL << 3)	// Double-precision floating-point extension
+#define MISA_EXT_F (1UL << 5)	// Single-precision floating-point extension
+#define MISA_EXT_H (1UL << 7)	// Hypervisor extension
+#define MISA_EXT_I (1UL << 8)	// RV32I/64I/128I base ISA
+#define MISA_EXT_M (1UL << 12)	// Integer Multiply/Divide extension
+#define MISA_EXT_S (1UL << 18)	// Supervisor mode implemented
+#define MISA_EXT_U (1UL << 20)	// User mode implemented
 
 // Machine Vendor, Architecture, Implementation and Hart ID Registers
 #define R_MVENDORID(uint32ptr) asm volatile("csrr %0, mvendorid" : "=r" (uint32ptr))
@@ -309,16 +315,22 @@
 #define W_MTVAL(value) asm volatile("csrw mtval, %0" : : "r" (value))
 
 // Machine Configuration Pointer Register - not accessible in qemu-virt
-// #define R_MCONFIGPTR(uint64ptr) asm volatile("csrr %0, mconfigptr" : "=r" (*uint64ptr))
+//#define R_MCONFIGPTR(uint64ptr) asm volatile("csrr %0, mconfigptr" : "=r" (*uint64ptr))
 
 // Machine Environment Configuration Register
 #define R_MENVCFG(uint64ptr) asm volatile("csrr %0, menvcfg" : "=r" (*uint64ptr))
 #define W_MENVCFG(value) asm volatile("csrw menvcfg, %0" : : "r" (value))
 #define MENVCFG_FIOM ENVCFG_FIOM
 
-// Physical Memory Protection - PMP
+// Physical Memory Protection Registers
 #define W_PMPCFG0(value) asm volatile("csrw pmpcfg0, %0" : : "r" (value))
 #define W_PMPADDR0(value) asm volatile("csrw pmpaddr0, %0" : : "r" (value))
+#define PMPCFG_R (1UL << 0)		// Read
+#define PMPCFG_W (1UL << 1)		// Write
+#define PMPCFG_X (1UL << 2)		// Execute
+#define PMPCFG_A (0b11UL << 3)		// Address Matching Mode
+#define PMPCFG_A_TOR (0b01UL << 3)	// Address Matching Mode - Top of Range
+#define PMPCFG_L (1UL << 7)		// Locking
 
 
 // Supervisor Status Register

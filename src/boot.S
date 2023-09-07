@@ -21,6 +21,7 @@ boot:
 		|	|
 		+-------+ <- sp (hart 2) = stack0 + 3 * 4096
 	*/
+	mv tp, a0
 	la sp, stack0
 	li t0, 4096
 	addi t1, a0, 1

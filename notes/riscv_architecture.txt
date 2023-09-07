@@ -6,6 +6,9 @@ mepc <- interrupted pc
 mstatus <- previous privilege level
 mcause <- interrupt cause
 
+mret can be executed in M-mode
+sret can be executed in M-mode and S-mode
+
 
 3 interrupt pins on each hart
 - external
@@ -70,19 +73,42 @@ x30	t5	tmp
 x31	t6	tmp
 
 
-CSR (check out SiFive (yt): Part I: An Introduction to the RISC-V Architecture)
-===============================================================================
-
-mstatus: machine status
-mcause: machine interrupt cause
-mie: machine interrupt enable
-mip: machine interrupt pending
-mtvec: machine trap vector
-mepc: holds pc when interrupt happens
-
-
 Boot process
 ============
 first routine at 0x1000
 openSBI start is here 0x80000000
 my first instruction is 0x80100000 (defined by elf binary entry point)
+
+
+Physical Memory Attributes
+==========================
+
+PMAs are inherent properties of the underlying hardware and rarely change
+during system operation.
+
+1. Main memory
+Always supports read/write of any access width, optionally if fetching
+is supported.
+
+2. I/O memory
+I/O regions can specify which combinations of read, write, or execute
+accesses to which data widths are supported.
+
+3. vacant memory (not used memory)
+
+
+Physical Memory Protection
+==========================
+
+rwx bits for physical memory accesses (from S, U-mode or via translation)
+
+memory access control. By default S, U modes have no permissions. M has
+full permissions. Very platform dependent
+
+
+Cache
+=====
+
+master-private
+shared
+slave-private

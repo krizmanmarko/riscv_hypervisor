@@ -1,0 +1,14 @@
+--- Unsolved ---
+
+Why are virtual addresses of different size to physical addresses
+
+
+
+--- Solved ---
+
+When H extension is enabled, do we control 3 seperate registers for status (vsstatus, hstatus, sstatus) or are sstatus and hstatus equal
+  S mode is further split into 2 submodes depending on the V-bit (V=0: HS-mode, V=1, VS-mode)
+
+where is V bit? (virtualization bit)
+  Check out hypervisor MSTATUS_SPV (supervisor previous virtualization mode)
+  works the same way as MSTATUS_MPP (machine previous privilege mode)

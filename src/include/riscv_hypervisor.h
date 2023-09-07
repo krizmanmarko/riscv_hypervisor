@@ -6,15 +6,11 @@
 
 // Hypervisor extension
 // uses S-mode registers for exception, interrupt and address translation subsystems
-// offers new HS-mode registers (hsstatus, hideleg, hedeleg)
+// offers new HS-mode registers (hstatus, hideleg, hedeleg)
 // offers extra set of VS-mode registers
 // modifies M-mode registers
 
-#define RISCV_HS_MODE (2 << 11)
-#define RISCV_VS_MODE (1 << 11)
-#define RISCV_VU_MODE (0 << 11)
-
-#define STATUS_GVA (1 << 38)	// Guest Virtual Address
+#define STATUS_GVA (1UL << 38)	// Guest Virtual Address
 
 #define INT_HYPERVISOR_SW 0
 #define INT_VIRTUAL_SUPERVISOR_SW 2
@@ -24,13 +20,13 @@
 #define INT_VIRTUAL_SUPERVISOR_EXT 10
 #define INT_HYPERVISOR_GUEST_EXT 12	// check out section on hip, hie, hvip
 
-#define INT_HSSI (1 << INT_HYPERVISOR_SW)
-#define INT_VSSI (1 << INT_VIRTUAL_SUPERVISOR_SW)
-#define INT_HSTI (1 << INT_HYPERVISOR_TIM)
-#define INT_VSTI (1 << INT_VIRTUAL_SUPERVISOR_TIM)
-#define INT_HSEI (1 << INT_HYPERVISOR_EXT)
-#define INT_VSEI (1 << INT_VIRTUAL_SUPERVISOR_EXT)
-#define INT_SGEI (1 << INT_HYPERVISOR_GUEST_EXT)	// check out hypervisor mip
+#define INT_HSSI (1UL << INT_HYPERVISOR_SW)
+#define INT_VSSI (1UL << INT_VIRTUAL_SUPERVISOR_SW)
+#define INT_HSTI (1UL << INT_HYPERVISOR_TIM)
+#define INT_VSTI (1UL << INT_VIRTUAL_SUPERVISOR_TIM)
+#define INT_HSEI (1UL << INT_HYPERVISOR_EXT)
+#define INT_VSEI (1UL << INT_VIRTUAL_SUPERVISOR_EXT)
+#define INT_SGEI (1UL << INT_HYPERVISOR_GUEST_EXT)	// check out hypervisor mip
 
 #define EXC_INSTRUCTION_GUEST_PAGE_FAULT 20
 #define EXC_LOAD_GUEST_PAGE_FAULT 21
@@ -40,7 +36,7 @@
 
 // Machine Status Registers
 #define MSTATUS_GVA STATUS_GVA
-#define MSTATUS_MPV (1 << 39)	// Machine Previous Virtualization Mode
+#define MSTATUS_MPV (1UL << 39)		// Machine Previous Virtualization Mode
 // modifies behavior of: TSR, TVM, TW, MPRV fields
 
 // Machine Interrupt Pending Register
@@ -64,18 +60,18 @@
 #define W_MTINST(value) asm volatile("csrw mtinst, %0" : : "r" (value))
 
 // Hypervisor Status Register
-#define R_HSSTATUS(uint64ptr) asm volatile("csrr %0, hsstatus" : "=r" (*uint64ptr))
-#define W_HSSTATUS(value) asm volatile("csrw hsstatus, %0" : : "r" (value))
-#define HSSTATUS_VSBE (1 << 5)		// Virtual Supervisor Big Endianness
-#define HSSTATUS_GVA STATUS_GVA		// Guest Virtual Address
-#define HSSTATUS_SPV (1 << 7)		// Supervisor Previous Virtualization Mode
-#define HSSTATUS_SPVP (1 << 8)		// Supervisor Previous Virtual Privilege
-#define HSSTATUS_HU (1 << 9)		// Hypervisor in U-mode
-#define HSSTATUS_VGEIN (0b111111 << 12)	// Virtual Guest External Interrupt Number
-#define HSSTATUS_VTVM (1 << 20)		// Virtual Trap Virtual Memory
-#define HSSTATUS_VTW (1 << 21)		// Virtual Timout Wait
-#define HSSTATUS_VTSR (1 << 22)		// Virtual Trap SRET
-#define HSSTATUS_VSXL (0b11 << 32)	// effective VSXLEN
+#define R_HSTATUS(uint64ptr) asm volatile("csrr %0, hstatus" : "=r" (*uint64ptr))
+#define W_HSTATUS(value) asm volatile("csrw hstatus, %0" : : "r" (value))
+#define HSTATUS_VSBE (1UL << 5)		// Virtual Supervisor Big Endianness
+#define HSTATUS_GVA STATUS_GVA		// Guest Virtual Address
+#define HSTATUS_SPV (1UL << 7)		// Supervisor Previous Virtualization Mode
+#define HSTATUS_SPVP (1UL << 8)		// Supervisor Previous Virtual Privilege
+#define HSTATUS_HU (1UL << 9)		// Hypervisor in U-mode
+#define HSTATUS_VGEIN (0x3fUL << 12)	// Virtual Guest External Interrupt Number
+#define HSTATUS_VTVM (1UL << 20)	// Virtual Trap Virtual Memory
+#define HSTATUS_VTW (1UL << 21)		// Virtual Timout Wait
+#define HSTATUS_VTSR (1UL << 22)	// Virtual Trap SRET
+#define HSTATUS_VSXL (0b11UL << 32)	// effective VSXLEN
 
 // Hypervisor Exception Delegation Register
 #define R_HEDELEG(uint64ptr) asm volatile("csrr %0, hedeleg" : "=r" (*uint64ptr))
@@ -94,10 +90,10 @@
 #define HEDELEG_INSTRUCTION_PAGE_FAULT EDELEG_INSTRUCTION_PAGE_FAULT
 #define HEDELEG_LOAD_PAGE_FAULT EDELEG_LOAD_PAGE_FAULT
 #define HEDELEG_STORE_OR_AMO_PAGE_FAULT EDELEG_STORE_OR_AMO_PAGE_FAULT
-#define HEDELEG_INSTRUCTION_GUEST_PAGE_FAULT (1 << EXC_INSTRUCTION_GUEST_PAGE_FAULT)
-#define HEDELEG_LOAD_GUEST_PAGE_FAULT (1 << EXC_LOAD_GUEST_PAGE_FAULT)
-#define HEDELEG_VIRTUAL_INSTRUCTION (1 << EXC_VIRTUAL_INSTRUCTION)
-#define HEDELEG_STORE_OR_AMO_GUEST_PAGE_FAULT (1 << EXC_STORE_OR_AMO_GUEST_PAGE_FAULT)
+#define HEDELEG_INSTRUCTION_GUEST_PAGE_FAULT (1UL << EXC_INSTRUCTION_GUEST_PAGE_FAULT)
+#define HEDELEG_LOAD_GUEST_PAGE_FAULT (1UL << EXC_LOAD_GUEST_PAGE_FAULT)
+#define HEDELEG_VIRTUAL_INSTRUCTION (1UL << EXC_VIRTUAL_INSTRUCTION)
+#define HEDELEG_STORE_OR_AMO_GUEST_PAGE_FAULT (1UL << EXC_STORE_OR_AMO_GUEST_PAGE_FAULT)
 
 // Hypervisor Interrupt Delegation Register
 #define R_HIDELEG(uint64ptr) asm volatile("csrr %0, hideleg" : "=r" (*uint64ptr))
@@ -200,7 +196,7 @@
 #define R_HGATP(uint64ptr) asm volatile("csrr %0, hgatp" : "=r" (*uint64ptr))
 #define W_HGATP(value) asm volatile("csrw hgatp, %0" : : "r" (value))
 #define HGATP_PPN ATP_PPN
-#define HGATP_VMID (0x3fff << 44)	// Virtual Machine Identifier
+#define HGATP_VMID (0x3fffUL << 44)	// Virtual Machine Identifier
 #define HGATP_MODE ATP_MODE
 
 
