@@ -40,15 +40,15 @@
 // modifies behavior of: TSR, TVM, TW, MPRV fields
 
 // Machine Interrupt Pending Register
-#define MIP_VSSIP INT_SSI
-#define MIP_VSTIP INT_STI
-#define MIP_VSEIP INT_SEI
+#define MIP_VSSIP INT_VSSI
+#define MIP_VSTIP INT_VSTI
+#define MIP_VSEIP INT_VSEI
 #define MIP_SGEIP INT_SGEI
 
 // Machine Interrupt Enable Register
-#define MIE_VSSIE INT_SSI
-#define MIE_VSTIE INT_STI
-#define MIE_VSEIE INT_SEI
+#define MIE_VSSIE INT_VSSI
+#define MIE_VSTIE INT_VSTI
+#define MIE_VSEIE INT_VSEI
 #define MIE_SGEIE INT_SGEI
 
 // Machine Second Trap Value Register

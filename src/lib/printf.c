@@ -10,7 +10,11 @@
 #include "types.h"
 
 void uartputc(char c);
+
 void printf(char *fmt, ...);
+void panic(char *s);
+static void print_uint(uint64 num, int base);
+static void print_padded(uint64 num, int base, int bytes);
 
 static char digits[] = "0123456789abcdef";
 
@@ -21,8 +25,8 @@ print_uint(uint64 num, int base)
 	uint64 tmp;
 	char buf[64];
 
-	// TODO print error
-	if (base < 2) return;	// otherwise overflow is possible
+	if (base < 2)
+		panic("printf: invalid base (base < 2)\n");
 
 	tmp = num;
 	size = 0;
@@ -43,7 +47,7 @@ print_padded(uint64 num, int base, int bytes)
 	int start, end;
 
 	if (base != 2 && base != 16)
-		return;	// TODO panic (invalid base)
+		panic("printf: invalid base (must be 2 or 16)\n");
 
 	bits_in_char = 0;
 	while (base > 1) {
@@ -69,7 +73,8 @@ printf(char *fmt, ...)
 	int base, length;
 	char *s;
 
-	if (fmt == 0) return;	// TODO print error
+	if (fmt == 0)
+		panic("printf: fmt cannot not be null");
 
 	va_start(ap, fmt);
 	c = fmt[0];
@@ -179,7 +184,7 @@ decide_type:
 					print_uint(tmp64, base);
 				break;
 			default:
-				printf("printf: invalid length\n");
+				panic("printf: invalid length\n");
 				break;
 			}
 			break;
@@ -214,12 +219,12 @@ decide_type:
 					print_uint(tmp64, base);
 				break;
 			default:
-				printf("printf: invalid length\n");
+				panic("printf: invalid length\n");
 				break;
 			}
 			break;
 		default:
-			printf("printf: unknown specifier\n");
+			panic("printf: unknown specifier\n");
 			break;
 		}
 		c = fmt[++i];
@@ -231,6 +236,6 @@ decide_type:
 void
 panic(char *s)
 {
-	printf("panic: %s\n", s);
+	printf("[PANIC] %s\n", s);
 	while (1);
 }

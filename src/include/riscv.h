@@ -125,7 +125,7 @@
 #define ENVCFG_FIOM (1UL << 0)		// Fence of I/O Implies Memory
 
 #define ATP_PPN (0xfffffffffffUL << 0)	// 44-bit physical page number
-#define ATP_ASID (0xffffUL << 44)		// Virtual Machine Identifier
+#define ATP_ASID (0xffffUL << 44)	// Virtual Machine Identifier
 #define ATP_MODE (0b1111UL << 60)
 #define ATP_MODE_BARE (0b0000UL << 60)
 #define ATP_MODE_Sv39 (0b0100UL << 60)
