@@ -28,6 +28,8 @@
 #define INT_VSEI (1UL << INT_VIRTUAL_SUPERVISOR_EXT)
 #define INT_SGEI (1UL << INT_HYPERVISOR_GUEST_EXT)	// check out hypervisor mip
 
+#define EXC_ECALL_FROM_HS 9
+#define EXC_ECALL_FROM_VS 10
 #define EXC_INSTRUCTION_GUEST_PAGE_FAULT 20
 #define EXC_LOAD_GUEST_PAGE_FAULT 21
 #define EXC_VIRTUAL_INSTRUCTION 22
@@ -38,6 +40,20 @@
 #define MSTATUS_GVA STATUS_GVA
 #define MSTATUS_MPV (1UL << 39)		// Machine Previous Virtualization Mode
 // modifies behavior of: TSR, TVM, TW, MPRV fields
+
+// Machine Exception Delegation Register
+#define MEDELEG_ECALL_FROM_HS (1UL << EXC_ECALL_FROM_HS)
+#define MEDELEG_ECALL_FROM_VS (1UL << EXC_ECALL_FROM_VS)
+#define MEDELEG_INSTRUCTION_GUEST_PAGE_FAULT (1UL << EXC_INSTRUCTION_GUEST_PAGE_FAULT)
+#define MEDELEG_LOAD_GUEST_PAGE_FAULT (1UL << EXC_LOAD_GUEST_PAGE_FAULT)
+#define MEDELEG_VIRTUAL_INSTRUCTION (1UL << EXC_VIRTUAL_INSTRUCTION)
+#define MEDELEG_STORE_OR_AMO_GUEST_PAGE_FAULT (1UL << EXC_STORE_OR_AMO_GUEST_PAGE_FAULT)
+
+// Machine Interrupt Delegation Register
+#define MIDELEG_VSSI INT_VSSI	// read-only 1
+#define MIDELEG_VSTI INT_VSTI	// read-only 1
+#define MIDELEG_VSEI INT_VSEI	// read-only 1
+#define MIDELEG_SGEI INT_SGEI
 
 // Machine Interrupt Pending Register
 #define MIP_VSSIP INT_VSSI

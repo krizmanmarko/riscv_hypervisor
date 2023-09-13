@@ -5,6 +5,8 @@
 
 #define BASE DTB_SERIAL
 
+void uartputc(char c);
+
 void
 uartputc(char c)
 {

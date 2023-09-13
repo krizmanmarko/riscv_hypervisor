@@ -1,0 +1,7 @@
+enter VS-mode exception handler
+V == 1 (before the trap)
+check medeleg -> check hedeleg -> exception handler in VS-mode
+
+
+enter VS-mode interrupt
+check mideleg -> check hideleg -> interrupt handler in VS-mode

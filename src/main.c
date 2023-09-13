@@ -1,8 +1,8 @@
 #include "riscv_hypervisor.h"
+#include "dtb.h"
 
-int uartputc(char c);
-int printf(char *fmt, ...);
-void test();
+extern void test();
+int main();
 
 int
 main()

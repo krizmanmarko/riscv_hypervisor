@@ -1,26 +1,31 @@
 #include "dtb.h"
 #include "riscv_hypervisor.h"
-#include "types.h"
 
-int main();
+extern void mtrapvec();
+extern void strapvec();
+extern int main();
 
-__attribute__ ((aligned(16))) char stack0[4096 * DTB_NR_CPUS];
+void start(unsigned long hartid, void *dtb);
 
 void
 start(unsigned long hartid, void *dtb)
 {
+	// setup trap vector as early as possible
+	W_MTVEC((uint64) mtrapvec);
+
 	// check support for H extension
 	uint64 misa;
 	R_MISA(&misa);
 	if ((misa & MISA_EXT_H) == 0) {
 		while (1);
 		// TODO exit with fail("hypervisor extension not supported")
+		// issue is I cannot panic, since uart is not initialized
+		// neither is printf so this is a weird scenario
 	}
 
 	// setup memory
 	W_PMPCFG0(PMPCFG_A_TOR | PMPCFG_R | PMPCFG_W | PMPCFG_X);
 	W_PMPADDR0(0x3fffffffffffff);
-	W_SATP(ATP_MODE_BARE);
 
 	// delegate exceptions (do not delegate M exceptions)
 	uint64 exceptions = MEDELEG_INSTRUCTION_ADDR_MISALIGNED
@@ -32,20 +37,34 @@ start(unsigned long hartid, void *dtb)
 		| MEDELEG_STORE_OR_AMO_ADDRESS_MISALIGNED
 		| MEDELEG_STORE_OR_AMO_ACCESS_FAULT
 		| MEDELEG_ECALL_FROM_U
-		| MEDELEG_ECALL_FROM_S
+		| MEDELEG_ECALL_FROM_HS
+		| MEDELEG_ECALL_FROM_VS
 		| MEDELEG_INSTRUCTION_PAGE_FAULT
-		| MEDELEG_STORE_OR_AMO_PAGE_FAULT;
+		| MEDELEG_LOAD_PAGE_FAULT
+		| MEDELEG_STORE_OR_AMO_PAGE_FAULT
+		| MEDELEG_INSTRUCTION_GUEST_PAGE_FAULT
+		| MEDELEG_LOAD_GUEST_PAGE_FAULT
+		| MEDELEG_VIRTUAL_INSTRUCTION
+		| MEDELEG_STORE_OR_AMO_GUEST_PAGE_FAULT;
 	W_MEDELEG(exceptions);
 
 	// delegate interrupts (do not delegate M interrupts)
-	uint64 interrupts = INT_HSSI
-		| INT_VSSI
-		| INT_HSTI
-		| INT_VSTI
-		| INT_HSEI
-		| INT_VSEI
-		| INT_SGEI;
+	uint64 interrupts = MIDELEG_SSI
+		| MIDELEG_VSSI
+		| MIDELEG_STI
+		| MIDELEG_VSTI
+		| MIDELEG_SEI
+		| MIDELEG_VSEI
+		| MIDELEG_SGEI;
 	W_MIDELEG(interrupts);
+
+	// initialize supervisor
+	W_SSTATUS((uint64) 0);
+	W_SIE((uint64) 0);
+	W_SIP((uint64) 0);
+	W_SATP(ATP_MODE_BARE);
+	W_STVEC((uint64) strapvec);
+	//W_SSCRATCH();
 
 	// Prepare for first mret
 	uint64 mstatus;
@@ -57,8 +76,9 @@ start(unsigned long hartid, void *dtb)
 	W_MEPC((uint64) main);	// requires gcc -mcmodel=medany
 
 	// Testing purposes
-	W_MTVEC((uint64) 0x1000);
-	W_STVEC((uint64) 0x2000);
+	W_MSTATUS(mstatus & ~(MSTATUS_MIE));	// disable interrupts globally
+	// end Testing purposes
 
+	// enter supervisor mode
 	asm volatile("mret");
 }

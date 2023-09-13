@@ -1,20 +1,20 @@
 // TODO: use console read write instead of direct uart
 
+// printf(char *, ...) -> variadic function
 // fmt: "%{format}{length}{type}"
 // format: {_ - decimal, b - binary, x - hex}
 // length: {l, _, h, hh}
 // type: {u - unsigned, d - signed, p - pointer, %, s - string}
 
-
 #include <stdarg.h>
 #include "types.h"
 
-void uartputc(char c);
+extern void uartputc(char c);
 
-void printf(char *fmt, ...);
-void panic(char *s);
 static void print_uint(uint64 num, int base);
 static void print_padded(uint64 num, int base, int bytes);
+void printf(char *fmt, ...);
+void panic(char *s);
 
 static char digits[] = "0123456789abcdef";
 

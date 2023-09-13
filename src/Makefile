@@ -1,9 +1,10 @@
-OBJFILES=boot.o trap.o main.o start.o uart.o printf.o test.o
+OBJFILES=boot.o trap.o main.o start.o uart.o printf.o test.o cpu.o spinlock.o
 OBJECTS=$(patsubst %, $(BUILD_DIR)%, $(OBJFILES))
 
 INCDIR=./include
 
 CFLAGS=-Wall -ggdb -I$(INCDIR)
+#CFLAGS+= -Werror
 # isolate from host environment
 CFLAGS+=-ffreestanding -fno-common -nodefaultlibs
 # position independent code
@@ -36,6 +37,9 @@ $(BUILD_DIR)%.o: driver/%.c
 	$(cc) $(CFLAGS) -c $^ -o $@
 
 $(BUILD_DIR)%.o: lib/%.c
+	$(cc) $(CFLAGS) -c $^ -o $@
+
+$(BUILD_DIR)%.o: lib/%.S
 	$(cc) $(CFLAGS) -c $^ -o $@
 
 $(BUILD_DIR)%.o: test/%.c

@@ -1,7 +1,50 @@
 
-void printf(char *fmt, ...);
+#include "lock.h"
+#include "types.h"
 
-void printf_test()
+extern void printf(char *fmt, ...);
+extern void uartputc(char c);
+extern uint64 hartid();
+
+// intended to run on 3 harts
+static struct lock lk;
+static int init_finished = 0;
+static int hart0_finished = 0;
+static int hart1_finished = 0;
+static int hart2_finished = 0;
+static int written_note = 0;
+static void spinlock_test()
+{
+	if (hartid() == 0) {
+		printf("No locking:\n");
+		init_lock(&lk);
+		init_finished = 1;
+	}
+	while (!init_finished);
+	for (int i = 0; i < 400; i++) {
+		uartputc('A' + hartid());
+	}
+
+	if (hartid() == 0) {
+		hart0_finished = 1;
+	} else if (hartid() == 1) {
+		hart1_finished = 1;
+	} else if (hartid() == 2) {
+		hart2_finished = 1;
+	}
+	while (!hart0_finished || !hart1_finished || !hart2_finished);
+	acquire(&lk);
+	if (!written_note) {
+		printf("\nUsing locks:\n");
+		written_note = 1;
+	}
+	for (int i = 0; i < 400; i++) {
+		uartputc('A' + hartid());
+	}
+	release(&lk);
+}
+
+static void printf_test()
 {
 	printf("TESTING hexadecimal output");
 	printf("expected: address of printf\n", printf);
@@ -50,5 +93,6 @@ void printf_test()
 
 void test()
 {
-	printf_test();
+	spinlock_test();
+	//printf_test();
 }
