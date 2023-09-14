@@ -3,11 +3,10 @@
 #include "riscv_hypervisor.h"
 #include "types.h"
 
-#define CPU_STACK_SIZE 4096
-
 static struct cpu cpus[DTB_NR_CPUS];
 // TODO: I guess I am aligning this for performance / call convention
-__attribute__ ((aligned(16))) char cpu_stacks[CPU_STACK_SIZE * DTB_NR_CPUS];
+// beware that 4096 is also used in boot.S
+__attribute__ ((aligned(16))) char cpu_stacks[4096 * DTB_NR_CPUS];
 
 uint64 hartid();
 static struct cpu *mycpu();

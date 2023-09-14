@@ -1,0 +1,67 @@
+
+=== Sequential Consistency
+
+--- Global memory order
+Harts take turn executing instructions. The order is non-deterministic.
+
+--- Preserved program order
+Each hart executes its own instructions in order
+
+Riscv PPO rules:
+if A appears before B in program order, and A and B match one of the patterns
+below, then A appears before B in global memory order:
+
+program order:
+    A
+    ...
+    B
+
+Overlapping-address ordering
+    1. if A and B(s) overlap
+    2. if A(l) and B(l) overlap
+    3. if A(amo/sc) and B(l) overlap
+
+Explicit synchronization
+    4. if A and B are seperated by fence
+    5. if A.aq
+    6. if B.rl
+    7. if A.rl and B.aq (yes truly release before acquire)
+    8. if A(lr) and B(sc)
+
+Syntactic dependencies
+    9. if B has a syntactic address dependency on A
+    10. if B(s) has a syntactic control dependency on A
+    11. if B has a syntactic data dependency on A
+
+Pipeline dependencies
+    12. B follows M in ppo, and M has an address dependency on A
+    13. B returns a value from an earlier store M in the same hart,
+        and M has an address or data dependency on A
+
+Legend: s - store
+        l - load
+	amo/sc - atomic operation/store conditional
+        B(s) - operation B is a store
+	B(l) - operation B is a load
+	B(amo/sc) - operation B is AMO/SC
+	B - operation B is any access
+	overlap - access the same address (or accesses have some overlap)
+	fence - fence with correct bits set (pr, pw, pi, po, sr, sw, si, so)
+	ppo - preserved program order
+
+> address dependency: result of A is used to determine address accessed by B
+> control dependency: result of A feeds a branch that determines whether B is
+                      executed at all
+> data dependency: result of A is used to determine value written by B(s)
+
+
+
+
+--- Load value axiom
+Loads return the value written by the most recent preceding store to
+the same address
+
+
+=== References
+[1] https://www.youtube.com/watch?v=QkbWgCSAEoo
+[2] https://five-embeddev.com/riscv-isa-manual/latest/rvwmo.html#sec:memorymodel:dependencies

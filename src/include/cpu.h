@@ -1,3 +1,6 @@
+#ifndef CPU_H
+#define CPU_H
+
 // per cpu allocations
 struct cpu {
 	// stack
@@ -10,3 +13,5 @@ struct cpu {
 	int int_enable;	// stored for push and pop
 	int noff;	// times interrupt_disable was pushed but not popped
 };
+
+#endif // CPU_H

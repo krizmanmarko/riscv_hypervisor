@@ -1,13 +1,14 @@
 
 #include "lock.h"
 #include "types.h"
+#include "panic.h"
 
 extern void printf(char *fmt, ...);
 extern void uartputc(char c);
 extern uint64 hartid();
 
 // intended to run on 3 harts
-static struct lock lk;
+static struct lock lock_test_lk;
 static int init_finished = 0;
 static int hart0_finished = 0;
 static int hart1_finished = 0;
@@ -17,12 +18,14 @@ static void spinlock_test()
 {
 	if (hartid() == 0) {
 		printf("No locking:\n");
-		init_lock(&lk);
+		init_lock(&lock_test_lk, "test");
 		init_finished = 1;
 	}
 	while (!init_finished);
 	for (int i = 0; i < 400; i++) {
-		uartputc('A' + hartid());
+		char buf[2] = { 'A', '\0' };
+		buf[0] += hartid();
+		printf(buf);
 	}
 
 	if (hartid() == 0) {
@@ -33,20 +36,23 @@ static void spinlock_test()
 		hart2_finished = 1;
 	}
 	while (!hart0_finished || !hart1_finished || !hart2_finished);
-	acquire(&lk);
+	acquire(&lock_test_lk);
 	if (!written_note) {
 		printf("\nUsing locks:\n");
 		written_note = 1;
 	}
 	for (int i = 0; i < 400; i++) {
-		uartputc('A' + hartid());
+		char buf[2] = { 'A', '\0' };
+		buf[0] += hartid();
+		printf(buf);
 	}
-	release(&lk);
+	release(&lock_test_lk);
 }
 
+// intended to run on 1 hart
 static void printf_test()
 {
-	printf("TESTING hexadecimal output");
+	printf("TESTING hexadecimal output\n");
 	printf("expected: address of printf\n", printf);
 	printf("got     : %p\n", printf);
 	printf("expected: -0000000000000001\n");
@@ -91,8 +97,14 @@ static void printf_test()
 	printf("got     : %s\n", (char *)0);
 }
 
+int printf_test_finished = 0;
 void test()
 {
-	spinlock_test();
-	//printf_test();
+	if (hartid() == 0) {
+//		printf_test();
+		printf_test_finished = 1;
+	}
+	while (!printf_test_finished);
+	//spinlock_test();
+	panic("ALL TESTS FINISHED");
 }

@@ -7,6 +7,8 @@
 // type: {u - unsigned, d - signed, p - pointer, %, s - string}
 
 #include <stdarg.h>
+#include "lock.h"
+#include "panic.h"
 #include "types.h"
 
 extern void uartputc(char c);
@@ -14,9 +16,9 @@ extern void uartputc(char c);
 static void print_uint(uint64 num, int base);
 static void print_padded(uint64 num, int base, int bytes);
 void printf(char *fmt, ...);
-void panic(char *s);
 
 static char digits[] = "0123456789abcdef";
+struct lock printf_lk;
 
 static void
 print_uint(uint64 num, int base)
@@ -26,7 +28,7 @@ print_uint(uint64 num, int base)
 	char buf[64];
 
 	if (base < 2)
-		panic("printf: invalid base (base < 2)\n");
+		panic("invalid base (base < 2)");
 
 	tmp = num;
 	size = 0;
@@ -47,7 +49,7 @@ print_padded(uint64 num, int base, int bytes)
 	int start, end;
 
 	if (base != 2 && base != 16)
-		panic("printf: invalid base (must be 2 or 16)\n");
+		panic("invalid base (must be 2 or 16)");
 
 	bits_in_char = 0;
 	while (base > 1) {
@@ -69,16 +71,20 @@ printf(char *fmt, ...)
 {
 	char c;
 	int i;
+	int invalid_length, unknown_specifier;	// for panicking correctly
 	va_list ap;
 	int base, length;
 	char *s;
 
 	if (fmt == 0)
-		panic("printf: fmt cannot not be null");
+		panic("fmt cannot not be null");
 
 	va_start(ap, fmt);
 	c = fmt[0];
 	i = 0;
+	invalid_length = 0;
+	unknown_specifier = 0;
+	acquire(&printf_lk);
 	while (c != 0) {
 		if (c != '%') {
 			uartputc(c);
@@ -184,7 +190,7 @@ decide_type:
 					print_uint(tmp64, base);
 				break;
 			default:
-				panic("printf: invalid length\n");
+				invalid_length = 1;
 				break;
 			}
 			break;
@@ -219,23 +225,28 @@ decide_type:
 					print_uint(tmp64, base);
 				break;
 			default:
-				panic("printf: invalid length\n");
+				invalid_length = 1;
 				break;
 			}
 			break;
 		default:
-			panic("printf: unknown specifier\n");
+			unknown_specifier = 1;
 			break;
 		}
 		c = fmt[++i];
 	}
+	release(&printf_lk);
 	va_end(ap);
-	return;
+
+	// calling printf recursively causes deadlock
+	// only recurse after printf_lk was released
+	if (invalid_length)
+		panic("invalid length");
+	if (unknown_specifier)
+		panic("unknown specifier");
 }
 
-void
-panic(char *s)
+void init_printf()
 {
-	printf("[PANIC] %s\n", s);
-	while (1);
+	init_lock(&printf_lk, "printf");
 }

@@ -1,4 +1,4 @@
-OBJFILES=boot.o trap.o main.o start.o uart.o printf.o test.o cpu.o spinlock.o
+OBJFILES=asm_boot.o asm_trap.o main.o start.o uart.o printf.o test.o cpu.o asm_spinlock.o spinlock.o
 OBJECTS=$(patsubst %, $(BUILD_DIR)%, $(OBJFILES))
 
 INCDIR=./include
@@ -21,13 +21,15 @@ BUILD_DIR=../build/
 
 .PHONY: all clean driver lib
 
-all: clean driver lib $(BUILD_DIR)hypervisor
+all: clean driver lib $(BUILD_DIR)hypervisor tags
+
+tags:
 	ctags -R .
 
 $(BUILD_DIR)hypervisor: $(OBJECTS)
 	$(ld) -T linker.ld $^ -o $@
 
-$(BUILD_DIR)%.o: %.S
+$(BUILD_DIR)asm_%.o: %.S
 	$(cc) $(CFLAGS) -c $^ -o $@
 
 $(BUILD_DIR)%.o: %.c
@@ -39,7 +41,7 @@ $(BUILD_DIR)%.o: driver/%.c
 $(BUILD_DIR)%.o: lib/%.c
 	$(cc) $(CFLAGS) -c $^ -o $@
 
-$(BUILD_DIR)%.o: lib/%.S
+$(BUILD_DIR)asm_%.o: lib/%.S
 	$(cc) $(CFLAGS) -c $^ -o $@
 
 $(BUILD_DIR)%.o: test/%.c
