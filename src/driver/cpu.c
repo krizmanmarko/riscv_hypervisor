@@ -66,3 +66,18 @@ pop_int_disable()
 		if (cpu->int_enable)
 			interrupt_enable();
 }
+
+int interrupt_status()
+{
+	uint64 sstatus;
+	R_SSTATUS(&sstatus);
+	return (sstatus & SSTATUS_SIE) ? 1 : 0;
+}
+
+void init_cpu()
+{
+	// no need to initialize cpu stack
+	interrupt_disable();
+	mycpu()->int_enable = 0;
+	mycpu()->noff = 0;
+}

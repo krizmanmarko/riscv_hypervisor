@@ -1,8 +1,6 @@
 #ifndef LOCK_H
 #define LOCK_H
 
-#include "types.h"
-
 // spinlock
 
 struct lock {

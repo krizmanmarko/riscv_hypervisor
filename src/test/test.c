@@ -7,6 +7,13 @@ extern void printf(char *fmt, ...);
 extern void uartputc(char c);
 extern uint64 hartid();
 
+// intended to run on 1 hart
+static void
+cpu_test()
+{
+
+}
+
 // intended to run on 3 harts
 static struct lock lock_test_lk;
 static int init_finished = 0;
@@ -14,7 +21,8 @@ static int hart0_finished = 0;
 static int hart1_finished = 0;
 static int hart2_finished = 0;
 static int written_note = 0;
-static void spinlock_test()
+static void
+spinlock_test()
 {
 	if (hartid() == 0) {
 		printf("No locking:\n");
@@ -50,7 +58,8 @@ static void spinlock_test()
 }
 
 // intended to run on 1 hart
-static void printf_test()
+static void
+printf_test()
 {
 	printf("TESTING hexadecimal output\n");
 	printf("expected: address of printf\n", printf);
@@ -98,13 +107,13 @@ static void printf_test()
 }
 
 int printf_test_finished = 0;
-void test()
+void
+test(int testid)
 {
-	if (hartid() == 0) {
-//		printf_test();
-		printf_test_finished = 1;
-	}
-	while (!printf_test_finished);
-	//spinlock_test();
-	panic("ALL TESTS FINISHED");
+	if (testid == 0)
+		printf_test();
+	if (testid == 1)
+		panic("panic test");
+	if (testid == 2)
+		spinlock_test();
 }

@@ -1,6 +1,8 @@
 #ifndef PANIC_H
 #define PANIC_H
 
+#include "types.h"
+
 extern uint64 hartid();
 extern void printf(char *fmt, ...);
 
