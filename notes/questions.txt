@@ -2,6 +2,7 @@
 
 Why are virtual addresses of different size to physical addresses
 
+Software interrupt vs exception_ECALL_FROM_U_MODE
 
 
 --- Solved ---

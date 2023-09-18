@@ -314,8 +314,8 @@
 #define R_MTVAL(uint64ptr) asm volatile("csrr %0, mtval" : "=r" (*uint64ptr))
 #define W_MTVAL(value) asm volatile("csrw mtval, %0" : : "r" (value))
 
-// Machine Configuration Pointer Register - not accessible in qemu-virt
-//#define R_MCONFIGPTR(uint64ptr) asm volatile("csrr %0, mconfigptr" : "=r" (*uint64ptr))
+// Machine Configuration Pointer Register
+#define R_MCONFIGPTR(uint64ptr) asm volatile("csrr %0, mconfigptr" : "=r" (*uint64ptr))
 
 // Machine Environment Configuration Register
 #define R_MENVCFG(uint64ptr) asm volatile("csrr %0, menvcfg" : "=r" (*uint64ptr))

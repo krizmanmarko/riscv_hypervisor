@@ -1,0 +1,176 @@
+Description of every single HART in qemu-virt
+
+Registers
+=========
+
+--- CSRs ---
+
+[x] misa
+[x] mvendorid
+[x] marchid
+[x] mimpid
+[x] mhartid
+[x] mstatus
+[x] mtvec
+[x] medeleg
+[x] mideleg
+[x] mip
+[x] mie
+[x] mcycle -> cycle
+[x] minstret -> instret
+[x] mhpmcounters -> hpmcounters
+[x] mcounteren
+[x] mcountinhibit
+[x] mscratch
+[x] mepc
+[x] mcause
+[x] mtval
+[x] mconfigptr
+[x] menvcfg
+[x] mseccfg
+[x] mtime -> time
+[x] mtimecmp
+[x] sstatus
+[x] stvec
+[x] sip
+[x] sie
+[x] scounteren
+[x] sscratch
+[x] sepc
+[x] scause
+[x] stval
+[x] senvcfg
+[x] satp
+[x] hstatus
+[x] hedeleg
+[x] hideleg
+[x] hvip
+[x] hip
+[x] hie
+[x] hgeip
+[x] hgeie
+[x] hcounteren
+[x] htimedelta
+[x] htval
+[x] htinst
+[x] hgatp
+[x] vsstatus
+[x] vsip
+[x] vsie
+[x] vstvec
+[x] vsscratch
+[x] vsepc
+[x] vscause
+[x] vstval
+[x] vsatp
+[x] mtval2
+[x] mtinst
+
+1. read-only:
+    mvendorid (32-bit)
+    marchid
+    mimpid
+    mhartid
+    mconfigptr
+    mcycle
+    minstret
+    hgeip
+
+2. read-write:
+    misa
+    mstatus
+    hstatus
+    vsstatus
+    mtvec
+    stvec
+    vstvec
+    medeleg
+    hedeleg
+    mideleg
+    hideleg
+    mip
+    mie
+    mcounteren (32-bit)
+    hcounteren (32-bit)
+    scounteren (32-bit)
+    mhpmcounterx (32-bit)
+    mcountinhibit (32-bit)
+    mscratch
+    sscratch
+    vsscratch
+    mepc
+    sepc
+    vsepc
+    mcause
+    scause
+    vscause
+    mtval
+    stval
+    htval
+    vstval
+    mtval2
+    menvcfg
+    senvcfg
+    mseccfg (32-bit)
+    satp
+    hgatp
+    vsatp
+    htimedelta
+    mtinst
+    htinst
+    hgeie
+
+3. Memory mapped (no need for special csr instructions)
+    mtime
+    mtimecmp
+
+4. just submasks of other registers
+    sstatus (mstatus)
+    sip (mip)
+    hip (mip)
+    vsip (mip)
+    hvip (mip)
+    sie (mie)
+    hie (mie)
+    vsie (mie)
+    cycle (mcycle)
+    instret (minstret)
+    hpmcounterx (mhpmcounterx)
+    time (mtime + htimedelta)
+
+--- General purpose registers ---
+
+name    ABI     description			saver
+------------------------------------------------------------
+x0      zero    hard-wired zero			-
+x1      ra      return address			caller
+x2      sp      stack pointer			callee
+x3      gp      global pointer			-
+x4      tp      thread pointer			-
+x5      t0      tmp				caller
+x6      t1      tmp				caller
+x7      t2      tmp				caller
+x8      s0/fp   saved register/frame pointer	callee
+x9      s1      saved register			callee
+x10     a0      arg / retval			caller
+x11     a1      arg / retval			caller
+x12     a2      arg				caller
+x13     a3      arg				caller
+x14     a4      arg				caller
+x15     a5      arg				caller
+x16     a6      arg				caller
+x17     a7      arg				caller
+x18     s2      saved register			callee
+x19     s3      saved register			callee
+x20     s4      saved register			callee
+x21     s5      saved register			callee
+x22     s6      saved register			callee
+x23     s7      saved register			callee
+x24     s8      saved register			callee
+x25     s9      saved register			callee
+x26     s10     saved register			callee
+x27     s11     saved register			callee
+x28     t3      tmp				caller
+x29     t4      tmp				caller
+x30     t5      tmp				caller
+x31     t6      tmp				caller

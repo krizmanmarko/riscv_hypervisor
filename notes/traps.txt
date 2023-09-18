@@ -2,6 +2,44 @@ enter VS-mode exception handler
 V == 1 (before the trap)
 check medeleg -> check hedeleg -> exception handler in VS-mode
 
-
 enter VS-mode interrupt
 check mideleg -> check hideleg -> interrupt handler in VS-mode
+
+
+1 -> name
+2 -> triggered in
+3 -> possibly delegated to
+
+1	2	3
+--- HSSI
+1. Hypervisor software interrupt
+2. Triggered by:
+	- ecall
+3. 
+
+SSI
+VSSI
+MSI
+HSTI
+STI
+VSTI
+MTI
+HEI
+SEI
+VSEI
+MEI
+SGEI
+
+
+Interrupt sources
+-----------------
+
+1. software interrupt
+    ecall in M-mode -> taken in M
+    ecall in HS-mode -> taken in M, HS
+    ecall in VS-mode -> taken in M, HS, VS
+    ecall in U-mode -> taken in M, HS, VS, U
+
+2. timer interrupt
+
+3. PLIC
