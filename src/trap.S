@@ -1,3 +1,5 @@
+.section ".text"
+
 .globl strapvec
 .align 4
 strapvec:
@@ -8,4 +10,11 @@ strapvec:
 .globl mtrapvec
 .align 4
 mtrapvec:
-	j mtrapvec
+	mret
+
+# for testing access fault exceptions
+.section ".nop", "ax"
+
+.globl access_fault_test_addr
+access_fault_test_addr:
+	nop

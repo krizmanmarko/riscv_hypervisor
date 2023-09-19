@@ -27,4 +27,10 @@ SECTIONS
 	}
 
 	PROVIDE(end = .);
+
+	# DTB_MEMORY + DTB_MEMORY_SIZE - 8
+	. = 0xa0000000 - 8;
+	.nop : {
+		*(.nop .nop.*)
+	}
 }

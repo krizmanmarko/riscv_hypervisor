@@ -2,14 +2,24 @@
 
 Why are virtual addresses of different size to physical addresses
 
-Software interrupt vs exception_ECALL_FROM_U_MODE
-
 
 --- Solved ---
 
-When H extension is enabled, do we control 3 seperate registers for status (vsstatus, hstatus, sstatus) or are sstatus and hstatus equal
-  S mode is further split into 2 submodes depending on the V-bit (V=0: HS-mode, V=1, VS-mode)
+When H extension is enabled, do we control 3 seperate registers for status
+(vsstatus, hstatus, sstatus) or are sstatus and hstatus equal?
+  sstatus is just a masked mstatus, whereas hstatus and vsstatus are completely
+  seperate registers (so we only have mstatus, hstatus and vsstatus registers)
 
 where is V bit? (virtualization bit)
   Check out hypervisor MSTATUS_SPV (supervisor previous virtualization mode)
   works the same way as MSTATUS_MPP (machine previous privilege mode)
+
+Software interrupt vs exception_ECALL_FROM_U_MODE
+  software interrupt is IPI (inter-hart interrupt)
+  ecall from X-mode happens when ecall instruction is executed on current hart
+
+Why can medeleg have EXC_ECALL_FROM_M bit set?
+This would imply that supervisor software handles M-mode ecalls
+  In qemu-virt setting medeleg.EXC_ECALL_FROM_M does not delegate M-mode ecalls
+  to supervisor mode (still handled in mtrapvec)
+  So it has no effect on the execution (probably should be read-only 0)

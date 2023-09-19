@@ -6,40 +6,55 @@ enter VS-mode interrupt
 check mideleg -> check hideleg -> interrupt handler in VS-mode
 
 
-1 -> name
-2 -> triggered in
-3 -> possibly delegated to
+Interrupts
+==========
 
-1	2	3
---- HSSI
-1. Hypervisor software interrupt
-2. Triggered by:
-	- ecall
-3. 
-
-SSI
-VSSI
-MSI
-HSTI
-STI
-VSTI
-MTI
-HEI
-SEI
-VSEI
-MEI
-SGEI
-
-
-Interrupt sources
------------------
+--- Sources
 
 1. software interrupt
-    ecall in M-mode -> taken in M
-    ecall in HS-mode -> taken in M, HS
-    ecall in VS-mode -> taken in M, HS, VS
-    ecall in U-mode -> taken in M, HS, VS, U
-
+    when clint.mswi.msip = 1
 2. timer interrupt
+    when clint.mtimer.mtime >= clint.mtimer.mtimecmp
+3. external interrupt
+    PLIC (but how where what and who)
 
-3. PLIC
+--- Handling
+
+check corresponding mideleg bit
+    0 -> mtrapvec
+    1 -> check corresponding hideleg bit
+        0 -> hstrapvec
+	1 -> vstrapvec
+
+
+Exceptions
+==========
+
+--- sources
+
+1. instruction
+    - instruction address misaligned (0)
+    - instruction access fault (1)
+    - illegall instruction (2)
+    - breakpoint (3)
+    + virtual instruction (22)
+
+2. load/store
+    - load address misaligned (4)
+    - load access fault (5)
+    - store or amo address misaligned (6)
+    - store or amo access fault (7)
+
+3. ecall
+    - ecall from U-mode (8)
+    - ecall from HS-mode (9)
+    + ecall from VS-mode (10)
+    - ecall from M-mode (11)
+
+4. page fault
+    - instruction page fault (12)
+    - load page fault (13)
+    - store or amo page fault (15)
+    + instruction guest page fault (20)
+    + load guest page fault (21)
+    + store or amo guest page fault (23)

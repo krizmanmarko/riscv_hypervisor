@@ -1,64 +1,6 @@
-
-#include "lock.h"
-#include "types.h"
-#include "panic.h"
-
 extern void printf(char *fmt, ...);
-extern void uartputc(char c);
-extern uint64 hartid();
 
-// intended to run on 1 hart
-static void
-cpu_test()
-{
-
-}
-
-// intended to run on 3 harts
-static struct lock lock_test_lk;
-static int init_finished = 0;
-static int hart0_finished = 0;
-static int hart1_finished = 0;
-static int hart2_finished = 0;
-static int written_note = 0;
-static void
-spinlock_test()
-{
-	if (hartid() == 0) {
-		printf("No locking:\n");
-		init_lock(&lock_test_lk, "test");
-		init_finished = 1;
-	}
-	while (!init_finished);
-	for (int i = 0; i < 400; i++) {
-		char buf[2] = { 'A', '\0' };
-		buf[0] += hartid();
-		printf(buf);
-	}
-
-	if (hartid() == 0) {
-		hart0_finished = 1;
-	} else if (hartid() == 1) {
-		hart1_finished = 1;
-	} else if (hartid() == 2) {
-		hart2_finished = 1;
-	}
-	while (!hart0_finished || !hart1_finished || !hart2_finished);
-	acquire(&lock_test_lk);
-	if (!written_note) {
-		printf("\nUsing locks:\n");
-		written_note = 1;
-	}
-	for (int i = 0; i < 400; i++) {
-		char buf[2] = { 'A', '\0' };
-		buf[0] += hartid();
-		printf(buf);
-	}
-	release(&lock_test_lk);
-}
-
-// intended to run on 1 hart
-static void
+void
 printf_test()
 {
 	printf("TESTING hexadecimal output\n");
@@ -104,16 +46,4 @@ printf_test()
 	printf("got     : %s\n", "Hello world %s");
 	printf("expected: (null)\n");
 	printf("got     : %s\n", (char *)0);
-}
-
-int printf_test_finished = 0;
-void
-test(int testid)
-{
-	if (testid == 0)
-		printf_test();
-	if (testid == 1)
-		panic("panic test");
-	if (testid == 2)
-		spinlock_test();
 }

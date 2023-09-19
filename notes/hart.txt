@@ -3,6 +3,44 @@ Description of every single HART in qemu-virt
 Registers
 =========
 
+--- General purpose registers ---
+
+name    ABI     description			saver
+------------------------------------------------------------
+x0      zero    hard-wired zero			-
+x1      ra      return address			caller
+x2      sp      stack pointer			callee
+x3      gp      global pointer			-
+x4      tp      thread pointer			-
+x5      t0      tmp				caller
+x6      t1      tmp				caller
+x7      t2      tmp				caller
+x8      s0/fp   saved register/frame pointer	callee
+x9      s1      saved register			callee
+x10     a0      arg / retval			caller
+x11     a1      arg / retval			caller
+x12     a2      arg				caller
+x13     a3      arg				caller
+x14     a4      arg				caller
+x15     a5      arg				caller
+x16     a6      arg				caller
+x17     a7      arg				caller
+x18     s2      saved register			callee
+x19     s3      saved register			callee
+x20     s4      saved register			callee
+x21     s5      saved register			callee
+x22     s6      saved register			callee
+x23     s7      saved register			callee
+x24     s8      saved register			callee
+x25     s9      saved register			callee
+x26     s10     saved register			callee
+x27     s11     saved register			callee
+x28     t3      tmp				caller
+x29     t4      tmp				caller
+x30     t5      tmp				caller
+x31     t6      tmp				caller
+
+
 --- CSRs ---
 
 [x] misa
@@ -121,8 +159,8 @@ Registers
     hgeie
 
 3. Memory mapped (no need for special csr instructions)
-    mtime
-    mtimecmp
+    mtime (shared between all cores)
+    mtimecmp (1 per core)
 
 4. just submasks of other registers
     sstatus (mstatus)
@@ -138,39 +176,34 @@ Registers
     hpmcounterx (mhpmcounterx)
     time (mtime + htimedelta)
 
---- General purpose registers ---
 
-name    ABI     description			saver
-------------------------------------------------------------
-x0      zero    hard-wired zero			-
-x1      ra      return address			caller
-x2      sp      stack pointer			callee
-x3      gp      global pointer			-
-x4      tp      thread pointer			-
-x5      t0      tmp				caller
-x6      t1      tmp				caller
-x7      t2      tmp				caller
-x8      s0/fp   saved register/frame pointer	callee
-x9      s1      saved register			callee
-x10     a0      arg / retval			caller
-x11     a1      arg / retval			caller
-x12     a2      arg				caller
-x13     a3      arg				caller
-x14     a4      arg				caller
-x15     a5      arg				caller
-x16     a6      arg				caller
-x17     a7      arg				caller
-x18     s2      saved register			callee
-x19     s3      saved register			callee
-x20     s4      saved register			callee
-x21     s5      saved register			callee
-x22     s6      saved register			callee
-x23     s7      saved register			callee
-x24     s8      saved register			callee
-x25     s9      saved register			callee
-x26     s10     saved register			callee
-x27     s11     saved register			callee
-x28     t3      tmp				caller
-x29     t4      tmp				caller
-x30     t5      tmp				caller
-x31     t6      tmp				caller
+
+Interrupt registers
+===================
+
+mideleg, hideleg
+mip, mie
+sip, sie
+hip, hie, hvip, hgeip, hgeie
+vsip, vsie
+
+mideleg: M -> HS
+hideleg: HS -> VS
+
+M: mip, mie
+HS: sip, hip, sie, hie
+VS: vsip, vsie (alias of hip, hie if VS bits in hideleg are set, else RO 0)
+
+Every writeable bit in sie is read-only 0 in hie and vice versa
+Every writeable bit in sip is read-only 0 in hip and vice versa
+    sie | hie -> hypervisor interrupt enable
+    sip | hip -> hypervisor interrupt pending
+    sie ^ hie == 0
+    sip ^ hip == 0
+
+When bit 10 of hideleg is zero, vsip.SEIP and vsie.SEIE are read-only zeros.
+  Else, vsip.SEIP and vsie.SEIE are aliases of hip.VSEIP and hie.VSEIE.
+When bit 6 of hideleg is zero, vsip.STIP and vsie.STIE are read-only zeros.
+  Else, vsip.STIP and vsie.STIE are aliases of hip.VSTIP and hie.VSTIE.
+When bit 2 of hideleg is zero, vsip.SSIP and vsie.SSIE are read-only zeros.
+  Else, vsip.SSIP and vsie.SSIE are aliases of hip.VSSIP and hie.VSSIE.

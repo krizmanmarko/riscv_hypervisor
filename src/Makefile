@@ -1,4 +1,6 @@
-OBJFILES=asm_boot.o asm_trap.o main.o start.o uart.o printf.o test.o cpu.o asm_spinlock.o spinlock.o
+OBJFILES=asm_boot.o asm_trap.o main.o start.o uart.o printf.o cpu.o asm_spinlock.o spinlock.o
+TESTS=printf_test.o spinlock_test.o exception_tests.o
+OBJFILES+= $(TESTS)
 OBJECTS=$(patsubst %, $(BUILD_DIR)%, $(OBJFILES))
 
 INCDIR=./include
@@ -6,7 +8,7 @@ INCDIR=./include
 CFLAGS=-Wall -ggdb -I$(INCDIR)
 #CFLAGS+= -Werror
 # isolate from host environment
-CFLAGS+=-ffreestanding -fno-common -nodefaultlibs
+CFLAGS+=-ffreestanding -fno-common -nodefaultlibs -nostdlib
 # position independent code
 CFLAGS+=-mcmodel=medany
 
@@ -45,6 +47,9 @@ $(BUILD_DIR)asm_%.o: lib/%.S
 	$(cc) $(CFLAGS) -c $^ -o $@
 
 $(BUILD_DIR)%.o: test/%.c
+	$(cc) $(CFLAGS) -c $^ -o $@
+
+$(BUILD_DIR)asm_%.o: test/%.S
 	$(cc) $(CFLAGS) -c $^ -o $@
 
 clean:

@@ -7,6 +7,8 @@ extern int main();
 
 void start(unsigned long hartid, void *dtb);
 
+extern char *etext;	// linker.ld
+
 void
 start(unsigned long hartid, void *dtb)
 {
@@ -24,8 +26,14 @@ start(unsigned long hartid, void *dtb)
 	}
 
 	// setup memory
-	W_PMPCFG0(PMPCFG_A_TOR | PMPCFG_R | PMPCFG_W | PMPCFG_X);
-	W_PMPADDR0(0x3fffffffffffff);
+	uint64 pmpcfg0;
+
+	// Leave 16 bytes for access faults exception tests
+	pmpcfg0 = PMPCFG_A_TOR | PMPCFG_R | PMPCFG_W | PMPCFG_X;
+	W_PMPADDR0((DTB_MEMORY + DTB_MEMORY_SIZE - 8) >> 2);
+	pmpcfg0 |= (PMPCFG_A_TOR) << 8;
+	W_PMPADDR1(0x3fffffffffffffUL);
+	W_PMPCFG0(pmpcfg0);
 
 	// delegate exceptions (do not delegate M exceptions)
 	uint64 exceptions = MEDELEG_INSTRUCTION_ADDR_MISALIGNED
@@ -76,7 +84,6 @@ start(unsigned long hartid, void *dtb)
 	W_MEPC((uint64) main);	// requires gcc -mcmodel=medany
 
 	// Testing purposes
-	W_MSTATUS(mstatus & ~(MSTATUS_MIE));	// disable interrupts globally
 	// end Testing purposes
 
 	// enter supervisor mode
