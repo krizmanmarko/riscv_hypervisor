@@ -1,0 +1,35 @@
+This document shows pretty some obscure situations where assumebd
+behaviour did not match reality. It also provides examples on how
+this bit me in the ass.
+
+
+===========================
+Is char signed or unsigned?
+===========================
+
+Depends on the compiler...
+my riscv64 gnu toolchain's default char is unsigned
+my x86_64 linux gnu toolchain's default char is signed
+(note: int is always signed)
+
+typedef char int8;	<- is actually uint8
+
+
+=====================================
+Providing a symbol from linker script
+=====================================
+
+* and [] do not work the same way.
+Following examples show correct usage of symbols defined in linker script:
+
+extern type symbol_name_start;
+extern type symbol_name_end;
+size_t size = &symbol_name_end - &symbol_name_start;
+
+extern type symbol_name_start[];
+extern type symbol_name_end[];
+size_t size = symbol_name_end - symbol_name_start;
+
+extern type *symbol_name_start;
+extern type *symbol_name_end;
+size_t size = &symbol_name_end - &symbol_name_start;

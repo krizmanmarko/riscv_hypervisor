@@ -1,5 +1,5 @@
-OBJFILES=asm_boot.o asm_trap.o main.o start.o uart.o printf.o cpu.o asm_spinlock.o spinlock.o
-TESTS=printf_test.o spinlock_test.o exception_tests.o
+OBJFILES=asm_boot.o asm_trap.o main.o start.o uart.o printf.o cpu.o asm_spinlock.o spinlock.o trap.o
+TESTS=printf_test.o spinlock_test.o asm_exception_tests.o
 OBJFILES+= $(TESTS)
 OBJECTS=$(patsubst %, $(BUILD_DIR)%, $(OBJFILES))
 
@@ -12,6 +12,10 @@ CFLAGS+=-ffreestanding -fno-common -nodefaultlibs -nostdlib
 # position independent code
 CFLAGS+=-mcmodel=medany
 
+PAGE_SIZE=4096
+LDFLAGS=-nostdlib
+LDFLAGS+= -z common-page-size=$(PAGE_SIZE) -z max-page-size=$(PAGE_SIZE)
+
 CROSS_COMPILE=/home/marko/shit/riscv-gnu-toolchain-build/bin/riscv64-unknown-linux-gnu-
 cc=$(CROSS_COMPILE)gcc
 ld=$(CROSS_COMPILE)ld
@@ -21,15 +25,19 @@ objcopy=$(CROSS_COMPILE)objcopy
 
 BUILD_DIR=../build/
 
-.PHONY: all clean driver lib
+.PHONY: all clean
 
-all: clean driver lib $(BUILD_DIR)hypervisor tags
+all: clean $(BUILD_DIR)hypervisor tags
 
 tags:
 	ctags -R .
 
-$(BUILD_DIR)hypervisor: $(OBJECTS)
-	$(ld) -T linker.ld $^ -o $@
+# watch out! linkerscript.ld must be before $(OBJECTS) because it is an argument for -T switch
+$(BUILD_DIR)hypervisor: $(BUILD_DIR)linkerscript.ld $(OBJECTS)
+	$(ld) $(LDFLAGS) -T $^ -o $@
+
+$(BUILD_DIR)linkerscript.ld: linkerscript.c
+	gcc -I$(INCDIR) -P -E $^ -o $@
 
 $(BUILD_DIR)asm_%.o: %.S
 	$(cc) $(CFLAGS) -c $^ -o $@

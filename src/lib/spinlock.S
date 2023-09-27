@@ -1,4 +1,4 @@
-.section ".text"
+.section ".text", "ax"
 .globl acquire
 .globl release
 .globl init_lock

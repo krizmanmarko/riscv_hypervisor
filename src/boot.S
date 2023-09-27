@@ -1,4 +1,4 @@
-.section ".text"
+.section ".boot", "ax"
 .globl boot
 
 boot:

@@ -2,12 +2,12 @@
 #include "riscv_hypervisor.h"
 
 extern void mtrapvec();
-extern void strapvec();
+extern void hstrapvec();
 extern int main();
 
 void start(unsigned long hartid, void *dtb);
 
-extern char *etext;	// linker.ld
+extern char etext[];	// linker script
 
 void
 start(unsigned long hartid, void *dtb)
@@ -27,12 +27,28 @@ start(unsigned long hartid, void *dtb)
 
 	// setup memory
 	uint64 pmpcfg0;
+	int reg;
 
-	// Leave 16 bytes for access faults exception tests
-	pmpcfg0 = PMPCFG_A_TOR | PMPCFG_R | PMPCFG_W | PMPCFG_X;
-	W_PMPADDR0((DTB_MEMORY + DTB_MEMORY_SIZE - 8) >> 2);
-	pmpcfg0 |= (PMPCFG_A_TOR) << 8;
-	W_PMPADDR1(0x3fffffffffffffUL);
+	pmpcfg0 = 0;
+	reg = -1;
+
+	// make mmio region RW
+	pmpcfg0 |= (PMPCFG_A_TOR | PMPCFG_R | PMPCFG_W) << (++reg * 8);
+	W_PMPADDR0(DTB_MEMORY >> 2);
+
+	// make .text section RX
+	pmpcfg0 |= (PMPCFG_A_TOR | PMPCFG_R | PMPCFG_X) << (++reg * 8);
+	W_PMPADDR1(((uint64) &etext) >> 2);
+
+	// Leave 4 bytes of memory for access fault exception tests
+	// in test/exception_tests.c this address is hardcoded
+	pmpcfg0 |= (PMPCFG_A_TOR | PMPCFG_R | PMPCFG_W) << (++reg * 8);
+	W_PMPADDR2((DTB_MEMORY + DTB_MEMORY_SIZE - 4) >> 2);
+
+	// max physical addr (56-bits) -> no permissions
+	pmpcfg0 |= (PMPCFG_A_TOR) << (++reg * 8);
+	W_PMPADDR3((0xffffffffffffffUL) >> 2);
+
 	W_PMPCFG0(pmpcfg0);
 
 	// delegate exceptions (do not delegate M exceptions)
@@ -71,7 +87,7 @@ start(unsigned long hartid, void *dtb)
 	W_SIE((uint64) 0);
 	W_SIP((uint64) 0);
 	W_SATP(ATP_MODE_BARE);
-	W_STVEC((uint64) strapvec);
+	W_STVEC((uint64) hstrapvec);
 	//W_SSCRATCH();
 
 	// Prepare for first mret
