@@ -4,9 +4,15 @@
 #include "types.h"
 
 static struct cpu cpus[DTB_NR_CPUS];
-// TODO: I guess I am aligning this for performance / call convention
-// beware that 4096 is also used in boot.S
-__attribute__ ((aligned(16))) char cpu_stacks[4096 * DTB_NR_CPUS];
+
+// Call convention demands alignment of stack pointer to 16.
+//	0xfff0 -> aligned
+//	0xfff8 -> not aligned
+// It also increases performance:
+//	ld t0, 0(sp) -> only requires one fetch in DRAM
+//	ld t0, 1(sp) -> requires 0(sp) and 8(sp) fetches
+// TODO: At least I think this is what happens (not the goal of my research)
+__attribute__ ((aligned(16))) char cpu_stacks[CPU_STACK_SIZE * DTB_NR_CPUS];
 
 uint64 hartid();
 static struct cpu *mycpu();

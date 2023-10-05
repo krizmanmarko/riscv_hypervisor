@@ -7,7 +7,8 @@ extern int main();
 
 void start(unsigned long hartid, void *dtb);
 
-extern char etext[];	// linker script
+extern char rodata[];	// linker script
+extern char data[];	// linker script
 
 void
 start(unsigned long hartid, void *dtb)
@@ -23,6 +24,7 @@ start(unsigned long hartid, void *dtb)
 		// TODO exit with fail("hypervisor extension not supported")
 		// issue is I cannot panic, since uart is not initialized
 		// neither is printf so this is a weird scenario
+		// Maybe move this check to later stage in code?
 	}
 
 	// setup memory
@@ -38,16 +40,20 @@ start(unsigned long hartid, void *dtb)
 
 	// make .text section RX
 	pmpcfg0 |= (PMPCFG_A_TOR | PMPCFG_R | PMPCFG_X) << (++reg * 8);
-	W_PMPADDR1(((uint64) &etext) >> 2);
+	W_PMPADDR1(((uint64) &rodata) >> 2);
+
+	// make .rodata section RO
+	pmpcfg0 |= (PMPCFG_A_TOR | PMPCFG_R) << (++reg * 8);
+	W_PMPADDR2(((uint64) &data) >> 2);
 
 	// Leave 4 bytes of memory for access fault exception tests
 	// in test/exception_tests.c this address is hardcoded
 	pmpcfg0 |= (PMPCFG_A_TOR | PMPCFG_R | PMPCFG_W) << (++reg * 8);
-	W_PMPADDR2((DTB_MEMORY + DTB_MEMORY_SIZE - 4) >> 2);
+	W_PMPADDR3((DTB_MEMORY + DTB_MEMORY_SIZE - 4) >> 2);
 
 	// max physical addr (56-bits) -> no permissions
 	pmpcfg0 |= (PMPCFG_A_TOR) << (++reg * 8);
-	W_PMPADDR3((0xffffffffffffffUL) >> 2);
+	W_PMPADDR4((0xffffffffffffffUL) >> 2);
 
 	W_PMPCFG0(pmpcfg0);
 

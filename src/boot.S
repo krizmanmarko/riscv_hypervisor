@@ -1,6 +1,8 @@
 .section ".boot", "ax"
 .globl boot
 
+# 4096 stands for CPU_STACK_SIZE
+
 boot:
 	# Previous boot stage provides:
 	#	a0: hart id

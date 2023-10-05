@@ -2,6 +2,7 @@
 
 .section ".data", "aw"
 	.balign 8
+aligned:
 	.byte 0x5a
 misaligned:
 	.dword 0x5a5a5a5a5a5a5a5a
@@ -16,7 +17,7 @@ misaligned:
 .globl exc_store_or_amo_address_misaligned_test
 .globl exc_store_or_amo_access_fault_test
 
-# 0
+# 0 - never fails
 exc_instruction_address_misaligned_test:
 	addi ra, ra, 1
 	ret
@@ -24,6 +25,8 @@ exc_instruction_address_misaligned_test:
 # 1
 exc_instruction_access_fault_test:
 	li ra, DTB_MEMORY + DTB_MEMORY_SIZE - 4
+	# return sets pc
+	ret
 
 # 2
 exc_illegal_instruction_test:
@@ -36,8 +39,12 @@ exc_breakpoint_test:
 # 4
 exc_load_address_misaligned_test:
 	la a0, misaligned
+	# qemu-virt allows misaligned loads
 	ld a0, 0(a0)
-	ret
+	# no ZAM extension -> fail
+	# TODO: but this should cause exc_store_or_amo_address_misaligned
+	# https://gitlab.com/qemu-project/qemu/-/issues/594
+	amoxor.d a0, a0, 0(a0)
 
 # 5
 exc_load_access_fault_test:
@@ -47,9 +54,12 @@ exc_load_access_fault_test:
 # 6
 exc_store_or_amo_address_misaligned_test:
 	la a0, misaligned
+	la a1, aligned
 	# qemu-virt allows misaligned stores
 	sd zero, 0(a0)
 	# no ZAM extension -> fail
+	# TODO: why does this cause load misaligned exception (4)?
+	# https://gitlab.com/qemu-project/qemu/-/issues/594
 	amoxor.d a0, a0, 0(a0)
 
 # 7

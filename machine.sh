@@ -6,4 +6,4 @@ build_dir="/home/marko/home/schola/diploma/risc-v/build/"
 	-kernel ${build_dir}hypervisor \
 	-smp 1 \
 	-m 512M \
-	-s -S
+	-s #-S

@@ -18,7 +18,9 @@ acquire:
 	li t0, 1
 1:	amoswap.w.aq t1, t0, (a0)	# try swap
 	bnez t1, 1b			# back to label '1' == 1b
-	fence				# TODO: is this truly necessary
+
+# not necessary since aq and rl do the same thing (check out memory_model.txt)
+#	fence
 
 	# lock->hartid = hartid
 	mv t0, a0			# a0 is caller saved
@@ -42,7 +44,8 @@ release:
 	li t0, -1
 	sw t0, 4(a0)
 
-	fence				# TODO: is this truly necessary
+# not necessary since aq and rl do the same thing (check out memory_model.txt)
+#	fence
 	amoswap.w.rl zero, zero, (a0)	# swap (no need to try)
 	call pop_int_disable
 

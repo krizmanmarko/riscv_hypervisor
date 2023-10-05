@@ -1,6 +1,3 @@
 
-qemu: ./build/hypervisor
+qemu:
 	@./machine.sh
-
-./build/hypervisor:
-	cd src && make

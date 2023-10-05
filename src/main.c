@@ -6,13 +6,13 @@
 extern void init_printf();
 extern uint64 hartid();
 extern void init_cpu();
+extern void init_kmem();
 extern void init_uart();
 extern void printf(char *fmt, ...);
 
 int main();
 
 int finished_init = 0;
-
 
 int
 main()
@@ -21,6 +21,7 @@ main()
 		init_uart();
 		init_printf();
 		init_cpu();
+		init_kmem();
 
 		// Testing purposes
 		//exc_instruction_address_misaligned_test();
@@ -31,6 +32,7 @@ main()
 		//exc_load_access_fault_test();
 		//exc_store_or_amo_address_misaligned_test();
 		//exc_store_or_amo_access_fault_test();
+
 		extern char etext[];	// linker script
 		printf("%p\n", etext);
 		// End testing purposes

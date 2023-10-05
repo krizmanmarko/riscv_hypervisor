@@ -2,7 +2,7 @@
 // This enables using include/dtb.h symbols in this script
 
 #include "dtb.h"
-#define PAGE_SIZE 0x1000
+#include "memory.h"
 
 OUTPUT_ARCH("riscv")
 ENTRY(boot)
@@ -18,25 +18,26 @@ SECTIONS
 
 	/* start RX section */
 	.boot BLOCK (PAGE_SIZE) : {
+		PROVIDE(text = .);
 		*(.boot .boot.*)
 	} > RAM
 
 	.text : {
 		*(.text .text.*)
 	} > RAM
-	. = ALIGN(PAGE_SIZE);
 	PROVIDE(etext = .);
 
 	/* start RO section in new page */
 	.rodata BLOCK (PAGE_SIZE) : {
+		PROVIDE(rodata = .);
 		. = ALIGN(16);
 		*(.rodata .rodata.*)
 	} > RAM
-	. = ALIGN(PAGE_SIZE);
 	PROVIDE(erodata = .);
 
 	/* start RW section in new page */
 	.data BLOCK (PAGE_SIZE) : {
+		PROVIDE(data = .);
 		. = ALIGN(16);
 		*(.data .data.*)
 	} > RAM
@@ -45,6 +46,7 @@ SECTIONS
 		. = ALIGN(16);
 		*(.bss .bss.*)
 	} > RAM
+	PROVIDE(edata = .);
 
 	PROVIDE(end = .);
 }

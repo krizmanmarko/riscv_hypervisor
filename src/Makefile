@@ -1,4 +1,4 @@
-OBJFILES=asm_boot.o asm_trap.o main.o start.o uart.o printf.o cpu.o asm_spinlock.o spinlock.o trap.o
+OBJFILES=asm_boot.o asm_trap.o main.o start.o uart.o printf.o cpu.o asm_spinlock.o spinlock.o trap.o vmem.o kmem.o
 TESTS=printf_test.o spinlock_test.o asm_exception_tests.o
 OBJFILES+= $(TESTS)
 OBJECTS=$(patsubst %, $(BUILD_DIR)%, $(OBJFILES))

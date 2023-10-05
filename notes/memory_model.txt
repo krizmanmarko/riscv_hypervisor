@@ -1,3 +1,5 @@
+a.k.a. Trying to understand FENCE instruction
+
 
 === Sequential Consistency
 

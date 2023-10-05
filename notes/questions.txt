@@ -1,9 +1,17 @@
 --- Unsolved ---
 
-Why are virtual addresses of different size to physical addresses
+Why are virtual addresses of different size to physical addresses?
+In sv39 virtual address size is 39 bits while physical address size is 56 bits
+
 
 
 --- Solved ---
+
+Memory lookup triggers page table walk. But walking page tables requires memory lookups.
+How to avoid such infinite recursion?
+  a. hope that TLB has the necessary translations (unreliable)
+  b. use physical addresses with no translation when walking page tables
+     This is even defined in risc-v privileged spec (check out PTE field)
 
 When H extension is enabled, do we control 3 seperate registers for status
 (vsstatus, hstatus, sstatus) or are sstatus and hstatus equal?

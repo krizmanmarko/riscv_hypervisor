@@ -3,6 +3,7 @@
 
 void printf(char *fmt, ...);
 
+
 void
 hs_interrupt_handler(uint64 scause)
 {
@@ -13,5 +14,6 @@ hs_interrupt_handler(uint64 scause)
 void
 hs_exception_handler(uint64 scause)
 {
-	printf("hello from exception %blu\n", scause);
+	printf("hello from exception %bhhu\n", scause);
+	while (1);
 }
