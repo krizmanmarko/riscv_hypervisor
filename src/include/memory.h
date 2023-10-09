@@ -1,22 +1,31 @@
-#ifndef VMEM_H
-#define VMEM_H
+#ifndef MEMORY_H
+#define MEMORY_H
 
-#define PAGE_SIZE 4096
+// sv39 translation scheme
+
+#define PAGE_SHIFT 12
+#define PAGE_SIZE (1 << PAGE_SHIFT)
 
 #define PGROUNDUP(a) (((a) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1))
 #define PGROUNDDOWN(a) ((a) & ~(PAGE_SIZE - 1))
 
-#define PTE_V (1 << 0)
-#define PTE_R (1 << 1)
-#define PTE_W (1 << 2)
-#define PTE_X (1 << 3)
-#define PTE_U (1 << 4)
-#define PTE_G (1 << 5)
-#define PTE_A (1 << 6)
-#define PTE_D (1 << 7)
+#define PTE_SIZE 8
+#define LEVELS 3
+
+#define PTE_V (1UL << 0)
+#define PTE_R (1UL << 1)
+#define PTE_W (1UL << 2)
+#define PTE_X (1UL << 3)
+#define PTE_U (1UL << 4)
+#define PTE_G (1UL << 5)
+#define PTE_A (1UL << 6)
+#define PTE_D (1UL << 7)
 
 // get ppn to correct offset
-#define PA2PTE(pa) ((pa >> 12) << 10)
-#define PTE2PA(pte) ((pte >> 10) << 12)
+#define PA2PTE(pa) ((pte_t) (((pa) >> 12) << 10))
+#define PTE2PA(pte) ((pte_t *) (((pte) >> 10) << 12))
 
-#endif // VMEM_H
+// vpn[2], vpn[1], vpn[0], offset -> vpn[level]
+#define VA2IDX(level, va) ((((va) >> PAGE_SHIFT) >> ((level) * 9)) & 0x1ff)
+
+#endif // MEMORY_H

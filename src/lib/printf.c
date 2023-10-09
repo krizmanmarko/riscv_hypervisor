@@ -8,17 +8,14 @@
 
 #include <stdarg.h>
 #include "lock.h"
-#include "panic.h"
-#include "types.h"
-
-extern void uartputc(char c);
+#include "stdio.h"
+#include "defs.h"
 
 static void print_uint(uint64 num, int base);
 static void print_padded(uint64 num, int base, int bytes);
-void printf(char *fmt, ...);
 
 static char digits[] = "0123456789abcdef";
-struct lock printf_lk;
+static struct lock printf_lk;
 
 static void
 print_uint(uint64 num, int base)

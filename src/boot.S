@@ -29,6 +29,6 @@ boot:
 	addi t1, a0, 1
 	mul t0, t1, t0
 	add sp, sp, t0
-	call start
+	call init_machine
 halt:
 	j	halt

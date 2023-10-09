@@ -1,7 +1,6 @@
 .section ".text", "ax"
 .globl acquire
 .globl release
-.globl init_lock
 
 # void acquire(struct lock *lk)
 acquire:

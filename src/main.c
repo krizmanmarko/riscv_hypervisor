@@ -1,16 +1,8 @@
-#include "riscv_hypervisor.h"
+#include "defs.h"
 #include "dtb.h"
-#include "types.h"
+#include "riscv_hypervisor.h"
+#include "stdio.h"
 #include "test.h"
-
-extern void init_printf();
-extern uint64 hartid();
-extern void init_cpu();
-extern void init_kmem();
-extern void init_uart();
-extern void printf(char *fmt, ...);
-
-int main();
 
 int finished_init = 0;
 
@@ -22,6 +14,7 @@ main()
 		init_printf();
 		init_cpu();
 		init_kmem();
+		init_vmem();
 
 		// Testing purposes
 		//exc_instruction_address_misaligned_test();

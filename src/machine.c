@@ -1,17 +1,9 @@
+#include "defs.h"
 #include "dtb.h"
 #include "riscv_hypervisor.h"
 
-extern void mtrapvec();
-extern void hstrapvec();
-extern int main();
-
-void start(unsigned long hartid, void *dtb);
-
-extern char rodata[];	// linker script
-extern char data[];	// linker script
-
 void
-start(unsigned long hartid, void *dtb)
+init_machine()
 {
 	// setup trap vector as early as possible
 	W_MTVEC((uint64) mtrapvec);

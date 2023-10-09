@@ -1,10 +1,7 @@
-#ifndef PANIC_H
-#define PANIC_H
+#ifndef STDIO_H
+#define STDIO_H
 
-#include "types.h"
-
-extern uint64 hartid();
-extern void printf(char *fmt, ...);
+#include "defs.h"
 
 // void __noreturn__ panic(char *s)
 #define panic(s) 						\
@@ -19,4 +16,7 @@ extern void printf(char *fmt, ...);
 		while (1);					\
 	} while (0);
 
-#endif // PANIC_H
+void printf(char *fmt, ...);
+void init_printf();
+
+#endif // STDIO_H

@@ -1,12 +1,12 @@
 // Kernel physical memory
 
+#include "defs.h"
 #include "dtb.h"
 #include "lock.h"
 #include "memory.h"
-#include "panic.h"
+#include "stdio.h"
+#include "string.h"
 #include "types.h"
-
-extern char end[];	// linker script
 
 struct ll {
 	struct ll *next;
@@ -18,9 +18,6 @@ struct {
 } kmem;
 
 static int valid_address(void *pa);
-void *kmalloc();
-void kfree(void *pa);
-void init_kmem();
 
 static int
 valid_address(void *pa)

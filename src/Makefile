@@ -1,11 +1,14 @@
-OBJFILES=asm_boot.o asm_trap.o main.o start.o uart.o printf.o cpu.o asm_spinlock.o spinlock.o trap.o vmem.o kmem.o
+OBJFILES=asm_boot.o asm_trap.o main.o machine.o uart.o printf.o cpu.o
+OBJFILES+= asm_spinlock.o spinlock.o trap.o vmem.o kmem.o string.o
+
 TESTS=printf_test.o spinlock_test.o asm_exception_tests.o
+
 OBJFILES+= $(TESTS)
 OBJECTS=$(patsubst %, $(BUILD_DIR)%, $(OBJFILES))
 
 INCDIR=./include
 
-CFLAGS=-Wall -ggdb -I$(INCDIR)
+CFLAGS=-W -Wall -ggdb -I$(INCDIR)
 #CFLAGS+= -Werror
 # isolate from host environment
 CFLAGS+=-ffreestanding -fno-common -nodefaultlibs -nostdlib

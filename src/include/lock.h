@@ -13,8 +13,8 @@ struct lock {
 	char *name;	// purpose of the lock
 };
 
-extern void acquire(struct lock *lk);
-extern void release(struct lock *lk);
-extern void init_lock(struct lock *lk, char *name);
+void acquire(struct lock *lk);
+void release(struct lock *lk);
+void init_lock(struct lock *lk, char *name);
 
 #endif // LOCK_H

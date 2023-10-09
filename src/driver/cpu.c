@@ -1,9 +1,25 @@
-#include "cpu.h"
 #include "dtb.h"
+#include "memory.h"
 #include "riscv_hypervisor.h"
 #include "types.h"
 
-static struct cpu cpus[DTB_NR_CPUS];
+// BEWARE: 4096 is hardcoded in boot.S for CPU_STACK_SIZE
+#define CPU_STACK_SIZE PAGE_SIZE
+
+// per cpu allocations
+struct cpu {
+	// stack
+	// defined as cpu_stacks for all dtb cpus (but should belong here)
+	//   if we declared it in struct cpu, we do not know the offset to
+	//   this field in assembly code (boot.S), position may even change
+	//   in the future
+
+	// interrupts
+	int int_enable;	// stored for push and pop
+	int noff;	// times interrupt_disable was pushed but not popped
+};
+
+static struct cpu *mycpu();
 
 // Call convention demands alignment of stack pointer to 16.
 //	0xfff0 -> aligned
@@ -13,13 +29,7 @@ static struct cpu cpus[DTB_NR_CPUS];
 //	ld t0, 1(sp) -> requires 0(sp) and 8(sp) fetches
 // TODO: At least I think this is what happens (not the goal of my research)
 __attribute__ ((aligned(16))) char cpu_stacks[CPU_STACK_SIZE * DTB_NR_CPUS];
-
-uint64 hartid();
-static struct cpu *mycpu();
-void interrupt_enable();
-void interrupt_disable();
-void push_int_disable();
-void pop_int_disable();
+static struct cpu cpus[DTB_NR_CPUS];
 
 uint64
 hartid()

@@ -1,7 +1,6 @@
 #ifndef RISCV_HYPERVISOR_H
 #define RISCV_HYPERVISOR_H
 
-#include "types.h"
 #include "riscv.h"
 
 // Hypervisor extension

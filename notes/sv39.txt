@@ -45,10 +45,22 @@ Page table entry: 64 bit -> { N ... PBMT ... Reserved ... PPN[2] ... PPN[1] ... 
 	0: V - valid
 
 
+X W R Meaning
+------------------------------------------
+0 0 0 Pointer to next level of page table.
+0 0 1 Read-only page.
+0 1 0 Reserved for future use.
+0 1 1 Read-write page.
+1 0 0 Execute-only page.
+1 0 1 Read-execute page.
+1 1 0 Reserved for future use.
+1 1 1 Read-write-execute page.
+
+
 --- Virtual address translation process ---
 
 /* step 0 - sv39 */
-#define PAGESIZE (2 << 12)
+#define PAGESIZE (1 << 12)
 #define PTESIZE 8
 #define LEVELS 3
 
