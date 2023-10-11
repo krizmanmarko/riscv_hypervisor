@@ -97,9 +97,6 @@ init_machine()
 	W_MSTATUS(mstatus);
 	W_MEPC((uint64) main);	// requires gcc -mcmodel=medany
 
-	// Testing purposes
-	// end Testing purposes
-
 	// enter supervisor mode
 	asm volatile("mret");
 }

@@ -90,7 +90,7 @@ int interrupt_status()
 	return (sstatus & SSTATUS_SIE) ? 1 : 0;
 }
 
-void init_cpu()
+void hart_init_cpu()
 {
 	// no need to initialize cpu stack
 	interrupt_disable();

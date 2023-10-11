@@ -30,38 +30,47 @@ BUILD_DIR=../build/
 
 .PHONY: all clean
 
-all: clean $(BUILD_DIR)hypervisor tags
+all: clean tags $(BUILD_DIR)hypervisor
 
 tags:
 	ctags -R .
 
 # watch out! linkerscript.ld must be before $(OBJECTS) because it is an argument for -T switch
 $(BUILD_DIR)hypervisor: $(BUILD_DIR)linkerscript.ld $(OBJECTS)
-	$(ld) $(LDFLAGS) -T $^ -o $@
+	@$(ld) $(LDFLAGS) -T $^ -o $@
+	@echo "[+] Successfuly built $@!"
 
 $(BUILD_DIR)linkerscript.ld: linkerscript.c
-	gcc -I$(INCDIR) -P -E $^ -o $@
+	@gcc -I$(INCDIR) -P -E $^ -o $@
+	@echo "$^ -> $@"
 
 $(BUILD_DIR)asm_%.o: %.S
-	$(cc) $(CFLAGS) -c $^ -o $@
+	@$(cc) $(CFLAGS) -c $^ -o $@
+	@echo "$^ -> $@"
 
 $(BUILD_DIR)%.o: %.c
-	$(cc) $(CFLAGS) -c $^ -o $@
+	@$(cc) $(CFLAGS) -c $^ -o $@
+	@echo "$^ -> $@"
 
 $(BUILD_DIR)%.o: driver/%.c
-	$(cc) $(CFLAGS) -c $^ -o $@
+	@$(cc) $(CFLAGS) -c $^ -o $@
+	@echo "$^ -> $@"
 
 $(BUILD_DIR)%.o: lib/%.c
-	$(cc) $(CFLAGS) -c $^ -o $@
+	@$(cc) $(CFLAGS) -c $^ -o $@
+	@echo "$^ -> $@"
 
 $(BUILD_DIR)asm_%.o: lib/%.S
-	$(cc) $(CFLAGS) -c $^ -o $@
+	@$(cc) $(CFLAGS) -c $^ -o $@
+	@echo "$^ -> $@"
 
 $(BUILD_DIR)%.o: test/%.c
-	$(cc) $(CFLAGS) -c $^ -o $@
+	@$(cc) $(CFLAGS) -c $^ -o $@
+	@echo "$^ -> $@"
 
 $(BUILD_DIR)asm_%.o: test/%.S
-	$(cc) $(CFLAGS) -c $^ -o $@
+	@$(cc) $(CFLAGS) -c $^ -o $@
+	@echo "$^ -> $@"
 
 clean:
 	rm -f tags

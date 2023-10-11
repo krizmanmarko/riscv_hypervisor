@@ -1,6 +1,7 @@
 #include "defs.h"
 #include "dtb.h"
 #include "memory.h"
+#include "riscv_hypervisor.h"
 #include "stdio.h"
 #include "string.h"
 
@@ -13,6 +14,9 @@ walk(pte_t *pgtable, uint64 va, int alloc)
 {
 	pte_t *pte;	// page table entry
 	pte_t *pa;	// physical address (of page table)
+
+	if (pgtable == 0)
+		panic("root page table doesn't exist");
 
 	pa = pgtable;
 	for (int level = LEVELS - 1; level > 0; level--) {
@@ -29,16 +33,70 @@ walk(pte_t *pgtable, uint64 va, int alloc)
 	return &pa[VA2IDX(0, va)];
 }
 
+static int
+map_page(pte_t *pgtable, uint64 va, uint64 pa, int pte_flags)
+{
+	pte_t *leaf;
+
+	if ((leaf = walk(pgtable, va, 1)) == 0)
+		return -1;
+	if (*leaf & PTE_V)
+		panic("tried to remap page");
+	*leaf = PA2PTE(pa) | pte_flags | PTE_V;
+	return 0;
+}
+
+// va, pa and size may not be page aligned
+// returns 0 on success, -1 on fail
+static int
+map_pages(pte_t *pgtable, uint64 va, uint64 pa, unsigned int size, int pte_flags)
+{
+	for (uint64 i = 0; i < PGROUNDUP(size); i += PAGE_SIZE)
+		if (map_page(pgtable, va + i, pa + i, pte_flags) < 0)
+			return -1;
+	return 0;
+}
+
 void
 init_vmem()
 {
 	pte_t *root;
 
 	if ((root = (pte_t *)kmalloc()) == 0)
-		panic("kvm: couldn't allocate root page table");
+		panic("couldn't allocate root page table");
 
 	memset(root, '\x00', PAGE_SIZE);	// make every entry invalid
 
+	map_page(root, 0x414044000, DTB_SERIAL, PTE_R | PTE_W);
+	map_page(root, DTB_SERIAL, DTB_SERIAL, PTE_R | PTE_W);
+
+	// testing
+	// temporarily map direct pages (removed after all init_hart_vmem())
+	uint64 va, pa, size;
+	va = (uint64) text;
+	pa = (uint64) text;
+	size = (uint64) etext - (uint64) text;
+	map_pages(root, va, pa, size, PTE_R | PTE_X);
+
+	va = (uint64) rodata;
+	pa = (uint64) rodata;
+	size = (uint64) erodata - (uint64) rodata;
+	map_pages(root, va, pa, size, PTE_R);
+
+	va = (uint64) data;
+	pa = (uint64) data;
+	size = (uint64) edata - (uint64) data;
+	map_pages(root, va, pa, size, PTE_R | PTE_W);
+
+
+	asm volatile("sfence.vma zero, zero");
+	W_SATP(ATP_MODE_Sv39 | (((uint64) root) >> 12));
+	asm volatile("sfence.vma zero, zero");
+	char *p = (char *)0x414044000;
+	*p = 'A';
+	p = (char *)DTB_SERIAL;
+	*p = 'B';
+	// end of testing
+
 	kernel_pgtable = root;
-	walk(kernel_pgtable, DTB_MEMORY, 1);
 }

@@ -15,7 +15,7 @@ void interrupt_disable();
 void push_int_disable();
 void pop_int_disable();
 int interrupt_status();
-void init_cpu();
+void hart_init_cpu();
 
 // driver/uart.c
 void uartputc(char c);

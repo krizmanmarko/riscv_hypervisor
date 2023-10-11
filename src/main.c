@@ -12,7 +12,8 @@ main()
 	if (hartid() == 0) {
 		init_uart();
 		init_printf();
-		init_cpu();
+		printf("Booting!\n");
+		hart_init_cpu();
 		init_kmem();
 		init_vmem();
 
@@ -32,19 +33,9 @@ main()
 
 		finished_init = 1;
 	} else {
-		init_cpu();
+		hart_init_cpu();
 	}
 	while (!finished_init);
 
 	while (1);
 }
-
-
-/* only 1 cpu:
- *     init_uart()
- *     init_printf()
- */
-
-/* every cpu:
- * 	init_cpu()
- */

@@ -4,8 +4,19 @@ Why are virtual addresses of different size to physical addresses?
 In sv39 virtual address size is 39 bits while physical address size is 56 bits
 
 
-
 --- Solved ---
+
+How to enter VAS with non direct mapping?
+  Maybe use temporary direct mapping and change values of all relevant registers
+  Another option is to initialize satp and kernel page table before transitioning
+  to supervisor mode (probably the best solution)
+  (xv6 uses direct mapping - va: 0x1000 -> pa: 0x1000)
+  (I would like - va: 0x1000 -> pa: 0x7000000)
+Why is this even difficult?
+  upon writing to satp every accessed address is translated. This also includes
+  instruction fetches. Now imagine that you map .text to some va (!= pa).
+  writing to satp in such state will cause an exception since pc points to
+  instruction after 'csrw x_, satp', but .text section is now somewhere else.
 
 Memory lookup triggers page table walk. But walking page tables requires memory lookups.
 How to avoid such infinite recursion?

@@ -110,7 +110,7 @@
 #define ATP_ASID (0xffffUL << 44)	// Virtual Machine Identifier
 #define ATP_MODE (0b1111UL << 60)
 #define ATP_MODE_BARE (0b0000UL << 60)
-#define ATP_MODE_Sv39 (0b0100UL << 60)
+#define ATP_MODE_Sv39 (0b1000UL << 60)
 
 
 // Machine ISA Register (WARL)
