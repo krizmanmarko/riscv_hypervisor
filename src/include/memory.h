@@ -6,6 +6,11 @@
 #define PAGE_SHIFT 12
 #define PAGE_SIZE (1 << PAGE_SHIFT)
 
+#define VAS_BASE (0xffffffc000000000)
+#define VAS_CPU_STACK (0xffffffc040000000)
+#define VAS_SIZE (MAX_VA - VAS_BASE)
+#define MAX_VA (0xffffffffffffffff)
+
 #define PGROUNDUP(a) (((a) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1))
 #define PGROUNDDOWN(a) ((a) & ~(PAGE_SIZE - 1))
 

@@ -67,8 +67,12 @@ init_vmem()
 
 	memset(root, '\x00', PAGE_SIZE);	// make every entry invalid
 
-	map_page(root, 0x414044000, DTB_SERIAL, PTE_R | PTE_W);
+	// TODO: maybe error check???
+	map_page(root, DTB_FLASH, DTB_FLASH, PTE_R | PTE_W);
+	map_page(root, DTB_PLATFORM_BUS, DTB_PLATFORM_BUS, PTE_R | PTE_W);
+	map_page(root, DTB_RTC, DTB_RTC, PTE_R | PTE_W);
 	map_page(root, DTB_SERIAL, DTB_SERIAL, PTE_R | PTE_W);
+	map_page(root, DTB_CLINT, DTB_CLINT, PTE_R | PTE_W);
 
 	// testing
 	// temporarily map direct pages (removed after all init_hart_vmem())
@@ -77,25 +81,30 @@ init_vmem()
 	pa = (uint64) text;
 	size = (uint64) etext - (uint64) text;
 	map_pages(root, va, pa, size, PTE_R | PTE_X);
+	va = (uint64) text - DTB_MEMORY + 0xffffffc000000000;
+	map_pages(root, va, pa, size, PTE_R | PTE_X);
 
 	va = (uint64) rodata;
 	pa = (uint64) rodata;
 	size = (uint64) erodata - (uint64) rodata;
+	map_pages(root, va, pa, size, PTE_R);
+	va = (uint64) rodata - DTB_MEMORY + 0xffffffc000000000;
 	map_pages(root, va, pa, size, PTE_R);
 
 	va = (uint64) data;
 	pa = (uint64) data;
 	size = (uint64) edata - (uint64) data;
 	map_pages(root, va, pa, size, PTE_R | PTE_W);
+	va = (uint64) data - DTB_MEMORY + 0xffffffc000000000;
+	map_pages(root, va, pa, size, PTE_R | PTE_W);
 
 
 	asm volatile("sfence.vma zero, zero");
 	W_SATP(ATP_MODE_Sv39 | (((uint64) root) >> 12));
-	asm volatile("sfence.vma zero, zero");
-	char *p = (char *)0x414044000;
-	*p = 'A';
-	p = (char *)DTB_SERIAL;
-	*p = 'B';
+
+	uint64 enter_vas = (uint64) &&entered - DTB_MEMORY + 0xffffffc000000000;
+entered:
+	while (1);
 	// end of testing
 
 	kernel_pgtable = root;

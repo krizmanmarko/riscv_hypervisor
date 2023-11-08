@@ -1,6 +1,16 @@
 // This is just a normal linker script, but it is edited by C preprocessor
 // This enables using include/dtb.h symbols in this script
 
+
+/*
+ * .boot is only used when booting (useless after initial page table is set up)
+ *
+ * why have seperate boot sections: so i can write explicitly which code is in
+ * vas and which in phys as
+ *
+ * seperate cpu stacks section in the end (so I can map it easier later)
+ */
+
 #include "dtb.h"
 #include "memory.h"
 
@@ -9,22 +19,38 @@ ENTRY(boot)
 
 MEMORY
 {
-	RAM : ORIGIN = DTB_MEMORY, LENGTH = DTB_MEMORY_SIZE
+	RAM (rwx): ORIGIN = DTB_MEMORY, LENGTH = DTB_MEMORY_SIZE
+	VAS (rwx): ORIGIN = VAS_BASE, LENGTH = VAS_SIZE
 }
+
 
 SECTIONS
 {
 	. = DTB_MEMORY;
 
-	/* start RX section */
-	.boot BLOCK (PAGE_SIZE) : {
-		PROVIDE(text = .);
-		*(.boot .boot.*)
-	} > RAM
+	/* start boot section */
+	/* this is special because VMA == LMA */
+	.boot.text BLOCK (PAGE_SIZE) : {
+		PROVIDE(boottext = .);
+		*(.boot.text.m)		/* to make sure M-mode boot is first */
+		*(.boot.text.s .boot.text .boot.text.*)
+	}> RAM AT> RAM
+	PROVIDE(eboottext = .);
 
-	.text : {
+	.boot.rodata BLOCK (PAGE_SIZE) : {
+		PROVIDE(bootrodata = .);
+		*(.boot.rodata .boot.rodata.*)
+	}> RAM AT> RAM
+
+
+
+	. = VAS_BASE;
+
+	/* start RX section */
+	.text BLOCK (PAGE_SIZE) : {
+		PROVIDE(text = .);
 		*(.text .text.*)
-	} > RAM
+	}> VAS AT> RAM
 	PROVIDE(etext = .);
 
 	/* start RO section in new page */
@@ -32,7 +58,7 @@ SECTIONS
 		PROVIDE(rodata = .);
 		. = ALIGN(16);
 		*(.rodata .rodata.*)
-	} > RAM
+	}> VAS AT> RAM
 	PROVIDE(erodata = .);
 
 	/* start RW section in new page */
@@ -40,12 +66,12 @@ SECTIONS
 		PROVIDE(data = .);
 		. = ALIGN(16);
 		*(.data .data.*)
-	} > RAM
+	}> VAS AT> RAM
 
-	.bss : {
+	.bss BLOCK (PAGE_SIZE): {
 		. = ALIGN(16);
 		*(.bss .bss.*)
-	} > RAM
+	}> VAS AT> RAM
 	PROVIDE(edata = .);
 
 	PROVIDE(end = .);

@@ -3,6 +3,10 @@
 Why are virtual addresses of different size to physical addresses?
 In sv39 virtual address size is 39 bits while physical address size is 56 bits
 
+When using indirect kernel page tables, how do we create new page tables?
+Problem is that we do not have access to physical addresses (do we just use
+some base offset / mask for translating va to pa in software?)
+
 
 --- Solved ---
 

@@ -82,7 +82,10 @@ hstrapvec:
 	addi sp, sp, 256
 	sret
 
+
+.section ".boot.text", "ax"
 .globl mtrapvec
+
 .align 4
 mtrapvec:
 	mret

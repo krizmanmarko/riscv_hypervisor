@@ -30,7 +30,7 @@ init_machine()
 	pmpcfg0 |= (PMPCFG_A_TOR | PMPCFG_R | PMPCFG_W) << (++reg * 8);
 	W_PMPADDR0(DTB_MEMORY >> 2);
 
-	// make .text section RX
+	// make .boot and .text section RX
 	pmpcfg0 |= (PMPCFG_A_TOR | PMPCFG_R | PMPCFG_X) << (++reg * 8);
 	W_PMPADDR1(((uint64) &rodata) >> 2);
 
@@ -38,10 +38,9 @@ init_machine()
 	pmpcfg0 |= (PMPCFG_A_TOR | PMPCFG_R) << (++reg * 8);
 	W_PMPADDR2(((uint64) &data) >> 2);
 
-	// Leave 4 bytes of memory for access fault exception tests
-	// in test/exception_tests.c this address is hardcoded
+	// make .data and dynamic memory RW
 	pmpcfg0 |= (PMPCFG_A_TOR | PMPCFG_R | PMPCFG_W) << (++reg * 8);
-	W_PMPADDR3((DTB_MEMORY + DTB_MEMORY_SIZE - 4) >> 2);
+	W_PMPADDR3((DTB_MEMORY + DTB_MEMORY_SIZE) >> 2);
 
 	// max physical addr (56-bits) -> no permissions
 	pmpcfg0 |= (PMPCFG_A_TOR) << (++reg * 8);
@@ -69,6 +68,7 @@ init_machine()
 		| MEDELEG_VIRTUAL_INSTRUCTION
 		| MEDELEG_STORE_OR_AMO_GUEST_PAGE_FAULT;
 	W_MEDELEG(exceptions);
+	// 0xf0b7ff
 
 	// delegate interrupts (do not delegate M interrupts)
 	uint64 interrupts = MIDELEG_SSI
@@ -79,14 +79,13 @@ init_machine()
 		| MIDELEG_VSEI
 		| MIDELEG_SGEI;
 	W_MIDELEG(interrupts);
+	// 0x1666
 
 	// initialize supervisor
-	W_SSTATUS((uint64) 0);
-	W_SIE((uint64) 0);
-	W_SIP((uint64) 0);
+	W_SSTATUS(0ULL);
+	W_SIE(0ULL);
+	W_SIP(0ULL);
 	W_SATP(ATP_MODE_BARE);
-	W_STVEC((uint64) hstrapvec);
-	//W_SSCRATCH();
 
 	// Prepare for first mret
 	uint64 mstatus;
