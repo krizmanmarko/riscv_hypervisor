@@ -7,16 +7,15 @@
 
 #ifndef __ASSEMBLER__
 
-// per cpu allocations
+// per cpu allocations (mapped to VAS_CPU_BASE)
 struct cpu {
 	// interrupts
 	int int_enable;	// stored for push and pop
 	int noff;	// times interrupt_disable was pushed but not popped
 
-	// stack MUST be at the bottom
-	uint8 stack[CPU_STACK_SIZE] __attribute__((aligned(PAGE_SIZE)))
+	// stack
+	char stack[CPU_STACK_SIZE] __attribute__((aligned(PAGE_SIZE)));
 };
 
 #endif // __ASSEMBLER__
-
 #endif // CPU_H

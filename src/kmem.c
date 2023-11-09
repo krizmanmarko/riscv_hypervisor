@@ -114,3 +114,4 @@ init_kmem()
 	if ((uint64) kmalloc() != DTB_MEMORY + DTB_MEMORY_SIZE - PAGE_SIZE)
 		panic("exception testing page not discarded");
 }
+TODO: this is an old file

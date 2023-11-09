@@ -5,7 +5,7 @@
 #	enter vas
 #	setup everything necessary to enter C code (stack, gp)
 
-#include "cpu.h"
+#include "structs_in_asm.h"
 
 .section ".boot.text.s", "ax"
 .globl setup
@@ -51,10 +51,10 @@ init_bootstrap_pages:
 #			root[384][0][0]
 #			...
 #			root[384][0][k] (depending on leftover memory)
+	li a0, CPU_SIZE
 	ret
 
 enter_vas:
-	mret
 	ret
 
 init_for_c:

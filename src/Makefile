@@ -15,9 +15,9 @@ OBJFILES+= asm_sboot.o asm_boot.o asm_trap.o
 OBJFILES+= $(TESTS)
 OBJECTS=$(patsubst %, $(BUILD_DIR)%, $(OBJFILES))
 
-INCDIR=./include
+INCLUDES=-I ./include -I$(BUILD_DIR)
 
-CFLAGS=-W -Wall -ggdb -I$(INCDIR)
+CFLAGS=-W -Wall -ggdb $(INCLUDES)
 #CFLAGS+= -Werror
 # isolate from host environment
 CFLAGS+=-ffreestanding -fno-common -nodefaultlibs -nostdlib
@@ -41,20 +41,25 @@ BUILD_DIR=../build/
 
 all: clean tags $(BUILD_DIR)hypervisor
 
-tags:
-	ctags -R .
+tags: $(BUILD_DIR)structs_in_asm.h
+	ctags -R . $^
 
 # watch out! linkerscript.ld must be before $(OBJECTS) because it is an argument for -T switch
 $(BUILD_DIR)hypervisor: $(BUILD_DIR)linkerscript.ld $(OBJECTS)
 	@$(ld) $(LDFLAGS) -T $^ -o $@
 	@echo "[+] Successfuly built $@!"
 
-$(BUILD_DIR)linkerscript.ld: linkerscript.c
-	@gcc -I$(INCDIR) -P -E $^ -o $@
+$(BUILD_DIR)structs_in_asm.h: helper/structs_in_asm.c
+	@$(cc) $(CFLAGS) -S $^ -o - \
+		| awk '($$1 == "->") { print "#define " $$2 " (" $$3 ")" }' >$@
 	@echo "$^ -> $@"
 
-$(BUILD_DIR)asm_%.o: %.S
-	@$(cc) $(CFLAGS) -c $^ -o $@
+$(BUILD_DIR)linkerscript.ld: helper/linkerscript.c
+	@gcc $(INCLUDES) -P -E $^ -o $@
+	@echo "$^ -> $@"
+
+$(BUILD_DIR)asm_%.o: %.S $(BUILD_DIR)structs_in_asm.h
+	@$(cc) $(CFLAGS) -c $< -o $@
 	@echo "$^ -> $@"
 
 $(BUILD_DIR)%.o: %.c
@@ -69,18 +74,19 @@ $(BUILD_DIR)%.o: lib/%.c
 	@$(cc) $(CFLAGS) -c $^ -o $@
 	@echo "$^ -> $@"
 
-$(BUILD_DIR)asm_%.o: lib/%.S
-	@$(cc) $(CFLAGS) -c $^ -o $@
+$(BUILD_DIR)asm_%.o: lib/%.S $(BUILD_DIR)structs_in_asm.h
+	@$(cc) $(CFLAGS) -c $< -o $@
 	@echo "$^ -> $@"
 
 $(BUILD_DIR)%.o: test/%.c
 	@$(cc) $(CFLAGS) -c $^ -o $@
 	@echo "$^ -> $@"
 
-$(BUILD_DIR)asm_%.o: test/%.S
-	@$(cc) $(CFLAGS) -c $^ -o $@
+$(BUILD_DIR)asm_%.o: test/%.S $(BUILD_DIR)structs_in_asm.h
+	@$(cc) $(CFLAGS) -c $< -o $@
 	@echo "$^ -> $@"
 
 clean:
-	rm -f tags
-	rm -f $(BUILD_DIR)*
+	@rm -f tags
+	@rm -f $(BUILD_DIR)*
+	@echo "[+] Cleaned up"

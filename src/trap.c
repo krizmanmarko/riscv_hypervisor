@@ -1,6 +1,6 @@
 #include "riscv_hypervisor.h"
-#include "stdio.h"	// TODO: only for debugging with printf and panic
 #include "types.h"
+//#include "stdio.h"	// TODO: only for debugging with printf and panic
 
 void
 hs_interrupt_handler(uint64 scause)
