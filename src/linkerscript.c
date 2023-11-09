@@ -11,6 +11,8 @@
  * seperate cpu stacks section in the end (so I can map it easier later)
  */
 
+#define __LINKER_SCRIPT__
+
 #include "dtb.h"
 #include "memory.h"
 
@@ -41,8 +43,16 @@ SECTIONS
 		PROVIDE(bootrodata = .);
 		*(.boot.rodata .boot.rodata.*)
 	}> RAM AT> RAM
+	PROVIDE(ebootrodata = .);
+
+	PROVIDE(eboot = .);
+	/*
+	 * pa = va - VAS_BASE + eboot
+	 * va = pa - eboot + VAS_BASE
+	 */
 
 
+	/* From here on out every symbol provided is virtual address */
 
 	. = VAS_BASE;
 
@@ -74,5 +84,5 @@ SECTIONS
 	}> VAS AT> RAM
 	PROVIDE(edata = .);
 
-	PROVIDE(end = .);
+	PROVIDE(dynamic = .);
 }

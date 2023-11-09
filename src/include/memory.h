@@ -1,6 +1,9 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
+// WARNING!
+// following section is also used in linker script
+
 // sv39 translation scheme
 
 #define PAGE_SHIFT 12
@@ -10,6 +13,10 @@
 #define VAS_CPU_STACK (0xffffffc040000000)
 #define VAS_SIZE (MAX_VA - VAS_BASE)
 #define MAX_VA (0xffffffffffffffff)
+
+
+// everything else is not needed in linkerscript
+#ifndef __LINKER_SCRIPT__
 
 #define PGROUNDUP(a) (((a) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1))
 #define PGROUNDDOWN(a) ((a) & ~(PAGE_SIZE - 1))
@@ -33,4 +40,6 @@
 // vpn[2], vpn[1], vpn[0], offset -> vpn[level]
 #define VA2IDX(level, va) ((((va) >> PAGE_SHIFT) >> ((level) * 9)) & 0x1ff)
 
+
+#endif // __LINKER_SCRIPT__
 #endif // MEMORY_H

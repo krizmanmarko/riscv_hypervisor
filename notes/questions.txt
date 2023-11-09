@@ -10,6 +10,10 @@ some base offset / mask for translating va to pa in software?)
 
 --- Solved ---
 
+How to get c struct offsets in assembly?
+  There is a neat trick to get this done. You have to alter the build process.
+    TODO: write specifics
+
 How to enter VAS with non direct mapping?
   Maybe use temporary direct mapping and change values of all relevant registers
   Another option is to initialize satp and kernel page table before transitioning

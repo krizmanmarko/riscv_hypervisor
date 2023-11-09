@@ -1,4 +1,13 @@
-OBJFILES=asm_sboot.o asm_boot.o asm_trap.o trap.o
+
+# TODO: clean this mess up please
+# a curious thing is going on here
+# c files must be compiled before asm files since they need compiler help
+# to generate correct offsets for c structs
+# (this way we avoid hardcodeing offsets)
+# i guess bao copied this https://stackoverflow.com/questions/8259447/give-structure-offset-attribute-to-assembler
+
+OBJFILES=trap.o
+OBJFILES+= asm_sboot.o asm_boot.o asm_trap.o
 #OBJFILES+= asm_spinlock.o spinlock.o trap.o vmem.o kmem.o string.o
 
 #TESTS=printf_test.o spinlock_test.o asm_exception_tests.o
