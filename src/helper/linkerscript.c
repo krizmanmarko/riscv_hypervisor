@@ -35,15 +35,21 @@ SECTIONS
 	.boot.text BLOCK (PAGE_SIZE) : {
 		PROVIDE(boottext = .);
 		*(.boot.text.m)		/* to make sure M-mode boot is first */
-		*(.boot.text.s .boot.text .boot.text.*)
+		*(.boot.text.*)
 	}> RAM AT> RAM
 	PROVIDE(eboottext = .);
 
-	.boot.rodata BLOCK (PAGE_SIZE) : {
-		PROVIDE(bootrodata = .);
-		*(.boot.rodata .boot.rodata.*)
+	.boot.data BLOCK (PAGE_SIZE) : {
+		PROVIDE(bootdata = .);
+		*(.boot.data .boot.data.*)
 	}> RAM AT> RAM
-	PROVIDE(ebootrodata = .);
+	PROVIDE(ebootdata = .);
+
+	.boot.bsp BLOCK (PAGE_SIZE) : {
+		PROVIDE(bsp = .);
+		*(.boot.bsp)
+	}> RAM AT> RAM
+	PROVIDE(ebsp = .);
 
 	PROVIDE(eboot = .);
 	/*
@@ -54,11 +60,13 @@ SECTIONS
 
 	/* From here on out every symbol provided is virtual address */
 
-	. = VAS_BASE;
+	/* simplify PA2VA and VA2PA */
+	. = . - DTB_MEMORY + VAS_BASE;
 
 	/* start RX section */
 	.text BLOCK (PAGE_SIZE) : {
 		PROVIDE(text = .);
+		*(.text.entry)
 		*(.text .text.*)
 	}> VAS AT> RAM
 	PROVIDE(etext = .);

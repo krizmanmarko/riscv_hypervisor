@@ -27,17 +27,20 @@
 	or \reg, \reg, t1
 .endm
 
-.section ".boot.rodata", "a"
+.section ".boot.data", "aw"
+.balign 8
 text_sym: .8byte text
 rodata_sym: .8byte rodata
 data_sym: .8byte data
 memory_end_sym: .8byte DTB_MEMORY_END
 max_address_sym: .8byte 0xffffffffffffff	# 56-bits
+nox_sym: .8byte 0x4141414141414141
 
 .section ".boot.text.m", "ax"
 .globl boot
 
 boot:
+	la t0, text_sym
 	# first instruction is here
 	# Previous boot stage provides:
 	#	a0: hart id

@@ -21,8 +21,8 @@ CFLAGS=-W -Wall -ggdb $(INCLUDES)
 #CFLAGS+= -Werror
 # isolate from host environment
 CFLAGS+=-ffreestanding -fno-common -nodefaultlibs -nostdlib
-# position independent code
-CFLAGS+=-mcmodel=medany
+# Position dependent code
+CFLAGS+= -mcmodel=medany -fno-pic
 
 PAGE_SIZE=4096
 LDFLAGS=-nostdlib
