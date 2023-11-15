@@ -1,7 +1,7 @@
 #ifndef STDIO_H
 #define STDIO_H
 
-#include "defs.h"
+//#include "defs.h"
 
 // void __noreturn__ panic(char *fmt, ...)
 // ##__VA_ARGS__ -> ## removes comma if __VA_ARGS__ is empty
@@ -22,4 +22,3 @@ void printf(char *fmt, ...);
 void init_printf();
 
 #endif // STDIO_H
-TODO: this is an old file

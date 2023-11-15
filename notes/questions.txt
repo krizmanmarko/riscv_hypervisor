@@ -7,6 +7,9 @@ When using indirect kernel page tables, how do we create new page tables?
 Problem is that we do not have access to physical addresses (do we just use
 some base offset / mask for translating va to pa in software?)
 
+I cannot map page at 0x000 to something (first available mappable page is at 0x1000).
+Why is this a thing?
+
 
 --- Solved ---
 

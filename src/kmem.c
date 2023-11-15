@@ -58,21 +58,21 @@ valid_address(void *pa)
 	return 1;
 }
 
-//// returns page address on succes, 0 on fail
-//void *
-//kmalloc()
-//{
-//	struct ll *page;
-//
-//	acquire(&kmem.lk);
-//	page = kmem.freelist;
-//	if (page)
-//		kmem.freelist = page->next;
-//	release(&kmem.lk);
-//
-//	return (void *)page;
-//}
-//
+// returns page address on succes, 0 on fail
+void *
+kmalloc()
+{
+	struct ll *page;
+
+	acquire(&kmem.lk);
+	page = kmem.freelist;
+	if (page)
+		kmem.freelist = page->next;
+	release(&kmem.lk);
+
+	return (void *)page;
+}
+
 //void
 //kfree(void *pa)
 //{
@@ -92,6 +92,7 @@ valid_address(void *pa)
 
 // It always receives valid pa
 // no locking necessary since this runs only on master hart
+// what is wrong with kfree? -> it uses panic(), but MMIO not setup yet in VAS
 static void
 bootstrap_kfree(void *pa)
 {

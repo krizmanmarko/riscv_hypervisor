@@ -22,6 +22,7 @@ acquire:
 	bnez t1, 1b			# back to label '1' == 1b
 
 	# lock->hartid = hartid
+	mv t0, a0
 	call hartid
 	sw a0, LOCK_HARTID_OFF(t0)
 

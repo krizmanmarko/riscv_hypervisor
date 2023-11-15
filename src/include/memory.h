@@ -16,13 +16,14 @@
 #define VAS_SIZE (MAX_VA - VAS_BASE)
 #define MAX_VA (0xffffffffffffffff)
 
+#define VA2PA(va) ((va) - VAS_BASE + DTB_MEMORY)
+#define PA2VA(pa) ((pa) - DTB_MEMORY + VAS_BASE)
 
 // everything else is not needed in linkerscript
 #ifndef __LINKER_SCRIPT__
 
 #define PGROUNDUP(a) (((a) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1))
 #define PGROUNDDOWN(a) ((a) & ~(PAGE_SIZE - 1))
-#define VA2PA(va) ((va - VAS_BASE + DTB_MEMORY))
 
 #define PTE_SIZE 8
 #define LEVELS 3

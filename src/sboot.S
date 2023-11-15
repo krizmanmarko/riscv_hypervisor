@@ -92,20 +92,29 @@ enter_vas:
 # for now just map 2 gigapages (it avoids dynamic memory management for now)
 # 0x80000000 -> 0x80000000
 # VAS_BASE   -> 0x80000000
+# DTB_SERIAL -> DTB_SERIAL (well actually 
 init_bootstrap_pages:
 	# t0 <- pte
 	# t1 <- root_pt[i] address
 
-	la t2, bsp_root
 	li t0, DTB_MEMORY
+	la t2, bsp_root
 	PTEGEN t0, PTE_R | PTE_W | PTE_X
 
 	# bsp_root[2]   -> DTB_MEMORY
 	li t1, 2
 	IDX2PTR t2, t1
 	sd t0, 0(t1)
+
 	# bsp_root[256] -> DTB_MEMORY
 	li t1, 256
+	IDX2PTR t2, t1
+	sd t0, 0(t1)
+
+	# bsp_root[0] -> 0 (includes DTB_SERIAL)
+	li t0, 0
+	PTEGEN t0, PTE_R | PTE_W
+	li t1, 0
 	IDX2PTR t2, t1
 	sd t0, 0(t1)
 

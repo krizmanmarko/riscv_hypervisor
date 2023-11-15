@@ -43,11 +43,16 @@ TODO: this is an old file
 */
 
 #include "defs.h"
+#include "stdio.h"
 
 void __attribute__((noreturn))
 main()
 {
-	if (hartid() == 0)
+	if (hartid() == 0) {
 		init_kmem();
+		init_uart();
+		init_printf();
+		printf("hello world");
+	}
 	while (1);
 }

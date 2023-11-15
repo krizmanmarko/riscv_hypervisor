@@ -1,6 +1,7 @@
 # M-mode entry point
 
 #include "dtb.h"
+#include "memory.h"
 #include "riscv_hypervisor.h"
 
 # reg: store value here
@@ -29,12 +30,13 @@
 
 .section ".boot.data", "aw"
 .balign 8
-text_sym: .8byte text
-rodata_sym: .8byte rodata
-data_sym: .8byte data
+# TODO: setup pmp correctly, dynamic must probably be rwx if vms can use it
+text_sym: .8byte VA2PA(text)
+rodata_sym: .8byte VA2PA(rodata)
+data_sym: .8byte VA2PA(data)
+memory_sym: .8byte DTB_MEMORY
 memory_end_sym: .8byte DTB_MEMORY_END
 max_address_sym: .8byte 0xffffffffffffff	# 56-bits
-nox_sym: .8byte 0x4141414141414141
 
 .section ".boot.text.m", "ax"
 .globl boot
@@ -71,23 +73,19 @@ setup_pmp:
 	# TODO: set this up when you are done changing memory layout...
 
 	# full permissions for now
-	PMPADDR_INIT pmpaddr0, max_address_sym
-	PMPCFG_INIT t0, 0, PMPCFG_A_TOR | PMPCFG_R | PMPCFG_W | PMPCFG_X
+#	PMPADDR_INIT pmpaddr0, max_address_sym
+#	PMPCFG_INIT t0, 0, PMPCFG_A_TOR | PMPCFG_R | PMPCFG_W | PMPCFG_X
+#	csrw pmpcfg0, t0
+
+	PMPADDR_INIT pmpaddr0, memory_sym		# end of mmio
+	PMPADDR_INIT pmpaddr1, memory_end_sym		# end of memory
+
+	mv t0, zero
+	# mmio
+	PMPCFG_INIT t0, 0, PMPCFG_A_TOR | PMPCFG_R | PMPCFG_W
+	# ram
+	PMPCFG_INIT t0, 1, PMPCFG_A_TOR | PMPCFG_R | PMPCFG_W | PMPCFG_X
 	csrw pmpcfg0, t0
-
-	#PMPADDR_INIT pmpaddr0, text_sym			# end of mmio
-	#PMPADDR_INIT pmpaddr1, rodata_sym		# end of .boot, .text
-	#PMPADDR_INIT pmpaddr2, data_sym			# end of .rodata
-	#PMPADDR_INIT pmpaddr3, memory_end_sym		# end of .data, dynamic
-	#PMPADDR_INIT pmpaddr4, max_address_sym		# end of leftover
-
-	#mv t0, zero
-	#PMPCFG_INIT t0, 0, PMPCFG_A_TOR | PMPCFG_R | PMPCFG_W	# mmio
-	#PMPCFG_INIT t0, 1, PMPCFG_A_TOR | PMPCFG_R | PMPCFG_X	# .boot, .text
-	#PMPCFG_INIT t0, 2, PMPCFG_A_TOR | PMPCFG_R		# .rodata
-	#PMPCFG_INIT t0, 3, PMPCFG_A_TOR | PMPCFG_R | PMPCFG_W	# .data, dynamic
-	#PMPCFG_INIT t0, 4, PMPCFG_A_TOR				# leftover
-	#csrw pmpcfg0, t0
 
 	ret
 

@@ -33,6 +33,7 @@ void setup(uint64 hartid, void *dtb);
 void __attribute__((noreturn)) main();
 
 // kmem.c
+void *kmalloc();
 void init_kmem();
 
 // driver/cpu.c

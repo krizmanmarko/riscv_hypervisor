@@ -19,79 +19,72 @@
 OUTPUT_ARCH("riscv")
 ENTRY(boot)
 
-MEMORY
-{
-	RAM (rwx): ORIGIN = DTB_MEMORY, LENGTH = DTB_MEMORY_SIZE
-	VAS (rwx): ORIGIN = VAS_BASE, LENGTH = VAS_SIZE
-}
-
-
 SECTIONS
 {
 	. = DTB_MEMORY;
 
 	/* start boot section */
 	/* this is special because VMA == LMA */
-	.boot.text BLOCK (PAGE_SIZE) : {
+	.boot.text ALIGN(PAGE_SIZE) : {
 		PROVIDE(boottext = .);
 		*(.boot.text.m)		/* to make sure M-mode boot is first */
 		*(.boot.text.*)
-	}> RAM AT> RAM
+	}
 	PROVIDE(eboottext = .);
 
-	.boot.data BLOCK (PAGE_SIZE) : {
+	.boot.data ALIGN(PAGE_SIZE) : {
 		PROVIDE(bootdata = .);
 		*(.boot.data .boot.data.*)
-	}> RAM AT> RAM
+	}
 	PROVIDE(ebootdata = .);
 
-	.boot.bsp BLOCK (PAGE_SIZE) : {
+	.boot.bsp ALIGN(PAGE_SIZE) : {
 		PROVIDE(bsp = .);
 		*(.boot.bsp)
-	}> RAM AT> RAM
+	}
 	PROVIDE(ebsp = .);
 
 	PROVIDE(eboot = .);
-	/*
-	 * pa = va - VAS_BASE + eboot
-	 * va = pa - eboot + VAS_BASE
-	 */
 
-
-	/* From here on out every symbol provided is virtual address */
-
-	/* simplify PA2VA and VA2PA */
+	/* keep physical and virtual memory in sync */
+	. = ALIGN(PAGE_SIZE);
+	phys_locctr = .;
 	. = . - DTB_MEMORY + VAS_BASE;
 
 	/* start RX section */
-	.text BLOCK (PAGE_SIZE) : {
+	.text ALIGN(PAGE_SIZE) : AT(phys_locctr) {
 		PROVIDE(text = .);
 		*(.text.entry)
 		*(.text .text.*)
-	}> VAS AT> RAM
+	}
 	PROVIDE(etext = .);
+	phys_locctr = ALIGN(phys_locctr + SIZEOF(.text), PAGE_SIZE);
 
 	/* start RO section in new page */
-	.rodata BLOCK (PAGE_SIZE) : {
+	.rodata ALIGN(PAGE_SIZE) : AT(phys_locctr) {
 		PROVIDE(rodata = .);
 		. = ALIGN(16);
 		*(.rodata .rodata.*)
-	}> VAS AT> RAM
+	}
 	PROVIDE(erodata = .);
+	phys_locctr = ALIGN(phys_locctr + SIZEOF(.rodata), PAGE_SIZE);
 
 	/* start RW section in new page */
-	.data BLOCK (PAGE_SIZE) : {
+	.data ALIGN(PAGE_SIZE) : AT(phys_locctr) {
 		PROVIDE(data = .);
 		. = ALIGN(16);
 		PROVIDE(__global_pointer$ = . + 0x800);
 		*(.data .data.*)
-	}> VAS AT> RAM
+	}
+	phys_locctr = ALIGN(phys_locctr + SIZEOF(.data), PAGE_SIZE);
 
-	.bss BLOCK (PAGE_SIZE): {
+	.bss ALIGN(PAGE_SIZE) : AT(phys_locctr) {
 		. = ALIGN(16);
 		*(.bss .bss.*)
-	}> VAS AT> RAM
+	}
 	PROVIDE(edata = .);
+	phys_locctr = ALIGN(phys_locctr + SIZEOF(.bss), PAGE_SIZE);
 
+	. = ALIGN(PAGE_SIZE);
 	PROVIDE(dynamic = .);
 }
