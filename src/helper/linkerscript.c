@@ -83,6 +83,7 @@ SECTIONS
 	.data BLOCK (PAGE_SIZE) : {
 		PROVIDE(data = .);
 		. = ALIGN(16);
+		PROVIDE(__global_pointer$ = . + 0x800);
 		*(.data .data.*)
 	}> VAS AT> RAM
 

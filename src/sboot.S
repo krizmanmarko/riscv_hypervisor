@@ -132,6 +132,22 @@ bsp_root: .zero PAGE_SIZE
 init_for_c:
 	# store hartid in tp
 	mv tp, a0
-	# init stack
-	# init gp
+
+	# init stack - last used, grows towards smaller, 16-bit aligned
+	la t0, cpus
+	li t1, CPU_SIZE
+	addi t2, tp, 1
+	mul t1, t1, t2
+	add sp, t0, t1
+
+	# init gp (not actually necessary, boost performance)
+	.option push
+	.option norelax
+	la gp, __global_pointer$
+	.option pop
+
+	# finally goto C
+	call main
+
+	# should never be reached
 	j .

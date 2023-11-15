@@ -6,7 +6,7 @@
 # (this way we avoid hardcodeing offsets)
 # i guess bao copied this https://stackoverflow.com/questions/8259447/give-structure-offset-attribute-to-assembler
 
-OBJFILES=trap.o
+OBJFILES=trap.o main.o cpu.o kmem.o
 OBJFILES+= asm_sboot.o asm_boot.o asm_trap.o
 #OBJFILES+= asm_spinlock.o spinlock.o trap.o vmem.o kmem.o string.o
 

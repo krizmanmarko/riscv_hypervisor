@@ -52,4 +52,3 @@ release:
 	ld ra, 8(sp)
 	addi sp, sp, 16
 	ret
-TODO: this is an old file

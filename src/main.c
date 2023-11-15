@@ -1,4 +1,4 @@
-#include "defs.h"
+/*#include "defs.h"
 #include "dtb.h"
 #include "riscv_hypervisor.h"
 #include "stdio.h"
@@ -40,3 +40,11 @@ main()
 	while (1);
 }
 TODO: this is an old file
+*/
+
+void __attribute__((noreturn))
+main()
+{
+	init_kmem();
+	while (1);
+}

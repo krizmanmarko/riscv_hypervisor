@@ -1,6 +1,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#ifndef __ASSEMBLER__
 typedef signed char int8;
 typedef signed short int16;
 typedef signed int int32;
@@ -13,4 +14,5 @@ typedef unsigned long uint64;
 
 typedef uint64 pte_t;
 
+#endif // __ASSEMBLER__
 #endif // TYPES_H

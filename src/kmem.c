@@ -1,7 +1,6 @@
 // Kernel physical memory
 
 /*
-
 https://forum.osdev.org/viewtopic.php?t=12022
 
 In general there's 3 completely different "levels".
@@ -33,9 +32,8 @@ void kfree(paddr_t *page);
 virtual memory manager will be used to map physpages to correct location in vmem
 int alloc(vaddr_t *address);
 void free(vaddr_t *address);
-/*
+*/
 
-#include "defs.h"
 #include "dtb.h"
 #include "lock.h"
 #include "memory.h"
@@ -103,15 +101,9 @@ init_kmem()
 
 	// calculate all possible page pointers in (end, max_mem]
 	uint64 pa;
-	pa = PGROUNDUP((uint64) end);
+	pa = PGROUNDUP((uint64) dynamic);
 	while (valid_address((void *)pa)) {
 		kfree((void *)pa);
 		pa += PAGE_SIZE;
 	}
-
-	// last 4 bytes of memory are reserved for exception testing
-	// therefore last page is thrown away forever
-	if ((uint64) kmalloc() != DTB_MEMORY + DTB_MEMORY_SIZE - PAGE_SIZE)
-		panic("exception testing page not discarded");
 }
-TODO: this is an old file
