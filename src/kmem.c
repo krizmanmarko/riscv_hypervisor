@@ -34,16 +34,11 @@ int alloc(vaddr_t *address);
 void free(vaddr_t *address);
 */
 
+#include "defs.h"
 #include "dtb.h"
 #include "lock.h"
 #include "memory.h"
-#include "stdio.h"
-#include "string.h"
 #include "types.h"
-
-struct ll {
-	struct ll *next;
-};
 
 struct {
 	struct lock lk;
@@ -51,46 +46,59 @@ struct {
 } kmem;
 
 static int valid_address(void *pa);
+static void bootstrap_kfree(void *pa);
 
 static int
 valid_address(void *pa)
 {
 	if (((uint64) pa % PAGE_SIZE) != 0)
 		return 0;
-	if ((char *)pa < end || (uint64) pa >= DTB_MEMORY + DTB_MEMORY_SIZE)
+	if ((char *)pa < VA2PA(dynamic) || (uint64) pa >= DTB_MEMORY_END)
 		return 0;
 	return 1;
 }
 
-// returns page address on succes, 0 on fail
-void *
-kmalloc()
+//// returns page address on succes, 0 on fail
+//void *
+//kmalloc()
+//{
+//	struct ll *page;
+//
+//	acquire(&kmem.lk);
+//	page = kmem.freelist;
+//	if (page)
+//		kmem.freelist = page->next;
+//	release(&kmem.lk);
+//
+//	return (void *)page;
+//}
+//
+//void
+//kfree(void *pa)
+//{
+//	struct ll *page;
+//
+//	if (!valid_address(pa))
+//		panic("kfree");
+//
+//	page = (struct ll *)pa;
+//
+//	acquire(&kmem.lk);
+//	page->next = kmem.freelist;
+//	kmem.freelist = page;
+//	release(&kmem.lk);
+//}
+
+
+// It always receives valid pa
+// no locking necessary since this runs only on master hart
+static void
+bootstrap_kfree(void *pa)
 {
 	struct ll *page;
-
-	acquire(&kmem.lk);
-	page = kmem.freelist;
-	if (page)
-		kmem.freelist = page->next;
-	release(&kmem.lk);
-
-	return (void *)page;
-}
-
-void
-kfree(void *pa)
-{
-	struct ll *page;
-
-	if (!valid_address(pa))
-		panic("kfree");
-
 	page = (struct ll *)pa;
-
-	acquire(&kmem.lk);
 	page->next = kmem.freelist;
 	kmem.freelist = page;
-	release(&kmem.lk);
 }
 
 void
@@ -101,9 +109,9 @@ init_kmem()
 
 	// calculate all possible page pointers in (end, max_mem]
 	uint64 pa;
-	pa = PGROUNDUP((uint64) dynamic);
+	pa = VA2PA(PGROUNDUP((uint64) dynamic));
 	while (valid_address((void *)pa)) {
-		kfree((void *)pa);
+		bootstrap_kfree((void *)pa);
 		pa += PAGE_SIZE;
 	}
 }

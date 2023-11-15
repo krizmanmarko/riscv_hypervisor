@@ -1,6 +1,8 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
+#include "dtb.h"
+
 // WARNING!
 // following section is also used in linker script
 
@@ -20,6 +22,7 @@
 
 #define PGROUNDUP(a) (((a) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1))
 #define PGROUNDDOWN(a) ((a) & ~(PAGE_SIZE - 1))
+#define VA2PA(va) ((va - VAS_BASE + DTB_MEMORY))
 
 #define PTE_SIZE 8
 #define LEVELS 3

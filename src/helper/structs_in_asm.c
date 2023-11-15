@@ -4,6 +4,7 @@
 
 #include <stddef.h>
 #include "cpu.h"
+#include "lock.h"
 
 #define DEFINE(sym, val) \
 	asm volatile("\n-> " #sym " %0 " #val "\n" : : "i" (val))
@@ -17,6 +18,12 @@
 void
 struct_defines()
 {
+	// cpu.h
 	DEFINE_SIZE(CPU_SIZE, struct cpu);
 	DEFINE_OFFSET(CPU_STACK_OFF, struct cpu, stack);
+
+	// lock.h
+	DEFINE_OFFSET(LOCK_LOCKED_OFF, struct lock, locked);
+	DEFINE_OFFSET(LOCK_HARTID_OFF, struct lock, hartid);
+	DEFINE_OFFSET(LOCK_NAME_OFF, struct lock, name);
 }

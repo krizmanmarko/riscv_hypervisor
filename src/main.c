@@ -42,9 +42,12 @@ main()
 TODO: this is an old file
 */
 
+#include "defs.h"
+
 void __attribute__((noreturn))
 main()
 {
-	init_kmem();
+	if (hartid() == 0)
+		init_kmem();
 	while (1);
 }

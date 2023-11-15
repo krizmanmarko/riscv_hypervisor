@@ -6,8 +6,8 @@
 # (this way we avoid hardcodeing offsets)
 # i guess bao copied this https://stackoverflow.com/questions/8259447/give-structure-offset-attribute-to-assembler
 
-OBJFILES=trap.o main.o cpu.o kmem.o
-OBJFILES+= asm_sboot.o asm_boot.o asm_trap.o
+OBJFILES=trap.o main.o cpu.o kmem.o spinlock.o
+OBJFILES+= asm_sboot.o asm_boot.o asm_trap.o asm_spinlock.o
 #OBJFILES+= asm_spinlock.o spinlock.o trap.o vmem.o kmem.o string.o
 
 #TESTS=printf_test.o spinlock_test.o asm_exception_tests.o
@@ -42,7 +42,8 @@ BUILD_DIR=../build/
 all: clean tags $(BUILD_DIR)hypervisor
 
 tags: $(BUILD_DIR)structs_in_asm.h
-	ctags -R . $^
+	@ctags -R . $^
+	@echo "[i] created tags"
 
 # watch out! linkerscript.ld must be before $(OBJECTS) because it is an argument for -T switch
 $(BUILD_DIR)hypervisor: $(BUILD_DIR)linkerscript.ld $(OBJECTS)
@@ -52,41 +53,41 @@ $(BUILD_DIR)hypervisor: $(BUILD_DIR)linkerscript.ld $(OBJECTS)
 $(BUILD_DIR)structs_in_asm.h: helper/structs_in_asm.c
 	@$(cc) $(CFLAGS) -S $^ -o - \
 		| awk '($$1 == "->") { print "#define " $$2 " (" $$3 ")" }' >$@
-	@echo "$^ -> $@"
+	@echo "[i] created structs_in_asm.h"
 
 $(BUILD_DIR)linkerscript.ld: helper/linkerscript.c
 	@gcc $(INCLUDES) -P -E $^ -o $@
-	@echo "$^ -> $@"
+	@echo "[+] $^ -> $@"
 
 $(BUILD_DIR)asm_%.o: %.S $(BUILD_DIR)structs_in_asm.h
 	@$(cc) $(CFLAGS) -c $< -o $@
-	@echo "$^ -> $@"
+	@echo "[+] $< -> $@"
 
 $(BUILD_DIR)%.o: %.c
 	@$(cc) $(CFLAGS) -c $^ -o $@
-	@echo "$^ -> $@"
+	@echo "[+] $^ -> $@"
 
 $(BUILD_DIR)%.o: driver/%.c
 	@$(cc) $(CFLAGS) -c $^ -o $@
-	@echo "$^ -> $@"
+	@echo "[+] $^ -> $@"
 
 $(BUILD_DIR)%.o: lib/%.c
 	@$(cc) $(CFLAGS) -c $^ -o $@
-	@echo "$^ -> $@"
+	@echo "[+] $^ -> $@"
 
 $(BUILD_DIR)asm_%.o: lib/%.S $(BUILD_DIR)structs_in_asm.h
 	@$(cc) $(CFLAGS) -c $< -o $@
-	@echo "$^ -> $@"
+	@echo "[+] $< -> $@"
 
 $(BUILD_DIR)%.o: test/%.c
 	@$(cc) $(CFLAGS) -c $^ -o $@
-	@echo "$^ -> $@"
+	@echo "[+] $^ -> $@"
 
 $(BUILD_DIR)asm_%.o: test/%.S $(BUILD_DIR)structs_in_asm.h
 	@$(cc) $(CFLAGS) -c $< -o $@
-	@echo "$^ -> $@"
+	@echo "[+] $< -> $@"
 
 clean:
 	@rm -f tags
 	@rm -f $(BUILD_DIR)*
-	@echo "[+] Cleaned up"
+	@echo "[i] cleaned up"

@@ -3,19 +3,19 @@
 
 // spinlock
 
+#ifndef __ASSEMBLER__
 struct lock {
-	// order and types of elements must stay the same, because they are
-	// hardcoded in lib/spinlock.S
 	int locked;
-	int hartid;	// hartid of cpu holding the lock
 
 	// debugging
+	int hartid;	// hartid of cpu holding the lock
 	char *name;	// purpose of the lock
 };
+
+#endif // __ASSEMBLER__
 
 void acquire(struct lock *lk);
 void release(struct lock *lk);
 void init_lock(struct lock *lk, char *name);
 
 #endif // LOCK_H
-TODO: this is an old file
