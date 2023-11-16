@@ -39,7 +39,7 @@
 
 // get ppn to correct offset
 #define PA2PTE(pa) ((pte_t) (((pa) >> 12) << 10))
-#define PTE2PA(pte) ((pte_t *) (((pte) >> 10) << 12))
+#define PTE2PA(pte) ((void *) (((pte) >> 10) << 12))
 
 // vpn[2], vpn[1], vpn[0], offset -> vpn[level]
 #define VA2IDX(level, va) ((((va) >> PAGE_SHIFT) >> ((level) * 9)) & 0x1ff)

@@ -9,7 +9,7 @@
 // TODO: does this create main rodata strings all sharing [PANIC...] prefix?
 #define panic(fmt, ...) \
 	do { \
-		printf("[PANIC(%d) %s:%d]: " fmt, \
+		printf("\033[38;2;255;0;0m[PANIC(%d) %s:%d]: " fmt, \
 			hartid(), \
 			__FILE__, \
 			__LINE__, \

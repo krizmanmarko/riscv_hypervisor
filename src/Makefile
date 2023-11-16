@@ -6,7 +6,7 @@
 # (this way we avoid hardcodeing offsets)
 # i guess bao copied this https://stackoverflow.com/questions/8259447/give-structure-offset-attribute-to-assembler
 
-OBJFILES=trap.o main.o cpu.o kmem.o spinlock.o vmem.o printf.o uart.o
+OBJFILES=trap.o main.o cpu.o kmem.o spinlock.o vmem.o printf.o uart.o string.o
 OBJFILES+= asm_sboot.o asm_boot.o asm_trap.o asm_spinlock.o
 #OBJFILES+= asm_spinlock.o spinlock.o trap.o vmem.o kmem.o string.o
 
@@ -28,7 +28,8 @@ PAGE_SIZE=4096
 LDFLAGS=-nostdlib
 LDFLAGS+= -z common-page-size=$(PAGE_SIZE) -z max-page-size=$(PAGE_SIZE)
 
-CROSS_COMPILE=/home/marko/shit/riscv-gnu-toolchain-build/bin/riscv64-unknown-linux-gnu-
+#CROSS_COMPILE=/home/marko/shit/riscv-gnu-toolchain-build/bin/riscv64-unknown-linux-gnu-
+CROSS_COMPILE=/home/marko/shit/toolchain-riscv-linux/bin/riscv64-unknown-elf-
 cc=$(CROSS_COMPILE)gcc
 ld=$(CROSS_COMPILE)ld
 as=$(CROSS_COMPILE)as

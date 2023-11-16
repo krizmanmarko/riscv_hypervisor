@@ -52,7 +52,9 @@ main()
 		init_kmem();
 		init_uart();
 		init_printf();
-		printf("hello world");
+		printf("hello world %d\n", 10);
+		init_vmem();
+		printf("vm init");
 	}
 	while (1);
 }

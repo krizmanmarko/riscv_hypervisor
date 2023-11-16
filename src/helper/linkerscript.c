@@ -81,6 +81,7 @@ SECTIONS
 	.bss ALIGN(PAGE_SIZE) : AT(phys_locctr) {
 		. = ALIGN(16);
 		*(.bss .bss.*)
+		*(.sbss .sbss.*)
 	}
 	PROVIDE(edata = .);
 	phys_locctr = ALIGN(phys_locctr + SIZEOF(.bss), PAGE_SIZE);

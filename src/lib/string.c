@@ -7,4 +7,3 @@ memset(void *dst, char c, int size)
 	}
 	return dst;
 }
-TODO: this is an old file
