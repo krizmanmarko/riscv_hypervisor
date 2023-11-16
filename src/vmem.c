@@ -99,5 +99,4 @@ init_vmem()
 	W_SATP(ATP_MODE_Sv39 | ppn);
 
 	kernel_pgtable = root;
-	panic("success %xlu", 0x543222);
 }
