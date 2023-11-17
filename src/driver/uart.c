@@ -103,7 +103,7 @@
 void uartputc(char c);
 void init_uart();
 
-static struct lock uart_lk;
+static struct lock uart_lk = LOCK_INITIALIZER;
 
 void
 uartputc(char c)
@@ -141,6 +141,4 @@ init_uart()
 
 	// no control flow
 	W_REG(MCR, 0);
-
-	init_lock(&uart_lk, "uart");
 }

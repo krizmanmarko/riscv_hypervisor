@@ -1,41 +1,27 @@
 #include "defs.h"
-#include "dtb.h"
-#include "riscv_hypervisor.h"
+#include "lock.h"
 #include "stdio.h"
+
+// temporary for testing
 #include "test.h"
+struct barrier b = BARRIER_INITIALIZER(3);
 
-int finished_init = 0;
-
-int
+void __attribute__((noreturn))
 main()
 {
 	if (hartid() == 0) {
-		init_uart();
-		init_printf();
-		printf("Booting!\n");
-		hart_init_cpu();
 		init_kmem();
+		init_uart();
+		// testing
+		printf_test();
+		// end testing
+		printf("Booting!\n");
 		init_vmem();
-
-		// Testing purposes
-		//exc_instruction_address_misaligned_test();
-		//exc_instruction_access_fault_test();
-		//exc_illegal_instruction_test();
-		//exc_breakpoint_test();
-		//exc_load_address_misaligned_test();
-		//exc_load_access_fault_test();
-		//exc_store_or_amo_address_misaligned_test();
-		//exc_store_or_amo_access_fault_test();
-
-		extern char etext[];	// linker script
-		printf("%p\n", etext);
-		// End testing purposes
-
-		finished_init = 1;
-	} else {
-		hart_init_cpu();
 	}
-	while (!finished_init);
-
+	// testing
+	spinlock_test();
+	wait_barrier(&b);
+	barrier_test();
+	// end testing
 	while (1);
 }

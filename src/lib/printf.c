@@ -10,12 +10,13 @@
 #include "lock.h"
 #include "stdio.h"
 #include "defs.h"
+#include "types.h"
 
 static void print_uint(uint64 num, int base);
 static void print_padded(uint64 num, int base, int bytes);
 
 static char digits[] = "0123456789abcdef";
-static struct lock printf_lk;
+static struct lock printf_lk = LOCK_INITIALIZER;
 
 static void
 print_uint(uint64 num, int base)
@@ -72,6 +73,17 @@ printf(char *fmt, ...)
 	va_list ap;
 	int base, length;
 	char *s;
+
+	union {
+		uint8 ui8;
+		uint16 ui16;
+		uint32 ui32;
+		uint64 ui64;
+		int8 i8;
+		int16 i16;
+		int32 i32;
+		int64 i64;
+	} tmp;
 
 	if (fmt == 0)
 		panic("fmt cannot not be null");
@@ -143,48 +155,48 @@ decide_type:
 		case 'd':
 			switch (length) {
 			case 1:
-				int8 tmp8 = va_arg(ap, int);
-				if (tmp8 < 0) {
+				tmp.i8 = va_arg(ap, int);
+				if (tmp.i8 < 0) {
 					uartputc('-');
-					tmp8 = -tmp8;
+					tmp.i8 = -tmp.i8;
 				}
 				if (base == 2 || base == 16)
-					print_padded(tmp8, base, length);
+					print_padded(tmp.i8, base, length);
 				else
-					print_uint(tmp8, base);
+					print_uint(tmp.i8, base);
 				break;
 			case 2:
-				int16 tmp16 = va_arg(ap, int);
-				if (tmp16 < 0) {
+				tmp.i16 = va_arg(ap, int);
+				if (tmp.i16 < 0) {
 					uartputc('-');
-					tmp16 = -tmp16;
+					tmp.i16 = -tmp.i16;
 				}
 				if (base == 2 || base == 16)
-					print_padded(tmp16, base, length);
+					print_padded(tmp.i16, base, length);
 				else
-					print_uint(tmp16, base);
+					print_uint(tmp.i16, base);
 				break;
 			case 4:
-				int32 tmp32 = va_arg(ap, int32);
-				if (tmp32 < 0) {
+				tmp.i32 = va_arg(ap, int32);
+				if (tmp.i32 < 0) {
 					uartputc('-');
-					tmp32 = -tmp32;
+					tmp.i32 = -tmp.i32;
 				}
 				if (base == 2 || base == 16)
-					print_padded(tmp32, base, length);
+					print_padded(tmp.i32, base, length);
 				else
-					print_uint(tmp32, base);
+					print_uint(tmp.i32, base);
 				break;
 			case 8:
-				int64 tmp64 = va_arg(ap, int64);
-				if (tmp64 < 0) {
+				tmp.i64 = va_arg(ap, int64);
+				if (tmp.i64 < 0) {
 					uartputc('-');
-					tmp64 = -tmp64;
+					tmp.i64 = -tmp.i64;
 				}
 				if (base == 2 || base == 16)
-					print_padded(tmp64, base, length);
+					print_padded(tmp.i64, base, length);
 				else
-					print_uint(tmp64, base);
+					print_uint(tmp.i64, base);
 				break;
 			default:
 				invalid_length = 1;
@@ -194,32 +206,32 @@ decide_type:
 		case 'u':
 			switch (length) {
 			case 1:
-				uint8 tmp8 = va_arg(ap, unsigned int);
+				tmp.ui8 = va_arg(ap, unsigned int);
 				if (base == 2 || base == 16)
-					print_padded(tmp8, base, length);
+					print_padded(tmp.ui8, base, length);
 				else
-					print_uint(tmp8, base);
+					print_uint(tmp.ui8, base);
 				break;
 			case 2:
-				uint16 tmp16 = va_arg(ap, unsigned int);
+				tmp.ui16 = va_arg(ap, unsigned int);
 				if (base == 2 || base == 16)
-					print_padded(tmp16, base, length);
+					print_padded(tmp.ui16, base, length);
 				else
-					print_uint(tmp16, base);
+					print_uint(tmp.ui16, base);
 				break;
 			case 4:
-				uint32 tmp32 = va_arg(ap, uint32);
+				tmp.ui32 = va_arg(ap, uint32);
 				if (base == 2 || base == 16)
-					print_padded(tmp32, base, length);
+					print_padded(tmp.ui32, base, length);
 				else
-					print_uint(tmp32, base);
+					print_uint(tmp.ui32, base);
 				break;
 			case 8:
-				uint64 tmp64 = va_arg(ap, uint64);
+				tmp.ui64 = va_arg(ap, uint64);
 				if (base == 2 || base == 16)
-					print_padded(tmp64, base, length);
+					print_padded(tmp.ui64, base, length);
 				else
-					print_uint(tmp64, base);
+					print_uint(tmp.ui64, base);
 				break;
 			default:
 				invalid_length = 1;
@@ -241,9 +253,4 @@ decide_type:
 		panic("invalid length");
 	if (unknown_specifier)
 		panic("unknown specifier");
-}
-
-void init_printf()
-{
-	init_lock(&printf_lk, "printf");
 }

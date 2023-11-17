@@ -1,4 +1,4 @@
-This document shows pretty some obscure situations where assumebd
+This document shows pretty some obscure situations where assumed
 behaviour did not match reality. It also provides examples on how
 this bit me in the ass.
 

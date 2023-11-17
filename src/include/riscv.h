@@ -1,6 +1,8 @@
 #ifndef RISCV_H
 #define RISCV_H // target: riscv64 (qemu-virt)
 
+#include "types.h"
+
 // WARL - write any, read legal
 // WLRL - write legal, read legal
 // WPRI - reserved writes preserve values, reads ignore values (ignored)

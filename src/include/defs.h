@@ -5,8 +5,36 @@
 
 // {lib,test}/* should be seperated
 
+// linkerscript (phys)
+extern char boottext[];
+extern char eboottext[];
+extern char bootdata[];
+extern char ebootdata[];
+extern char bsp[];
+extern char ebsp[];
+extern char eboot[];
+
+// linkerscript (vas)
+extern char text[];
+extern char etext[];
+extern char rodata[];
+extern char erodata[];
+extern char data[];
+extern char edata[];
+extern char dynamic[];
+
 // boot.S
 void boot(uint64 hartid, void *dtb);
+
+// sboot.S
+void setup(uint64 hartid, void *dtb);
+
+// main.c
+void __attribute__((noreturn)) main();
+
+// kmem.c
+void *kmalloc();
+void init_kmem();
 
 // driver/cpu.c
 uint64 hartid();
@@ -17,6 +45,8 @@ void pop_int_disable();
 int interrupt_status();
 void hart_init_cpu();
 
+// TODO: FROM HERE IT IS OLD
+
 // driver/uart.c
 void uartputc(char c);
 void init_uart();
@@ -26,20 +56,8 @@ void *kmalloc();
 void kfree(void *pa);
 void init_kmem();
 
-// linkerscript.c
-extern char text[];
-extern char etext[];
-extern char rodata[];
-extern char erodata[];
-extern char data[];
-extern char edata[];
-extern char end[];
-
 // machine.c
 void init_machine();
-
-// main.c
-int main();
 
 // trap.c
 void hs_interrupt_handler(uint64 scause);

@@ -33,6 +33,7 @@ walk(pte_t *pgtable, uint64 va, int alloc)
 	return &pa[VA2IDX(0, va)];
 }
 
+// returns 0 on success, -1 on fail
 static int
 map_page(pte_t *pgtable, uint64 va, uint64 pa, int pte_flags)
 {
@@ -57,9 +58,17 @@ map_pages(pte_t *pgtable, uint64 va, uint64 pa, unsigned int size, int pte_flags
 	return 0;
 }
 
+static int
+unmap(pte_t *pgtable)
+{
+	return 0;
+}
+
+// creates page table supervisor will actually use
 void
 init_vmem()
 {
+	int rv;
 	pte_t *root;
 
 	if ((root = (pte_t *)kmalloc()) == 0)
@@ -67,36 +76,43 @@ init_vmem()
 
 	memset(root, '\x00', PAGE_SIZE);	// make every entry invalid
 
-	map_page(root, 0x414044000, DTB_SERIAL, PTE_R | PTE_W);
-	map_page(root, DTB_SERIAL, DTB_SERIAL, PTE_R | PTE_W);
+	rv = map_page(root, DTB_FLASH, DTB_FLASH, PTE_R | PTE_W);
+	rv += map_page(root, DTB_PLATFORM_BUS, DTB_PLATFORM_BUS, PTE_R | PTE_W);
+	rv += map_page(root, DTB_RTC, DTB_RTC, PTE_R | PTE_W);
+	rv += map_page(root, DTB_SERIAL, DTB_SERIAL, PTE_R | PTE_W);
+	rv += map_page(root, DTB_CLINT, DTB_CLINT, PTE_R | PTE_W);
+	if (rv < 0)
+		panic("failed to map MMIO");
 
-	// testing
-	// temporarily map direct pages (removed after all init_hart_vmem())
-	uint64 va, pa, size;
-	va = (uint64) text;
-	pa = (uint64) text;
-	size = (uint64) etext - (uint64) text;
-	map_pages(root, va, pa, size, PTE_R | PTE_X);
+	// map kernel image
+	uint64 va = (uint64) text;
+	uint64 pa = VA2PA((uint64) text);
+	unsigned int size = (unsigned int) (etext - text);
+	rv = map_pages(root, va, pa, size, PTE_R | PTE_X);
 
 	va = (uint64) rodata;
-	pa = (uint64) rodata;
-	size = (uint64) erodata - (uint64) rodata;
-	map_pages(root, va, pa, size, PTE_R);
+	pa = VA2PA((uint64) rodata);
+	size = (unsigned int) (erodata - rodata);
+	rv = map_pages(root, va, pa, size, PTE_R);
 
 	va = (uint64) data;
-	pa = (uint64) data;
-	size = (uint64) edata - (uint64) data;
-	map_pages(root, va, pa, size, PTE_R | PTE_W);
-
-
-	asm volatile("sfence.vma zero, zero");
-	W_SATP(ATP_MODE_Sv39 | (((uint64) root) >> 12));
-	asm volatile("sfence.vma zero, zero");
-	char *p = (char *)0x414044000;
-	*p = 'A';
-	p = (char *)DTB_SERIAL;
-	*p = 'B';
-	// end of testing
+	pa = VA2PA((uint64) data);
+	size = (unsigned int) (edata - data);
+	rv = map_pages(root, va, pa, size, PTE_R | PTE_W);
 
 	kernel_pgtable = root;
+}
+
+void
+hart_init_vmem()
+{
+	W_SATP(ATP_MODE_Sv39 | ((uint64) kernel_pgtable) >> 12);
+	asm volatile("sfence.vma");	// flush TLB
+
+	// init sstatus
+	// init satp
+	// init stvec
+	// init sie
+	// init sip
+	// check out in driver/cpu.c
 }

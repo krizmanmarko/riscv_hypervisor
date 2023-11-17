@@ -1,20 +1,43 @@
 #ifndef LOCK_H
 #define LOCK_H
 
-// spinlock
-
+#ifndef __ASSEMBLER__
+	
 struct lock {
-	// order and types of elements must stay the same, because they are
-	// hardcoded in lib/spinlock.S
 	int locked;
-	int hartid;	// hartid of cpu holding the lock
 
 	// debugging
-	char *name;	// purpose of the lock
+	int hartid;	// hartid of cpu holding the lock
 };
 
+struct barrier {
+	int tokens;	// number of harts we are still waiting for
+	int initial;	// initial token count
+	struct lock lk;
+};
+
+#define LOCK_INITIALIZER \
+{ \
+	.locked = 0, \
+	.hartid = -1 \
+}
+
+#define BARRIER_INITIALIZER(cnt) \
+{ \
+	.tokens = cnt, \
+	.initial = cnt, \
+	.lk = LOCK_INITIALIZER \
+}
+
+#endif // __ASSEMBLER__
+
+// spinlock
 void acquire(struct lock *lk);
 void release(struct lock *lk);
-void init_lock(struct lock *lk, char *name);
+void init_lock(struct lock *lk);
+
+// barrier
+void wait_barrier(struct barrier *bar);
+void init_barrier(struct barrier *bar, int count);
 
 #endif // LOCK_H

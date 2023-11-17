@@ -1,0 +1,10 @@
+Uses openSBI with FW_JUMP=0x80200000
+
+
+linker script:
+	vm: virtual memory (and not virtual machine)
+	vm_image: the kernel binary
+
+
+arch/riscv/boot.S
+	_wait_for_bsp: wait for bootstrap pages?
