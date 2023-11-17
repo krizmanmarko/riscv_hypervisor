@@ -19,4 +19,3 @@
 #define MTIME (MTIMER_BASE + 0x7ff8)
 
 #endif // CLINT_H
-TODO: this is an old file
