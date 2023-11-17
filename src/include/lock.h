@@ -11,7 +11,8 @@ struct lock {
 };
 
 struct barrier {
-	int count;
+	int tokens;	// number of harts we are still waiting for
+	int initial;	// initial token count
 	struct lock lk;
 };
 
@@ -23,7 +24,8 @@ struct barrier {
 
 #define BARRIER_INITIALIZER(cnt) \
 { \
-	.count = cnt, \
+	.tokens = cnt, \
+	.initial = cnt, \
 	.lk = LOCK_INITIALIZER \
 }
 

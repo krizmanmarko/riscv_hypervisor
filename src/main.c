@@ -56,10 +56,11 @@ main()
 	if (hartid() == 0) {
 		init_kmem();
 		init_uart();
-		init_printf();
-		printf("hello world %hhd\n", -10);
-		init_vmem();
+		// testing
 		printf_test();
+		// end testing
+		printf("Booting!\n");
+		init_vmem();
 	}
 	// testing
 	spinlock_test();

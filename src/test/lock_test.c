@@ -17,7 +17,7 @@ void
 spinlock_test()
 {
 	if (hartid() == 0) {
-		printf("\nSPINLOCK TEST\n");
+		printf("\nSPINLOCK TEST (only runs on 3 cpus)\n");
 		printf("[info] successful if As, Bs and Cs are seperated when using locks\n");
 		printf("[info] first output is just sanity check and As, Bs and Cs should be mixed\n");
 		printf("No locking:\n");
@@ -52,15 +52,13 @@ spinlock_test()
 }
 
 struct barrier b1 = BARRIER_INITIALIZER(DTB_NR_CPUS);
-struct barrier b2 = BARRIER_INITIALIZER(DTB_NR_CPUS);
-struct barrier b3 = BARRIER_INITIALIZER(DTB_NR_CPUS);
 
 // basically spinlock test, but with barriers instead of global vars
 void
 barrier_test()
 {
 	if (hartid() == 0) {
-		printf("\nBARRIER TEST\n");
+		printf("\nBARRIER TEST (runs on DTB_NR_CPUS)\n");
 		printf("[info] successful if all ABCs seperated from DEFs\n");
 	}
 	wait_barrier(&b1);
@@ -70,11 +68,11 @@ barrier_test()
 		printf(buf);
 	}
 
-	wait_barrier(&b2);
+	wait_barrier(&b1);
 	if (hartid() == 0) {
 		printf("\nBarrier:\n");
 	}
-	wait_barrier(&b3);
+	wait_barrier(&b1);
 	for (int i = 0; i < 400; i++) {
 		char buf[2] = { 'A' + DTB_NR_CPUS, '\0' };
 		buf[0] += hartid();
