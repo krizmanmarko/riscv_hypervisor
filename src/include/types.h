@@ -15,8 +15,8 @@ typedef unsigned long uint64;
 typedef uint64 pte_t;
 
 // linked list
-struct ll {
-	struct ll *next;
+struct list {
+	struct list *next;
 };
 
 #endif // __ASSEMBLER__

@@ -58,6 +58,12 @@ map_pages(pte_t *pgtable, uint64 va, uint64 pa, unsigned int size, int pte_flags
 	return 0;
 }
 
+static int
+unmap(pte_t *pgtable)
+{
+	return 0;
+}
+
 // creates page table supervisor will actually use
 void
 init_vmem()
@@ -94,9 +100,19 @@ init_vmem()
 	size = (unsigned int) (edata - data);
 	rv = map_pages(root, va, pa, size, PTE_R | PTE_W);
 
-	asm volatile("sfence.vma");
-	uint64 ppn = ((uint64) root) >> 12;
-	W_SATP(ATP_MODE_Sv39 | ppn);
-
 	kernel_pgtable = root;
+}
+
+void
+hart_init_vmem()
+{
+	W_SATP(ATP_MODE_Sv39 | ((uint64) kernel_pgtable) >> 12);
+	asm volatile("sfence.vma");	// flush TLB
+
+	// init sstatus
+	// init satp
+	// init stvec
+	// init sie
+	// init sip
+	// check out in driver/cpu.c
 }

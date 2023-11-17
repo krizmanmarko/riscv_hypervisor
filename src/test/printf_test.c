@@ -1,8 +1,10 @@
-extern void printf(char *fmt, ...);
+#include "stdio.h"
 
 void
 printf_test()
 {
+	printf("\nPRINTF TEST\n");
+	printf("[info] successful if expected value matches the one we got\n");
 	printf("TESTING hexadecimal output\n");
 	printf("expected: address of printf\n", printf);
 	printf("got     : %p\n", printf);

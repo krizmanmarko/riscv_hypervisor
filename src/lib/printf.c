@@ -16,7 +16,7 @@ static void print_uint(uint64 num, int base);
 static void print_padded(uint64 num, int base, int bytes);
 
 static char digits[] = "0123456789abcdef";
-static struct lock printf_lk;
+static struct lock printf_lk = LOCK_INITIALIZER;
 
 static void
 print_uint(uint64 num, int base)
@@ -253,9 +253,4 @@ decide_type:
 		panic("invalid length");
 	if (unknown_specifier)
 		panic("unknown specifier");
-}
-
-void init_printf()
-{
-	init_lock(&printf_lk, "printf");
 }

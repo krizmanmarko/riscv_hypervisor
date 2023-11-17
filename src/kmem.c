@@ -38,12 +38,19 @@ void free(vaddr_t *address);
 #include "dtb.h"
 #include "lock.h"
 #include "memory.h"
+#include "stdio.h"
 #include "types.h"
 
-struct {
+// Wondering what on earth this is?
+// before =: kmem variable with type of anonymous struct
+// after = : initialization of this anonymous struct
+static struct {
 	struct lock lk;
-	struct ll *freelist;
-} kmem;
+	struct list *freelist;
+} kmem = {
+	.lk = LOCK_INITIALIZER,
+	.freelist = (struct list *)0
+};
 
 static int valid_address(void *pa);
 static void bootstrap_kfree(void *pa);
@@ -62,7 +69,7 @@ valid_address(void *pa)
 void *
 kmalloc()
 {
-	struct ll *page;
+	struct list *page;
 
 	acquire(&kmem.lk);
 	page = kmem.freelist;
@@ -73,21 +80,21 @@ kmalloc()
 	return (void *)page;
 }
 
-//void
-//kfree(void *pa)
-//{
-//	struct ll *page;
-//
-//	if (!valid_address(pa))
-//		panic("kfree");
-//
-//	page = (struct ll *)pa;
-//
-//	acquire(&kmem.lk);
-//	page->next = kmem.freelist;
-//	kmem.freelist = page;
-//	release(&kmem.lk);
-//}
+void
+kfree(void *pa)
+{
+	struct list *page;
+
+	if (!valid_address(pa))
+		panic("kfree");
+
+	page = (struct list *)pa;
+
+	acquire(&kmem.lk);
+	page->next = kmem.freelist;
+	kmem.freelist = page;
+	release(&kmem.lk);
+}
 
 
 // It always receives valid pa
@@ -96,8 +103,8 @@ kmalloc()
 static void
 bootstrap_kfree(void *pa)
 {
-	struct ll *page;
-	page = (struct ll *)pa;
+	struct list *page;
+	page = (struct list *)pa;
 	page->next = kmem.freelist;
 	kmem.freelist = page;
 }
@@ -105,9 +112,6 @@ bootstrap_kfree(void *pa)
 void
 init_kmem()
 {
-	init_lock(&kmem.lk, "kmem");
-	kmem.freelist = (struct ll *)0;
-
 	// calculate all possible page pointers in (end, max_mem]
 	uint64 pa;
 	pa = VA2PA(PGROUNDUP((uint64) dynamic));

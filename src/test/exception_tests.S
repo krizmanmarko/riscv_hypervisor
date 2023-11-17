@@ -66,4 +66,3 @@ exc_store_or_amo_address_misaligned_test:
 exc_store_or_amo_access_fault_test:
 	li a0, DTB_MEMORY + DTB_MEMORY_SIZE - 4
 	sw zero, 0(a0)
-TODO: this is an old file

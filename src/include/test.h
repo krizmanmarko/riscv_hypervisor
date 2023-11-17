@@ -11,6 +11,9 @@ void printf_test();
 // of spinlock actually helps
 void spinlock_test();
 
+// test is successful if all ABCs are written before DEFs
+void barrier_test();
+
 // unprivileged risc-v isa:
 //     With the addition of the C extension, no instructions can raise
 //     instruction-address-misaligned exceptions.

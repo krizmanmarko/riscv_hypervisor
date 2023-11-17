@@ -43,7 +43,12 @@ TODO: this is an old file
 */
 
 #include "defs.h"
+#include "lock.h"
 #include "stdio.h"
+
+// temporary for testing
+#include "test.h"
+struct barrier b = BARRIER_INITIALIZER(3);
 
 void __attribute__((noreturn))
 main()
@@ -54,6 +59,12 @@ main()
 		init_printf();
 		printf("hello world %hhd\n", -10);
 		init_vmem();
+		printf_test();
 	}
+	// testing
+	spinlock_test();
+	wait_barrier(&b);
+	barrier_test();
+	// end testing
 	while (1);
 }

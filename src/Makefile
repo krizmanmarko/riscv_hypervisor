@@ -6,11 +6,10 @@
 # (this way we avoid hardcodeing offsets)
 # i guess bao copied this https://stackoverflow.com/questions/8259447/give-structure-offset-attribute-to-assembler
 
-OBJFILES=trap.o main.o cpu.o kmem.o spinlock.o vmem.o printf.o uart.o string.o
+OBJFILES=trap.o main.o cpu.o kmem.o lock.o vmem.o printf.o uart.o string.o
 OBJFILES+= asm_sboot.o asm_boot.o asm_trap.o asm_spinlock.o
-#OBJFILES+= asm_spinlock.o spinlock.o trap.o vmem.o kmem.o string.o
 
-#TESTS=printf_test.o spinlock_test.o asm_exception_tests.o
+TESTS=printf_test.o lock_test.o asm_exception_tests.o
 
 OBJFILES+= $(TESTS)
 OBJECTS=$(patsubst %, $(BUILD_DIR)%, $(OBJFILES))
