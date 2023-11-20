@@ -1,10 +1,9 @@
 #include "defs.h"
+#include "dtb.h"
 #include "lock.h"
 #include "stdio.h"
 
-// temporary for testing
-#include "test.h"
-struct barrier b = BARRIER_INITIALIZER(3);
+struct barrier bar = BARRIER_INITIALIZER(DTB_NR_CPUS);
 
 void __attribute__((noreturn))
 main()
@@ -12,16 +11,10 @@ main()
 	if (hartid() == 0) {
 		init_kmem();
 		init_uart();
-		// testing
-		printf_test();
-		// end testing
 		printf("Booting!\n");
 		init_vmem();
 	}
-	// testing
-	spinlock_test();
-	wait_barrier(&b);
-	barrier_test();
-	// end testing
+	wait_barrier(&bar);
+	init_hart();
 	while (1);
 }

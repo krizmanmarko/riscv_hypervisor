@@ -43,7 +43,11 @@ void interrupt_disable();
 void push_int_disable();
 void pop_int_disable();
 int interrupt_status();
-void hart_init_cpu();
+void init_hart();
+
+// trap.S
+void hstrapvec();
+void mtrapvec();
 
 // TODO: FROM HERE IT IS OLD
 
@@ -62,10 +66,6 @@ void init_machine();
 // trap.c
 void hs_interrupt_handler(uint64 scause);
 void hs_exception_handler(uint64 scause);
-
-// trap.S
-void hstrapvec();
-void mtrapvec();
 
 // vmem.c
 pte_t *walk(pte_t *pgtable, uint64 va, int alloc);

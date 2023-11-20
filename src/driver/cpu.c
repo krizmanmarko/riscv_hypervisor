@@ -1,8 +1,11 @@
+#include "defs.h"
 #include "dtb.h"
 #include "memory.h"
 #include "riscv_hypervisor.h"
 #include "types.h"
 #include "cpu.h"
+
+extern pte_t *kernel_pgtable;
 
 static struct cpu *mycpu();
 
@@ -60,17 +63,28 @@ pop_int_disable()
 			interrupt_enable();
 }
 
-int interrupt_status()
+int
+interrupt_status()
 {
 	uint64 sstatus;
 	R_SSTATUS(&sstatus);
 	return (sstatus & SSTATUS_SIE) ? 1 : 0;
 }
 
-void hart_init_cpu()
+void
+init_hart()
 {
+	// STRUCT CPU INIT (int_enable, noff, stack)
+
+	// interrupts should be disabled at this point
 	// no need to initialize cpu stack
-	interrupt_disable();
 	mycpu()->int_enable = 0;
 	mycpu()->noff = 0;
+
+	// ACTUAL HART INIT (sstatus, sie, sip, satp, stvec)
+
+	W_SATP(ATP_MODE_Sv39 | ((uint64) kernel_pgtable) >> 12);
+	asm volatile("sfence.vma");	// flush TLB
+
+	W_STVEC(hstrapvec);	// implicit TVEC_MODE_DIRECT
 }

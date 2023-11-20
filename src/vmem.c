@@ -58,18 +58,13 @@ map_pages(pte_t *pgtable, uint64 va, uint64 pa, unsigned int size, int pte_flags
 	return 0;
 }
 
-static int
-unmap(pte_t *pgtable)
-{
-	return 0;
-}
-
 // creates page table supervisor will actually use
 void
 init_vmem()
 {
-	int rv;
 	pte_t *root;
+	int rv, size;
+	uint64 va, pa;
 
 	if ((root = (pte_t *)kmalloc()) == 0)
 		panic("couldn't allocate root page table");
@@ -82,37 +77,26 @@ init_vmem()
 	rv += map_page(root, DTB_SERIAL, DTB_SERIAL, PTE_R | PTE_W);
 	rv += map_page(root, DTB_CLINT, DTB_CLINT, PTE_R | PTE_W);
 	if (rv < 0)
-		panic("failed to map MMIO");
+		panic("failed to map %s", "MMIO");
 
 	// map kernel image
-	uint64 va = (uint64) text;
-	uint64 pa = VA2PA((uint64) text);
-	unsigned int size = (unsigned int) (etext - text);
-	rv = map_pages(root, va, pa, size, PTE_R | PTE_X);
+	va = (uint64) text;
+	pa = VA2PA((uint64) text);
+	size = (unsigned int) (etext - text);
+	if (map_pages(root, va, pa, size, PTE_R | PTE_X))
+		panic("failed to map %s", ".text");
 
 	va = (uint64) rodata;
 	pa = VA2PA((uint64) rodata);
 	size = (unsigned int) (erodata - rodata);
-	rv = map_pages(root, va, pa, size, PTE_R);
+	if (map_pages(root, va, pa, size, PTE_R))
+		panic("failed to map %s", ".rodata");
 
 	va = (uint64) data;
 	pa = VA2PA((uint64) data);
 	size = (unsigned int) (edata - data);
-	rv = map_pages(root, va, pa, size, PTE_R | PTE_W);
+	if (map_pages(root, va, pa, size, PTE_R | PTE_W))
+		panic("failed to map %s", "data");
 
 	kernel_pgtable = root;
-}
-
-void
-hart_init_vmem()
-{
-	W_SATP(ATP_MODE_Sv39 | ((uint64) kernel_pgtable) >> 12);
-	asm volatile("sfence.vma");	// flush TLB
-
-	// init sstatus
-	// init satp
-	// init stvec
-	// init sie
-	// init sip
-	// check out in driver/cpu.c
 }

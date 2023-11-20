@@ -96,10 +96,9 @@ kfree(void *pa)
 	release(&kmem.lk);
 }
 
-
 // It always receives valid pa
-// no locking necessary since this runs only on master hart
-// what is wrong with kfree? -> it uses panic(), but MMIO not setup yet in VAS
+// no locking necessary since this only runs on master hart
+// kfree is considerably slower (on 1GB ram: kfree: 1.8s, this: 1.2s)
 static void
 bootstrap_kfree(void *pa)
 {
