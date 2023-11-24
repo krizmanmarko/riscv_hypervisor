@@ -17,18 +17,23 @@ OBJECTS=$(patsubst %, $(BUILD_DIR)%, $(OBJFILES))
 INCLUDES=-I ./include -I$(BUILD_DIR)
 
 CFLAGS=-W -Wall -ggdb $(INCLUDES)
-#CFLAGS+= -Werror
+CFLAGS+= -march=rv64gch
+# g = imafd
 # isolate from host environment
 CFLAGS+=-ffreestanding -fno-common -nodefaultlibs -nostdlib
-# Position dependent code
+# PC-relative code
 CFLAGS+= -mcmodel=medany -fno-pic
+
+# from linux source arch/riscv/mm/init.c line 806
+# 1) It should use PC-relative addressing for accessing kernel symbols.
+#    To achieve this we always use GCC cmodel=medany.
+
 
 PAGE_SIZE=4096
 LDFLAGS=-nostdlib
 LDFLAGS+= -z common-page-size=$(PAGE_SIZE) -z max-page-size=$(PAGE_SIZE)
 
-#CROSS_COMPILE=/home/marko/shit/riscv-gnu-toolchain-build/bin/riscv64-unknown-linux-gnu-
-CROSS_COMPILE=/home/marko/shit/toolchain-riscv-linux/bin/riscv64-unknown-elf-
+CROSS_COMPILE=/home/marko/shit/riscv-gnu-toolchain-from-source/mybuild/bin/riscv64-unknown-elf-
 cc=$(CROSS_COMPILE)gcc
 ld=$(CROSS_COMPILE)ld
 as=$(CROSS_COMPILE)as
@@ -45,9 +50,13 @@ tags: $(BUILD_DIR)structs_in_asm.h
 	@ctags -R . $^
 	@echo "[i] created tags"
 
+$(BUILD_DIR)hypervisor.bin: $(BUILD_DIR)hypervisor
+	$(objcopy) -O binary $^ $@
+
 # watch out! linkerscript.ld must be before $(OBJECTS) because it is an argument for -T switch
 $(BUILD_DIR)hypervisor: $(BUILD_DIR)linkerscript.ld $(OBJECTS)
-	@$(ld) $(LDFLAGS) -T $^ -o $@
+	@$(objcopy) --input binary --output elf64-littleriscv --rename-section .data=.vm_image_guest --set-section-flags .vm_image_guest=code,contents,alloc,load,readonly guest/imgs/guest.bin $(BUILD_DIR)guest.o
+	@$(ld) $(LDFLAGS) -T $^ -o $@ $(BUILD_DIR)guest.o
 	@echo "[+] Successfuly built $@!"
 
 $(BUILD_DIR)structs_in_asm.h: helper/structs_in_asm.c

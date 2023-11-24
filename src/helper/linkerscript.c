@@ -1,7 +1,6 @@
 // This is just a normal linker script, but it is edited by C preprocessor
 // This enables using include/dtb.h symbols in this script
 
-
 /*
  * .boot is only used when booting (useless after initial page table is set up)
  *
@@ -85,7 +84,13 @@ SECTIONS
 	}
 	PROVIDE(edata = .);
 	phys_locctr = ALIGN(phys_locctr + SIZEOF(.bss), PAGE_SIZE);
+	. = ALIGN(PAGE_SIZE);
+
+	.vm_images ALIGN(PAGE_SIZE) : AT(phys_locctr) {
+		*(.vm_image_guest .vm_image_guest.*)
+	}
 
 	. = ALIGN(PAGE_SIZE);
 	PROVIDE(dynamic = .);
+
 }

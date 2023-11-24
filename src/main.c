@@ -16,5 +16,7 @@ main()
 	}
 	wait_barrier(&bar);
 	init_hart();
+	extern void vm_run();
+	vm_run();
 	while (1);
 }

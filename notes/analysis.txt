@@ -1,0 +1,35 @@
+identity mapping -> va == pa
+direct/linear mapping -> va == pa + offset
+
+
+bao-project/helloworld
+
+1. whole RAM identity mapping
+2. whole kernel image linear mapping
+3. cpu map
+
+when running baremetal-linux
+
+linux guest in hypervisor:
+satp
+1. whole RAM identity mapping
+2. whole kernel image linear mapping
+3. PLIC (after guard page (va -> (pa == 0)) just after kernel image
+4. cpu map
+5. some dynamic pages
+
+hgatp
+1. 8 virtio-mmio devices (identity mapping)
+2. dedicated part of RAM (identity mapping)
+
+vsatp (but we did not touch this register)
+linux page tables
+	ioremap:
+		0xff20000000000000 -> 0xc000000 (plic base)
+		0xff20000003fff000 -> 0xffff000
+	linear map of kernel (direct map):
+		0xff60000000000000 -> 0x90400000
+		0xff6000003fa00000 -> 0xcfe00000
+	kernel image
+		0xffffffff80000000 -> 0x90400000
+		0xffffffff81800000 -> 0x91c00000

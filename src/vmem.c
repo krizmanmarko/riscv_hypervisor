@@ -47,11 +47,32 @@ map_page(pte_t *pgtable, uint64 va, uint64 pa, int pte_flags)
 	return 0;
 }
 
+static int
+map_gigapage(pte_t *pgtable, uint64 va, uint64 pa, int pte_flags)
+{
+	if (pgtable == 0)
+		panic("root page table doesn't exist");
+
+	// check alignment (both va and pa must be aligned)
+	if (((va | pa) & 0x3fffffff) != 0)
+		return -1;
+	pgtable[VA2IDX(2, va)] = PA2PTE(pa) | pte_flags | PTE_V;
+	return 0;
+}
+
 // va, pa and size may not be page aligned
 // returns 0 on success, -1 on fail
 static int
-map_pages(pte_t *pgtable, uint64 va, uint64 pa, unsigned int size, int pte_flags)
+map_pages(pte_t *pgtable, uint64 va, uint64 pa, uint64 size, int pte_flags)
 {
+	// 0x40000000 -> 1GB
+	while (size >= 0x40000000) {
+		if (map_gigapage(pgtable, va, pa, pte_flags) < 0)
+			return -1;
+		va += 0x40000000;
+		pa += 0x40000000;
+		size -= 0x40000000;
+	}
 	for (uint64 i = 0; i < PGROUNDUP(size); i += PAGE_SIZE)
 		if (map_page(pgtable, va + i, pa + i, pte_flags) < 0)
 			return -1;
@@ -98,5 +119,37 @@ init_vmem()
 	if (map_pages(root, va, pa, size, PTE_R | PTE_W))
 		panic("failed to map %s", "data");
 
+	if (map_pages(root, DTB_MEMORY, DTB_MEMORY, DTB_MEMORY_SIZE, PTE_R | PTE_W | PTE_X))
+		panic("failed to map %s", "RAM");
+
 	kernel_pgtable = root;
+}
+
+
+// TODO: this is just for testing
+
+void
+vm_run()
+{
+	pte_t *root;
+
+	if ((root = (pte_t *)kmalloc()) == 0)
+		panic("couldn't allocate root page table");
+
+	memset(root, '\x00', PAGE_SIZE);	// make every entry invalid
+	map_page(root, DTB_SERIAL, DTB_SERIAL, PTE_R | PTE_W);
+	map_pages(root, DTB_MEMORY, DTB_MEMORY, DTB_MEMORY_SIZE, PTE_R | PTE_W | PTE_X);
+	W_HGATP(ATP_MODE_Sv39 | (((uint64) root) >> 12));
+	asm volatile("hfence.gvma");
+
+	uint64 hstatus = 0;
+	hstatus |= 2ULL << 32;	// vsxlen: 2 == 64-bit
+	W_HSTATUS(hstatus);
+
+	uint64 sstatus;
+	R_SSTATUS(&sstatus);
+	printf("%blu\n", sstatus);
+	W_SSTATUS(sstatus | MSTATUS_MPV);	// enter virtualization
+	W_SEPC(0x8000a000ULL);
+	asm volatile("sret");
 }

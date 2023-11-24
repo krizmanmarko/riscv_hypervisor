@@ -1,0 +1,11 @@
+MEMORY
+======
+
+maybe: map stack to STACK_BASE, DYNAMIC to dynamic ...
+
+create function that removes mapping and deallocates what can be deallocated
+
+CPU
+===
+
+figure out how to provide VM information and run baremetal app

@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # this file is used to print Sv39 page tables in gdb
 
-PTE_V = 1
-PTE_RWX = 2 | 4 | 8
+pte_v = 1
+pte_rwx = 2 | 4 | 8
 
 def pa2pte(pa):
 	return (pa >> 12) << 10
@@ -24,10 +24,10 @@ def get_pgdirs(pa):
 	for i, pte in enumerate(pgdir):
 		if pte == None:
 			continue
-	 	if pte & PTE_RWX:
+		if pte & pte_rwx:
 			pgdirs[i] = pte2pa(pte)		# actual page
 			continue
-		if pte & PTE_V:
+		if pte & pte_v:
 			pa = pte2pa(pte)
 			pgdirs[i] = get_pgdirs(pa)
 	return pgdirs
