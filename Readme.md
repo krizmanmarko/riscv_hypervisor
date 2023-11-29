@@ -46,11 +46,10 @@ Here comes a big issue. Kernel image can quickly occupy multiple pages,
 demanding some kind of dynamic memory management. But we do not want to implement
 it in assembly...
 
-- Linux first setups everything necessary for C code. Then it uses a seperate
+- Linux first sets up everything necessary for C code. Then it uses a seperate
 Boot Memory Allocator (just a normal physical allocator). The only issue with
-this allocator is that it does work both in virtual address space and actual
-physical memory (if VA == PA, then it works). After the boot process is
-finished this allocator is retired.
+this allocator is that it only works in actual physical memory. After the boot
+process is finished this allocator is retired.
 
 - Luckily for us, risc-v (sv39) supports giga-pages. We can completely
 avoid dynamic memory management by only allocating 1 page for root page
@@ -79,14 +78,12 @@ last used address. Optionally we can also set up global pointer.
 
 ## Start virtualization (enter virtual machine)
 
-### hgatp (GPA -> PA)
-
-1. Page tables are in Sv39x4 format. It is actually just Sv39 with 2 extra bits.
+hgatp (GPA -> PA)
+- Page tables are in Sv39x4 format. It is actually just Sv39 with 2 extra bits.
 In order to account for that change we enlarge the root page table (only) by
 a factor of four (to PAGE_SIZE * 4). Also the alignment is more strict (aligned
 to PAGE_SIZE * 4).
-
-2. PTEs must have User bit set
+- PTEs must have User bit set
 
 hstatus
 - set correct VSXLEN
@@ -98,19 +95,19 @@ sstatus
 sepc
 - entry point of virtual machine
 
-Now just execute sret
+Now just execute `sret`
 
 
 # Glossary
 
-DTB - device tree binary
-MMIO - memory mapped input/output
-VAS - virtual address space
-VA - virtual address
-PA - physical address
-GPA - guest physical address
-identity mapping - va == pa
-linear mapping - va == pa + constant
+- DTB - device tree binary
+- MMIO - memory mapped input/output
+- VAS - virtual address space
+- VA - virtual address
+- PA - physical address
+- GPA - guest physical address
+- identity mapping - va == pa
+- linear mapping - va == pa + constant
 
 # Extras
 
@@ -118,5 +115,5 @@ linear mapping - va == pa + constant
 
 This is a binary describing the physical layout of the machine. It
 provides information on the number of CPUs, size of RAM, MMIO
-addresses... I parsed by hand into the file
+addresses... I parsed it by hand into the file
 [src/include/dtb.h](src/include/dtb.h).
