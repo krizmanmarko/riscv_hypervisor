@@ -1,3 +1,4 @@
+GUEST_NAME=printer
 
 # TODO: clean this mess up please
 # a curious thing is going on here
@@ -31,22 +32,28 @@ as=$(CROSS_COMPILE)as
 objcopy=$(CROSS_COMPILE)objcopy
 
 
-BUILD_DIR=./build/
-IMGS_DIR=../imgs/
+BUILD_DIR=../../../build/$(GUEST_NAME)/
+IMGS_DIR=$(BUILD_DIR)imgs/
 
 .PHONY: all clean
 
-all: $(IMGS_DIR)guest.bin
+all: $(BUILD_DIR) $(IMGS_DIR) $(IMGS_DIR)$(GUEST_NAME).bin
 
-$(IMGS_DIR)guest.bin: $(BUILD_DIR)guest.bin
-	@cp -v $^ $@
+$(BUILD_DIR):
+	@mkdir -p $@
 
-$(BUILD_DIR)guest.bin: $(BUILD_DIR)guest
+$(IMGS_DIR):
+	@mkdir -p $@
+
+$(IMGS_DIR)$(GUEST_NAME).bin: $(BUILD_DIR)$(GUEST_NAME).bin
+	@cp $^ $@
+
+$(BUILD_DIR)$(GUEST_NAME).bin: $(BUILD_DIR)$(GUEST_NAME)
 	@$(objcopy) -O binary $^ $@
-	@echo "[+] Successfuly built $@!"
+	@echo "\e[32m[+] Successfuly built $(GUEST_NAME)!\e[0m"
 
 # watch out! linkerscript.ld must be before $(OBJECTS) because it is an argument for -T switch
-$(BUILD_DIR)guest: $(OBJECTS)
+$(BUILD_DIR)$(GUEST_NAME): $(OBJECTS)
 	@$(ld) $(LDFLAGS) -T linkerscript.ld $^ -o $@
 
 $(BUILD_DIR)asm_%.o: %.S
@@ -54,5 +61,5 @@ $(BUILD_DIR)asm_%.o: %.S
 	@echo "[+] $< -> $@"
 
 clean:
-	@rm -f $(BUILD_DIR)*
+	@rm -rf $(BUILD_DIR)
 	@echo "[i] cleaned up"

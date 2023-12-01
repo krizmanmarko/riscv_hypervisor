@@ -55,9 +55,10 @@ $(BUILD_DIR)hypervisor.bin: $(BUILD_DIR)hypervisor
 
 # watch out! linkerscript.ld must be before $(OBJECTS) because it is an argument for -T switch
 $(BUILD_DIR)hypervisor: $(BUILD_DIR)linkerscript.ld $(OBJECTS)
-	@$(objcopy) --input binary --output elf64-littleriscv --rename-section .data=.vm_image_guest --set-section-flags .vm_image_guest=code,contents,alloc,load,readonly guest/imgs/guest.bin $(BUILD_DIR)guest.o
+	@cd guest/printer && make
+	@$(objcopy) --input binary --output elf64-littleriscv --rename-section .data=.vm_image_guest --set-section-flags .vm_image_guest=code,contents,alloc,load,readonly $(BUILD_DIR)printer/imgs/printer.bin $(BUILD_DIR)guest.o
 	@$(ld) $(LDFLAGS) -T $^ -o $@ $(BUILD_DIR)guest.o
-	@echo "[+] Successfuly built $@!"
+	@echo "\e[32m[+] Successfuly built $@!\e[0m"
 
 $(BUILD_DIR)structs_in_asm.h: helper/structs_in_asm.c
 	@$(cc) $(CFLAGS) -S $^ -o - \
@@ -98,5 +99,5 @@ $(BUILD_DIR)asm_%.o: test/%.S $(BUILD_DIR)structs_in_asm.h
 
 clean:
 	@rm -f tags
-	@rm -f $(BUILD_DIR)*
+	@rm -rf $(BUILD_DIR)*
 	@echo "[i] cleaned up"
