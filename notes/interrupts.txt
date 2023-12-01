@@ -1,0 +1,34 @@
+gateway
+PLIC
+target contexts
+
+
+in interrupt handler always check if it still needs servicing
+
+PLIC has an input signal (interrupt needs servicing)
+    and an output signal (interrupt completely serviced)
+after the PLIC accepts an interrupt, the device may deassert
+it's interrupt before it is completely handled. The interrupt
+will still complete even though the device does not want it
+anymore
+
+
+My idea of interrupt handler
+
+call disable interrupts
+
+choose correct handler (external, timer, software)
+if bit is still pending do your thing
+
+call enable interrupts
+
+
+
+WTF: PLIC sends external interrupt pending to all target contexts
+and then they somehow arrange who does it (sw)
+
+why can plic claim an interrupt?
+
+
+some interrupt tests
+check if multiple interrupts can happen (a.k.a. if interrupt exits correctly (claim/complete register))

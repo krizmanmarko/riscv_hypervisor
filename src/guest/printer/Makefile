@@ -24,8 +24,7 @@ PAGE_SIZE=4096
 LDFLAGS=-nostdlib
 LDFLAGS+= -z common-page-size=$(PAGE_SIZE) -z max-page-size=$(PAGE_SIZE)
 
-#CROSS_COMPILE=/home/marko/shit/riscv-gnu-toolchain-build/bin/riscv64-unknown-linux-gnu-
-CROSS_COMPILE=/home/marko/shit/toolchain-riscv-linux/bin/riscv64-unknown-elf-
+CROSS_COMPILE=/home/marko/shit/riscv-gnu-toolchain-from-source/mybuild/bin/riscv64-unknown-elf-
 cc=$(CROSS_COMPILE)gcc
 ld=$(CROSS_COMPILE)ld
 as=$(CROSS_COMPILE)as

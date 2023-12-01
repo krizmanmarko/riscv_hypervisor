@@ -1,6 +1,6 @@
 #!/bin/bash
 
-build_dir="/home/marko/home/schola/diploma/risc-v/build/"
+build_dir="../build"
 /home/marko/shit/qemu-8.0.2/build/qemu-system-riscv64 \
 	-nographic \
 	-machine virt \

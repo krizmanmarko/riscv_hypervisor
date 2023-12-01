@@ -128,28 +128,39 @@ init_vmem()
 
 // TODO: this is just for testing
 
+
+pte_t vm_pgtable[512 * 4] __attribute__((aligned(4 * PAGE_SIZE)));
+
 void
 vm_run()
 {
-	pte_t *root;
-
-	if ((root = (pte_t *)kmalloc()) == 0)
-		panic("couldn't allocate root page table");
-
-	memset(root, '\x00', PAGE_SIZE);	// make every entry invalid
-	map_page(root, DTB_SERIAL, DTB_SERIAL, PTE_R | PTE_W);
-	map_pages(root, DTB_MEMORY, DTB_MEMORY, DTB_MEMORY_SIZE, PTE_R | PTE_W | PTE_X);
-	W_HGATP(ATP_MODE_Sv39 | (((uint64) root) >> 12));
-	asm volatile("hfence.gvma");
+	memset(vm_pgtable, '\x00', PAGE_SIZE * 4);	// make every entry invalid
+	map_page(vm_pgtable, DTB_SERIAL, DTB_SERIAL, PTE_U | PTE_R | PTE_W);
+	map_page(vm_pgtable, DTB_MEMORY, DTB_MEMORY + 0x11000, PTE_U | PTE_R | PTE_X);
+	W_HGATP(ATP_MODE_Sv39 | ((VA2PA((uint64) vm_pgtable)) >> 12));
+	asm volatile("hfence.gvma");	// TODO: needed?
 
 	uint64 hstatus = 0;
-	hstatus |= 2ULL << 32;	// vsxlen: 2 == 64-bit
+	hstatus |= 2ULL << 32;		// vsxlen: 2 == 64-bit
+	hstatus |= HSTATUS_SPV;		// go into virtualized env
 	W_HSTATUS(hstatus);
 
-	uint64 sstatus;
-	R_SSTATUS(&sstatus);
-	printf("%blu\n", sstatus);
-	W_SSTATUS(sstatus | MSTATUS_MPV);	// enter virtualization
-	W_SEPC(0x8000a000ULL);
+	uint64 sstatus = 0;
+	sstatus |= SSTATUS_SPP;
+	//sstatus |= 0xf << 13;	// XS dirty, FS dirty
+	W_SSTATUS(sstatus);
+	W_SEPC(0x80000000ULL);
+
+	W_HTIMEDELTA(0ULL);
+	W_VSSTATUS(STATUS_SD | (0xf << 13));
+	W_HIE(0ULL);
+	W_VSTVEC(0ULL);
+	W_VSSCRATCH(0ULL);
+	W_VSEPC(0ULL);
+	W_VSCAUSE(0ULL);
+	W_VSTVAL(0ULL);
+	W_HVIP(0ULL);
+	W_VSATP(0ULL);
+
 	asm volatile("sret");
 }

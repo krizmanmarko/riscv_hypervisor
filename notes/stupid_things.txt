@@ -33,3 +33,13 @@ size_t size = symbol_name_end - symbol_name_start;
 extern type *symbol_name_start;
 extern type *symbol_name_end;
 size_t size = &symbol_name_end - &symbol_name_start;
+
+
+=================
+hgatp page tables
+=================
+
+1. Sv39x4 just adds 2 bits to the virtual address, but in order to account
+   for such change root page table must be 4 * larger and aligned to 16KB
+
+2. ptes in this page table must be marked with PTE_U flag
