@@ -16,17 +16,17 @@
 #include "memory.h"
 
 OUTPUT_ARCH("riscv")
-ENTRY(boot)
+ENTRY(setup)
 
 SECTIONS
 {
-	. = DTB_MEMORY;
+	. = DTB_MEMORY + FIRMWARE_SIZE;
 
 	/* start boot section */
 	/* this is special because VMA == LMA */
 	.boot.text ALIGN(PAGE_SIZE) : {
 		PROVIDE(boottext = .);
-		*(.boot.text.m)		/* to make sure M-mode boot is first */
+		*(.boot.text.s)		/* to make sure correct function is first */
 		*(.boot.text.*)
 	}
 	PROVIDE(eboottext = .);

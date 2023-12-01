@@ -8,6 +8,7 @@ build_dir="./build/"
 	-machine virt \
 	-kernel ${build_dir}hypervisor \
 	-cpu rv64 \
-	-smp 3 \
-	-m 512M \
-	-S -s
+	-smp 1 \
+	-m 1G \
+	-gdb tcp::1111 \
+	-S

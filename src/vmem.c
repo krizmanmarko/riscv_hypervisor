@@ -136,7 +136,7 @@ vm_run()
 {
 	memset(vm_pgtable, '\x00', PAGE_SIZE * 4);	// make every entry invalid
 	map_page(vm_pgtable, DTB_SERIAL, DTB_SERIAL, PTE_U | PTE_R | PTE_W);
-	map_page(vm_pgtable, DTB_MEMORY, DTB_MEMORY + 0x11000, PTE_U | PTE_R | PTE_X);
+	map_page(vm_pgtable, DTB_MEMORY, DTB_MEMORY + FIRMWARE_SIZE + 0x11000, PTE_U | PTE_R | PTE_X);
 	W_HGATP(ATP_MODE_Sv39 | ((VA2PA((uint64) vm_pgtable)) >> 12));
 	asm volatile("hfence.gvma");	// TODO: needed?
 
