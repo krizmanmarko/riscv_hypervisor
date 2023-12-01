@@ -2,9 +2,6 @@
 kernel:
 	@./kernel.sh
 
-machine:
-	@./machine.sh
-
 debug:
 	@riscv64-unknown-elf-gdb ./build/hypervisor \
 		-ex 'target extended-remote localhost:1111' \

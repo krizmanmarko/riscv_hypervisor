@@ -81,11 +81,3 @@ hstrapvec:
 #	ld x0, 0*8(sp)
 #	addi sp, sp, 256
 	sret
-
-
-.section ".boot.text", "ax"
-.globl mtrapvec
-
-.balign 4
-mtrapvec:
-	mret

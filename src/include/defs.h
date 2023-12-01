@@ -23,9 +23,6 @@ extern char data[];
 extern char edata[];
 extern char dynamic[];
 
-// boot.S
-void boot(uint64 hartid, void *dtb);
-
 // sboot.S
 void setup(uint64 hartid, void *dtb);
 
@@ -59,9 +56,6 @@ void init_uart();
 void *kmalloc();
 void kfree(void *pa);
 void init_kmem();
-
-// machine.c
-void init_machine();
 
 // trap.c
 void hs_interrupt_handler(uint64 scause);
