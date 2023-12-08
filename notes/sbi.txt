@@ -83,3 +83,10 @@ error codes:
 --- extras ---
 
 - Does not clobber registers (except a0, a1)
+
+
+    unsigned long hart_mask is a scalar bit-vector containing hartids
+
+    unsigned long hart_mask_base is the starting hartid from which bit-vector must be computed.
+
+

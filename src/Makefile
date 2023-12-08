@@ -1,15 +1,16 @@
+## CONFIG
 
-# TODO: clean this mess up please
-# a curious thing is going on here
-# c files must be compiled before asm files since they need compiler help
-# to generate correct offsets for c structs
-# (this way we avoid hardcodeing offsets)
-# i guess bao copied this https://stackoverflow.com/questions/8259447/give-structure-offset-attribute-to-assembler
+CROSS_COMPILE=/home/marko/shit/riscv-gnu-toolchain-from-source/mybuild/bin/riscv64-unknown-elf-
+BUILD_DIR=../build/
 
-OBJFILES=trap.o main.o cpu.o kmem.o lock.o vmem.o printf.o uart.o string.o
+## END OF CONFIG
+
+# TODO: maybe abuse gcc dependency files?
+
+OBJFILES=trap.o main.o cpu.o kmem.o lock.o vmem.o printf.o uart.o string.o sbi.o
 OBJFILES+= asm_sboot.o asm_trap.o asm_spinlock.o
 
-TESTS=printf_test.o lock_test.o asm_exception_tests.o
+#TESTS=printf_test.o lock_test.o asm_exception_tests.o
 
 OBJFILES+= $(TESTS)
 OBJECTS=$(patsubst %, $(BUILD_DIR)%, $(OBJFILES))
@@ -18,7 +19,6 @@ INCLUDES=-I ./include -I$(BUILD_DIR)
 
 CFLAGS=-W -Wall -ggdb $(INCLUDES)
 CFLAGS+= -march=rv64gch
-# g = imafd
 # isolate from host environment
 CFLAGS+=-ffreestanding -fno-common -nodefaultlibs -nostdlib
 # PC-relative code
@@ -28,19 +28,15 @@ CFLAGS+= -mcmodel=medany -fno-pic
 # 1) It should use PC-relative addressing for accessing kernel symbols.
 #    To achieve this we always use GCC cmodel=medany.
 
-
 PAGE_SIZE=4096
 LDFLAGS=-nostdlib
 LDFLAGS+= -z common-page-size=$(PAGE_SIZE) -z max-page-size=$(PAGE_SIZE)
 
-CROSS_COMPILE=/home/marko/shit/riscv-gnu-toolchain-from-source/mybuild/bin/riscv64-unknown-elf-
 cc=$(CROSS_COMPILE)gcc
 ld=$(CROSS_COMPILE)ld
 as=$(CROSS_COMPILE)as
 objcopy=$(CROSS_COMPILE)objcopy
 
-
-BUILD_DIR=../build/
 
 .PHONY: all clean
 
@@ -60,6 +56,7 @@ $(BUILD_DIR)hypervisor: $(BUILD_DIR)linkerscript.ld $(OBJECTS)
 	@$(ld) $(LDFLAGS) -T $^ -o $@ $(BUILD_DIR)guest.o
 	@echo "\e[32m[+] Successfuly built $@!\e[0m"
 
+# i guess bao copied this https://stackoverflow.com/questions/8259447/give-structure-offset-attribute-to-assembler
 $(BUILD_DIR)structs_in_asm.h: helper/structs_in_asm.c
 	@$(cc) $(CFLAGS) -S $^ -o - \
 		| awk '($$1 == "->") { print "#define " $$2 " (" $$3 ")" }' >$@
@@ -86,6 +83,22 @@ $(BUILD_DIR)%.o: lib/%.c
 	@echo "[+] $^ -> $@"
 
 $(BUILD_DIR)asm_%.o: lib/%.S $(BUILD_DIR)structs_in_asm.h
+	@$(cc) $(CFLAGS) -c $< -o $@
+	@echo "[+] $< -> $@"
+
+$(BUILD_DIR)%.o: mem/%.c
+	@$(cc) $(CFLAGS) -c $^ -o $@
+	@echo "[+] $^ -> $@"
+
+$(BUILD_DIR)asm_%.o: mem/%.S $(BUILD_DIR)structs_in_asm.h
+	@$(cc) $(CFLAGS) -c $< -o $@
+	@echo "[+] $< -> $@"
+
+$(BUILD_DIR)%.o: core/%.c
+	@$(cc) $(CFLAGS) -c $^ -o $@
+	@echo "[+] $^ -> $@"
+
+$(BUILD_DIR)asm_%.o: core/%.S $(BUILD_DIR)structs_in_asm.h
 	@$(cc) $(CFLAGS) -c $< -o $@
 	@echo "[+] $< -> $@"
 

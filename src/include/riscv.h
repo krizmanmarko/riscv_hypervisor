@@ -1,7 +1,5 @@
-// TODO: %s/REMODELED_//g
-// TODO: do I really need machine register information?
-#ifndef REMODELED_RISCV_H
-#define REMODELED_RISCV_H // target: riscv64 (qemu-virt)
+#ifndef RISCV_H
+#define RISCV_H // target: riscv64 (qemu-virt)
 
 // Nominal privilege level
 #define M_MODE 3
@@ -33,7 +31,7 @@
 #define STATUS_UXL (0b11UL << 32)	// User XLEN
 #define STATUS_UXL_64 (XLEN_64 << 32)
 #define STATUS_SXL (0b11UL << 34)	// Supervisor XLEN
-#define STATUS_SXL_64 (XLEN_64 << 32)
+#define STATUS_SXL_64 (XLEN_64 << 34)
 #define STATUS_SBE (1UL << 36)		// Supervisor is big-endian (no effect on fetch)
 #define STATUS_MBE (1UL << 37)		// Machine is big-endian (no effect on fetch)
 #define STATUS_GVA (1UL << 38)		// Guest Virtual Address
@@ -293,4 +291,4 @@
     asm volatile("csrw  " #csr ", %0\n\r" : : "rK" (val) : "memory")
 
 #endif // __ASSEMBLER__
-#endif // REMODELED_RISCV_H
+#endif // RISCV_H

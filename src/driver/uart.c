@@ -1,3 +1,4 @@
+// TODO: maybe remove this file now that OpenSBI provides such functionality
 // ns16550a compatible
 // current stage: somewhat primitive (no interrupts)
 // check out: https://www.lammertbies.nl/comm/info/serial-uart
