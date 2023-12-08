@@ -1,4 +1,4 @@
-#include "riscv_hypervisor.h"
+#include "riscv.h"
 #include "types.h"
 //#include "stdio.h"	// TODO: only for debugging with printf and panic
 

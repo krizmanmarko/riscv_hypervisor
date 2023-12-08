@@ -1,7 +1,7 @@
 #include "defs.h"
 #include "dtb.h"
 #include "memory.h"
-#include "riscv_hypervisor.h"
+#include "riscv.h"
 #include "stdio.h"
 #include "string.h"
 
@@ -137,30 +137,31 @@ vm_run()
 	memset(vm_pgtable, '\x00', PAGE_SIZE * 4);	// make every entry invalid
 	map_page(vm_pgtable, DTB_SERIAL, DTB_SERIAL, PTE_U | PTE_R | PTE_W);
 	map_page(vm_pgtable, DTB_MEMORY, DTB_MEMORY + FIRMWARE_SIZE + 0x11000, PTE_U | PTE_R | PTE_X);
-	W_HGATP(ATP_MODE_Sv39 | ((VA2PA((uint64) vm_pgtable)) >> 12));
+	CSRW(hgatp, ATP_MODE_SV39 | ((VA2PA((uint64) vm_pgtable)) >> 12));
 	asm volatile("hfence.gvma");	// TODO: needed?
 
 	uint64 hstatus = 0;
 	hstatus |= 2ULL << 32;		// vsxlen: 2 == 64-bit
 	hstatus |= HSTATUS_SPV;		// go into virtualized env
-	W_HSTATUS(hstatus);
+	CSRW(hstatus, hstatus);
 
 	uint64 sstatus = 0;
 	sstatus |= SSTATUS_SPP;
 	//sstatus |= 0xf << 13;	// XS dirty, FS dirty
-	W_SSTATUS(sstatus);
-	W_SEPC(0x80000000ULL);
+	CSRW(sstatus, sstatus);
+	CSRW(sepc, 0x80000000ULL);
 
-	W_HTIMEDELTA(0ULL);
-	W_VSSTATUS(STATUS_SD | (0xf << 13));
-	W_HIE(0ULL);
-	W_VSTVEC(0ULL);
-	W_VSSCRATCH(0ULL);
-	W_VSEPC(0ULL);
-	W_VSCAUSE(0ULL);
-	W_VSTVAL(0ULL);
-	W_HVIP(0ULL);
-	W_VSATP(0ULL);
+	CSRW(htimedelta, 0ULL);
+	CSRW(vsstatus, STATUS_SD | (0xf << 13));
+	CSRW(hie, 0ULL);
+	CSRW(vstvec, 0ULL);
+	CSRW(vsscratch, 0ULL);
+	CSRW(vsepc, 0ULL);
+	CSRW(vscause, 0ULL);
+	CSRW(vstval, 0ULL);
+	CSRW(hvip, 0ULL);
+	CSRW(vsatp, 0ULL);
 
 	asm volatile("sret");
 }
+

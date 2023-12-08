@@ -1,7 +1,7 @@
 #include "defs.h"
 #include "dtb.h"
 #include "memory.h"
-#include "riscv_hypervisor.h"
+#include "riscv.h"
 #include "types.h"
 #include "cpu.h"
 
@@ -28,19 +28,15 @@ mycpu()
 void
 interrupt_enable()
 {
-	uint64 sstatus;
-	R_SSTATUS(&sstatus);
 	mycpu()->int_enable = 1;
-	W_SSTATUS(sstatus | SSTATUS_SIE);
+	CSRW(sstatus, CSRR(sstatus) | SSTATUS_SIE);
 }
 
 void
 interrupt_disable()
 {
-	uint64 sstatus;
-	R_SSTATUS(&sstatus);
 	mycpu()->int_enable = 0;
-	W_SSTATUS(sstatus & ~SSTATUS_SIE);
+	CSRW(sstatus, CSRR(sstatus) & ~SSTATUS_SIE);
 }
 
 void
@@ -66,14 +62,14 @@ pop_int_disable()
 int
 interrupt_status()
 {
-	uint64 sstatus;
-	R_SSTATUS(&sstatus);
-	return (sstatus & SSTATUS_SIE) ? 1 : 0;
+	return (CSRR(sstatus) & SSTATUS_SIE) ? 1 : 0;
 }
 
 void
 init_hart()
 {
+	uint64 reg;
+
 	// STRUCT CPU INIT (int_enable, noff, stack)
 
 	// interrupts should be disabled at this point
@@ -82,9 +78,14 @@ init_hart()
 	mycpu()->noff = 0;
 
 	// ACTUAL HART INIT (sstatus, sie, sip, satp, stvec)
+	reg = ((uint64) kernel_pgtable) >> 12;
+	reg |= ATP_MODE_SV39;
 
-	W_SATP(ATP_MODE_Sv39 | ((uint64) kernel_pgtable) >> 12);
+	CSRW(satp, reg);
 	asm volatile("sfence.vma");	// flush TLB
 
-	W_STVEC(hstrapvec);	// implicit TVEC_MODE_DIRECT
+	reg = (uint64) hstrapvec;
+	reg &= TVEC_MODE;
+	reg |= TVEC_MODE_DIRECT;
+	CSRW(stvec, hstrapvec);
 }
