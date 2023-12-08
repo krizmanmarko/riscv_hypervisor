@@ -25,8 +25,6 @@ struct sbiret {
 // unsigned long hart_mask: is a scalar bit-vector containing hartids
 // unsigned long hart_mask_base: is the starting hartid from which bit-vector must be computed.
 
-#endif // SBI_H
-
 // Base extension (EID=0x10) - retval in a0, a1
 struct sbiret sbi_get_spec_version(void);
 struct sbiret sbi_get_impl_id(void);
@@ -103,3 +101,5 @@ struct sbiret sbi_hart_suspend(
 	unsigned long resume_addr,
 	unsigned long opaque
 );
+
+#endif // SBI_H

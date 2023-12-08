@@ -150,7 +150,7 @@ sbi_remote_hfence_vvma(unsigned long hart_mask,
 		       unsigned long start_addr,
 		       unsigned long size)
 {
-	return sbi_ecall(0x52464e43, 5, hart_mask, hart_mask_base, start_addr,
+	return sbi_ecall(0x52464e43, 6, hart_mask, hart_mask_base, start_addr,
 			 size, 0, 0);
 }
 
