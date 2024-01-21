@@ -1,3 +1,7 @@
+# TODO: why are interrupts disabled for the whole duration
+#	of the critical section? maybe reenable them after
+#	acquiring the lock?
+
 #include "structs_in_asm.h"
 
 .section ".text", "ax"

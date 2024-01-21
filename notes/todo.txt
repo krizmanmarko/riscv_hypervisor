@@ -9,3 +9,11 @@ CPU
 ===
 
 figure out how to provide VM information and run baremetal app
+
+[+] sbi.h
+vcpu (context switching memory reservation)
+vm entry, vm exit
+
+timer interrupt
+ipi?
+external interrupt / plic

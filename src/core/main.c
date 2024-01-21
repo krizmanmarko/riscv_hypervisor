@@ -2,6 +2,7 @@
 #include "dtb.h"
 #include "lock.h"
 #include "stdio.h"
+#include "sbi.h"
 #include "riscv.h"
 
 struct barrier bar = BARRIER_INITIALIZER(DTB_NR_CPUS);
@@ -17,8 +18,9 @@ main()
 	}
 	wait_barrier(&bar);
 	init_hart();
+	
+	sbi_set_timer(10000000000000);	// 2 sekundi
 	extern void vm_run();
-	printf("%p\n", CSRR(sepc));
 	vm_run();
 	while (1);
 }

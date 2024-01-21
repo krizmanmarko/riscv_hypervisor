@@ -78,9 +78,12 @@ init_hart()
 	mycpu()->noff = 0;
 
 	// ACTUAL HART INIT (sstatus, sie, sip, satp, stvec)
+	CSRW(sstatus, CSRR(sstatus) | SSTATUS_SIE);
+	CSRW(sie, CSRR(sie) & ~SIE_STIE);
+	CSRW(hie, CSRR(hie) | HIE_VSTIE);
+
 	reg = ((uint64) kernel_pgtable) >> 12;
 	reg |= ATP_MODE_SV39;
-
 	CSRW(satp, reg);
 	asm volatile("sfence.vma");	// flush TLB
 

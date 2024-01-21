@@ -167,9 +167,10 @@
 #define HSTATUS_HU (1UL << 9)		// Hypervisor in U-mode
 #define HSTATUS_VGEIN (0x3fUL << 12)	// Virtual Guest External Interrupt Number
 #define HSTATUS_VTVM (1UL << 20)	// Virtual Trap Virtual Memory
-#define HSTATUS_VTW (1UL << 21)		// Virtual Timout Wait
+#define HSTATUS_VTW (1UL << 21)		// Virtual Timeout Wait
 #define HSTATUS_VTSR (1UL << 22)	// Virtual Trap SRET
 #define HSTATUS_VSXL (0b11UL << 32)	// effective VSXLEN
+#define HSTATUS_VSXL_64 (XLEN_64 << 32)
 
 // Hypervisor Exception Delegation Register
 #define HEDELEG_INSTRUCTION_ADDR_MISALIGNED (1UL << EXC_INSTRUCTION_ADDR_MISALIGNED)
@@ -193,16 +194,9 @@
 //#define HEDELEG_STORE_OR_AMO_GUEST_PAGE_FAULT (1UL << EXC_STORE_OR_AMO_GUEST_PAGE_FAULT)	// read-only 0
 
 // Hypervisor Interrupt Delegation Register
-#define HIDELEG_HSSI INT_HSSI
 #define HIDELEG_VSSI INT_VSSI
-#define HIDELEG_MSI INT_MSI
-#define HIDELEG_HSTI INT_HSTI
 #define HIDELEG_VSTI INT_VSTI
-#define HIDELEG_MTI INT_MTI
-#define HIDELEG_HSEI INT_HSEI
 #define HIDELEG_VSEI INT_VSEI
-#define HIDELEG_MEI INT_MEI
-#define HIDELEG_SGEI INT_SGEI
 
 // Hypervisor Virtual Interrupt Pending Register
 #define HVIP_VSSIP INT_VSSI
@@ -284,11 +278,17 @@
 		: "=r"(_temp) \
 		: \
 		: "memory"); \
-        _temp; \
+	_temp; \
 })
 
 #define CSRW(csr, val) \
-    asm volatile("csrw  " #csr ", %0\n\r" : : "rK" (val) : "memory")
+	asm volatile("csrw  " #csr ", %0\n\r" : : "rK" (val) : "memory")
+
+#define CSRC(csr, mask) \
+	asm volatile("csrc " #csr ", %0\n\n" : : "rK" (mask) : "memory")
+
+#define CSRS(csr, mask) \
+	asm volatile("csrs " #csr ", %0\n\n" : : "rK" (mask) : "memory")
 
 #endif // __ASSEMBLER__
 #endif // RISCV_H

@@ -96,7 +96,7 @@ init_vmem()
 	rv += map_page(root, DTB_PLATFORM_BUS, DTB_PLATFORM_BUS, PTE_R | PTE_W);
 	rv += map_page(root, DTB_RTC, DTB_RTC, PTE_R | PTE_W);
 	rv += map_page(root, DTB_SERIAL, DTB_SERIAL, PTE_R | PTE_W);
-	rv += map_page(root, DTB_CLINT, DTB_CLINT, PTE_R | PTE_W);
+	rv += map_pages(root, DTB_CLINT, DTB_CLINT, 0x10000, PTE_R | PTE_W);
 	if (rv < 0)
 		panic("failed to map %s", "MMIO");
 
@@ -128,40 +128,113 @@ init_vmem()
 
 // TODO: this is just for testing
 
-
 pte_t vm_pgtable[512 * 4] __attribute__((aligned(4 * PAGE_SIZE)));
 
+
+//	sstatus		// SD, FS=3, SIE
+//	stvec		// hstrapvec
+//	sip		// 0
+//	sie		// 0
+//	scounterena	// 7
+//	sscratch	// uninitialized
+//	sepc		// ???
+//	scause		// ???
+//	stval		// ???
+//	senvcfg		// ???
+//	satp		// VMM page table
+//	hstatus		// VSXLEN=64bit, 
+//	hedeleg		// 0
+//	hideleg		// 0
+//	hvip		// 0
+//	hip		// 0
+//	hie		// INT_VSTI
+//	hgeip		// 0
+//	hgeie		// 0
+//	hcounteren	// 0 <- maybe enable tm
+//	htimedelta	// 0
+//	htval		// ???
+//	htinst		// ???
+//	hgatp		// set it to custom sv39x4 pgtable
+//	vsstatus	// UXL=64, SXL=64
+//	vsip		// 0
+//	vsie		// 0
+//	vstvec		// 0
+//	vsscratch	// 0
+//	vsepc		// 0
+//	vscausec	// 0
+//	vstval		// 0
+//	vsatpc		// 0
+//
+//Every writeable bit in sie is read-only 0 in hie and vice versa
+//Every writeable bit in sip is read-only 0 in hip and vice versa
+//    sie | hie -> hypervisor interrupt enable
+//    sip | hip -> hypervisor interrupt pending
+//    sie ^ hie == 0
+//    sip ^ hip == 0
+//
+//When bit 10 of hideleg is zero, vsip.SEIP and vsie.SEIE are read-only zeros.
+//  Else, vsip.SEIP and vsie.SEIE are aliases of hip.VSEIP and hie.VSEIE.
+//When bit 6 of hideleg is zero, vsip.STIP and vsie.STIE are read-only zeros.
+//  Else, vsip.STIP and vsie.STIE are aliases of hip.VSTIP and hie.VSTIE.
+//When bit 2 of hideleg is zero, vsip.SSIP and vsie.SSIE are read-only zeros.
+//  Else, vsip.SSIP and vsie.SSIE are aliases of hip.VSSIP and hie.VSSIE.
+
 void
-vm_run()
+init_hs_pgtable()
 {
 	memset(vm_pgtable, '\x00', PAGE_SIZE * 4);	// make every entry invalid
 	map_page(vm_pgtable, DTB_SERIAL, DTB_SERIAL, PTE_U | PTE_R | PTE_W);
-	map_page(vm_pgtable, DTB_MEMORY, DTB_MEMORY + FIRMWARE_SIZE + 0x11000, PTE_U | PTE_R | PTE_X);
+	map_page(vm_pgtable, DTB_MEMORY, DTB_MEMORY + FIRMWARE_SIZE + 0x11000, PTE_U | PTE_R | PTE_W | PTE_X);
+}
+
+void
+init_hs()
+{
+	CSRW(hstatus, HSTATUS_VSXL | HSTATUS_SPV);
+	CSRW(hedeleg, 0ULL);
+	CSRW(hideleg, HIDELEG_VSTI);
+	CSRW(hvip, 0ULL);
+	CSRW(hip, 0ULL);
+	CSRW(hie, 0ULL);
+	// hgeip is RO
+	CSRW(hgeie, 0ULL);
+	CSRW(hcounteren, HCOUNTEREN_TM);	// vm can now read time
+	CSRW(htimedelta, 0ULL);
+	CSRW(htval, 0ULL);
+	CSRW(htinst, 0ULL);
+
+	init_hs_pgtable();
 	CSRW(hgatp, ATP_MODE_SV39 | ((VA2PA((uint64) vm_pgtable)) >> 12));
 	asm volatile("hfence.gvma");	// TODO: needed?
+}
 
-	uint64 hstatus = 0;
-	hstatus |= 2ULL << 32;		// vsxlen: 2 == 64-bit
-	hstatus |= HSTATUS_SPV;		// go into virtualized env
-	CSRW(hstatus, hstatus);
-
-	uint64 sstatus = 0;
-	sstatus |= SSTATUS_SPP;
-	//sstatus |= 0xf << 13;	// XS dirty, FS dirty
-	CSRW(sstatus, sstatus);
-	CSRW(sepc, 0x80000000ULL);
-
-	CSRW(htimedelta, 0ULL);
-	CSRW(vsstatus, STATUS_SD | (0xf << 13));
-	CSRW(hie, 0ULL);
+void
+init_vs()
+{
+	CSRW(vsstatus, 0ULL);
+	CSRW(vsip, 0ULL);
+	CSRW(vsie, 0ULL);
 	CSRW(vstvec, 0ULL);
 	CSRW(vsscratch, 0ULL);
 	CSRW(vsepc, 0ULL);
 	CSRW(vscause, 0ULL);
 	CSRW(vstval, 0ULL);
-	CSRW(hvip, 0ULL);
 	CSRW(vsatp, 0ULL);
+}
 
+void
+vm_run()
+{
+	init_vs();
+	init_hs();
+
+	//CSRW(scounteren, SCOUNTEREN_TM);	// enable U-mode to access time
+#include "sbi.h"
+	sbi_set_timer(0);
+
+	// prepare for sret
+	CSRW(sstatus, SSTATUS_SPP);
+	CSRW(sepc, 0x80000000ULL);
 	asm volatile("sret");
 }
 
