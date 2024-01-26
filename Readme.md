@@ -78,28 +78,28 @@ last used address. Optionally we can also set up global pointer.
 
 ## Start virtualization (enter virtual machine)
 
-hgatp (GPA -> PA)
-- Page tables are in Sv39x4 format. It is actually just Sv39 with 2 extra bits.
-In order to account for that change we enlarge the root page table (only) by
-a factor of four (to PAGE_SIZE * 4). Also the alignment is more strict (aligned
-to PAGE_SIZE * 4).
-- PTEs must have User bit set
+- hgatp (GPA -> PA)
+  - Page tables are in Sv39x4 format. It is actually just Sv39 with 2 extra bits.
+  In order to account for that change we enlarge the root page table (only) by
+  a factor of four (to PAGE_SIZE * 4). Also the alignment is more strict (aligned
+  to PAGE_SIZE * 4).
+  - PTEs must have User bit set
 
-hstatus.VSXLEN = 64-bit (0b10)
-hstatus.SPV = 1
-sstatus.SPP = 1
-sepc = vm entry point
+- hstatus.VSXLEN = 64-bit (0b10)
+- hstatus.SPV = 1
+- sstatus.SPP = 1
+- sepc = vm entry point
 
 Now just execute `sret`
 
 
 ## Delegating timer interrupts to VS
 
-mstatus.MIE = 1
-mideleg.VSTI = 1
-hideleg.VSTI = 1
-sie.STIE = 0
-hie.VSTIE = 1
+- mstatus.MIE = 1
+- mideleg.VSTI = 1
+- hideleg.VSTI = 1
+- sie.STIE = 0
+- hie.VSTIE = 1
 
 to set interrupt 1 second in advance do
 `sbi_set_timer(time + 10**7)`
