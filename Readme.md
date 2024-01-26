@@ -85,17 +85,25 @@ a factor of four (to PAGE_SIZE * 4). Also the alignment is more strict (aligned
 to PAGE_SIZE * 4).
 - PTEs must have User bit set
 
-hstatus
-- set correct VSXLEN
-- set SPV bit
-
-sstatus
-- set SPP bit
-
-sepc
-- entry point of virtual machine
+hstatus.VSXLEN = 64-bit (0b10)
+hstatus.SPV = 1
+sstatus.SPP = 1
+sepc = vm entry point
 
 Now just execute `sret`
+
+
+## Delegating timer interrupts to VS
+
+mstatus.MIE = 1
+mideleg.VSTI = 1
+hideleg.VSTI = 1
+sie.STIE = 0
+hie.VSTIE = 1
+
+to set interrupt 1 second in advance do
+`sbi_set_timer(time + 10**7)`
+
 
 
 # Glossary

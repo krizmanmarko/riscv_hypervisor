@@ -101,9 +101,6 @@
 // scratch register
 #define SCR 7
 
-void uartputc(char c);
-void init_uart();
-
 static struct lock uart_lk = LOCK_INITIALIZER;
 
 void

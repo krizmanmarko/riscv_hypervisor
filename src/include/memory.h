@@ -19,7 +19,7 @@
 #define VA2PA(va) ((va) - VAS_BASE + DTB_MEMORY)
 #define PA2VA(pa) ((pa) - DTB_MEMORY + VAS_BASE)
 
-// everything else is not needed in linkerscript
+// nothing else is needed by linkerscript
 #ifndef __LINKER_SCRIPT__
 
 #define PGROUNDUP(a) (((a) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1))
@@ -43,7 +43,6 @@
 
 // vpn[2], vpn[1], vpn[0], offset -> vpn[level]
 #define VA2IDX(level, va) ((((va) >> PAGE_SHIFT) >> ((level) * 9)) & 0x1ff)
-
 
 #endif // __LINKER_SCRIPT__
 #endif // MEMORY_H

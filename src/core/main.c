@@ -5,6 +5,8 @@
 #include "sbi.h"
 #include "riscv.h"
 
+void __attribute__((noreturn)) main();
+
 struct barrier bar = BARRIER_INITIALIZER(DTB_NR_CPUS);
 
 void __attribute__((noreturn))
@@ -18,9 +20,6 @@ main()
 	}
 	wait_barrier(&bar);
 	init_hart();
-	
-	sbi_set_timer(10000000000000);	// 2 sekundi
-	extern void vm_run();
+
 	vm_run();
-	while (1);
 }

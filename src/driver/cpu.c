@@ -5,10 +5,9 @@
 #include "types.h"
 #include "cpu.h"
 
-extern pte_t *kernel_pgtable;
-
 static struct cpu *mycpu();
 
+extern pte_t *kernel_pgtable;
 struct cpu cpus[DTB_NR_CPUS];
 
 uint64
@@ -78,9 +77,9 @@ init_hart()
 	mycpu()->noff = 0;
 
 	// ACTUAL HART INIT (sstatus, sie, sip, satp, stvec)
-	CSRW(sstatus, CSRR(sstatus) | SSTATUS_SIE);
-	CSRW(sie, CSRR(sie) & ~SIE_STIE);
-	CSRW(hie, CSRR(hie) | HIE_VSTIE);
+	CSRS(sstatus, SSTATUS_SIE);
+	CSRC(sie, SIE_STIE);
+	CSRS(hie, HIE_VSTIE);
 
 	reg = ((uint64) kernel_pgtable) >> 12;
 	reg |= ATP_MODE_SV39;
