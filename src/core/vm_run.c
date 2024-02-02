@@ -1,3 +1,5 @@
+// TODO: use VM config struct
+
 #include "defs.h"
 #include "dtb.h"
 #include "memory.h"
@@ -66,7 +68,7 @@ vm_run()
 	// prepare for sret
 	CSRS(sstatus, SSTATUS_SPP);
 	CSRW(sepc, 0x80000000ULL);
-	asm volatile("sret");
+	vm_entry();
 	while (1);	// this and noreturn removes function epilogue
 }
 

@@ -7,12 +7,16 @@ GUEST_NAME=printer
 # (this way we avoid hardcodeing offsets)
 # i guess bao copied this https://stackoverflow.com/questions/8259447/give-structure-offset-attribute-to-assembler
 
-OBJFILES=asm_main.o
+OBJFILES=sbi.o
+OBJFILES+=asm_main.o
+
+BUILD_DIR=../../../build/$(GUEST_NAME)/
+IMGS_DIR=$(BUILD_DIR)imgs/
 
 OBJFILES+= $(TESTS)
 OBJECTS=$(patsubst %, $(BUILD_DIR)%, $(OBJFILES))
 
-#INCLUDES=-I ./include -I$(BUILD_DIR)
+INCLUDES=-I ./include -I$(BUILD_DIR)
 
 CFLAGS=-W -Wall -ggdb $(INCLUDES)
 #CFLAGS+= -Werror
@@ -32,8 +36,6 @@ as=$(CROSS_COMPILE)as
 objcopy=$(CROSS_COMPILE)objcopy
 
 
-BUILD_DIR=../../../build/$(GUEST_NAME)/
-IMGS_DIR=$(BUILD_DIR)imgs/
 
 .PHONY: all clean
 
@@ -55,6 +57,10 @@ $(BUILD_DIR)$(GUEST_NAME).bin: $(BUILD_DIR)$(GUEST_NAME)
 # watch out! linkerscript.ld must be before $(OBJECTS) because it is an argument for -T switch
 $(BUILD_DIR)$(GUEST_NAME): $(OBJECTS)
 	@$(ld) $(LDFLAGS) -T linkerscript.ld $^ -o $@
+
+$(BUILD_DIR)%.o: lib/%.c
+	@$(cc) $(CFLAGS) -c $< -o $@
+	@echo "[+] $< -> $@"
 
 $(BUILD_DIR)asm_%.o: %.S
 	@$(cc) $(CFLAGS) -c $< -o $@

@@ -52,10 +52,9 @@ enter_vas:
 	la t2, bsp_root
 	srli t2, t2, 12
 	or t1, t1, t2
-
-	sfence.vma
 	csrw satp, t1
-	jr t0
+	sfence.vma
+	jr t0		# t0=PA2VA(init_for_c)
 
 # va -> pa
 # [0x80000000, dynamic] -> [0x80000000, dynamic] (just use gigapage (easy to unmap)
@@ -87,12 +86,12 @@ enter_vas:
 #			root[384][0][k] (depending on leftover memory)
 
 # WARNING!
-# .if kernel image ever exceeds 1GB this must be reworked
+# if kernel image ever exceeds 1GB this must be reworked
 
-# for now just map 2 gigapages (it avoids dynamic memory management for now)
+# map 2 gigapages (it just avoids dynamic memory management for now)
 # 0x80000000 -> 0x80000000
 # VAS_BASE   -> 0x80000000
-# DTB_SERIAL -> DTB_SERIAL (well actually 
+# DTB_SERIAL -> DTB_SERIAL
 init_bootstrap_pages:
 	# t0 <- pte
 	# t1 <- root_pt[i] address

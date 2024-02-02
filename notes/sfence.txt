@@ -1,0 +1,42 @@
+sfence.vma rd, rs1, rs2
+	- asid (rs2)
+	- vaddr (rs1)
+	- 0 (rd)
+
+if rs1 == x0 and rs2 == x0:
+	full tlb flush (even global mappings)
+
+if rs1 == x0 and rs2 != x0:
+	only asid (from rs2) is flushed
+
+if rs1 != x0 and rs2 == x0:
+	flush only one page (for all address spaces)
+
+if rs1 != x0 and rs2 != x0:
+	flush only one page (for only one address space)
+
+if rs1 is invalid:
+	sfence.vma == nop
+
+sfence.vma is used to flush any local hardware caches related to address
+translation
+
+global sfence.vma is done via IPIs
+
+
+https://github.com/riscv/riscv-isa-manual/issues/226
+In general, you need to SFENCE after you've recycled an ASID.
+
+https://blog.stephenmarz.com/2021/02/01/wrong-about-sfence/
+sfence.vma should be invoked if:
+
+1. When software recycles an ASID
+	- write satp
+	- sfence.vma (rs1=zero, rs2=recycled ASID)
+
+2. if software only uses single ASID
+	- write satp
+	- sfence.vma
+
+3. if leaf gets more permissions than it had you can call sfence.vma in
+   exception handler
