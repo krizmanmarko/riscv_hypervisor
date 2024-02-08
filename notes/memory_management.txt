@@ -1,0 +1,81 @@
+================================================================================
+This document describes how this hypervisor manages memory
+================================================================================
+
+Goal:
+Hypervisor should not care about the location of the physical memory (after
+early boot finishes).
+
+maybe check out - https://forum.osdev.org/viewtopic.php?t=12022
+
+
+Virtual memory map
+==================
+
+0xffffffc000000000 - kernel image
+0xffffffc040000000 - cpu struct (cpu info and stack)
+0xffffffe000000000 - linear mapping of whole RAM
+0x................ - devices with identity mapping
+
+
+It is very similar to an elf binary vmmap:
+1. Kernel image is like the static data (.text, .rodata, .bss, .data...)
+2. cpu struct is basically for stack
+3. linear mapping of whole RAM could be thought of as the heap (kmalloc, kfree)
+
+So all of the same benefits apply:
+	- immediately recognise pointer and it's meaning
+	- if you run out of stack you page fault
+
+But there is also an extra thing with the local (per hart) cpu struct mapping:
+	- hart does not care about it's hartid anymore, since address is the
+	  same for all harts
+
+
+Early boot shenanigans
+======================
+
+before C code
+-------------
+
+Master hart builds primitive page table using only gigapages. This way we can
+completely avoid dynamic memory management at this point (before entering VAS).
+
+1. 0x0000000000000000 -> 0x0000000000000000 (for serial console device)
+2. 0x0000000080000000 -> 0x0000000080000000 (identity mapping)
+3. 0xffffffc000000000 -> 0x0000000080000000 (kernel image)
+4. 0xffffffe000000000 -> 0x0000000080000000 (kernel physical memory)
+
+First mapping is only used for early printfs. We can see others are mapped to
+the same address (RAM). One is just identity mapping since we cannot write to
+satp and pc in one instruction [NOTE 1]. Mapping number 3 is where code is
+actually going to execute. And the last one is going to be used for accessing
+physical memory (physical memory allocator depends on this mapping).
+
+[NOTE 1]
+> Imagine we do not use this identity mapping and write to satp.
+> Pc will point to instruction after `write satp`.
+> Since that address is not mapped we page fault.
+
+
+Physical memory manager (mem/kmem.c)
+--------------------------------------
+
+Only a single hart walks the whole memory and connects pages in a linked list
+basically marking all pages as freed. It only operates with pointers pointing to
+kernel physical memory (and not to actual physical memory), because later on
+identity mapping is not used anymore. Here we also start to notice a peculiar
+issue. We need locks to safely kfree a page. But in order to use them we need
+to know the hart's id. The way we plan on doing this is by looking at cpu struct
+mapped at VAS_CPU_STRUCT. But so far that mapping is not active and we need some
+other way to distinguish between harts. We use thread pointer (tp) register to
+(temporarily) hold this value for us.
+
+
+Virtual memory manager (mem/vmem.c)
+-----------------------------------
+
+Creates page table according to hartid. Every mapping is global except for cpu
+struct. These are the final page tables used for this hypervisor.
+
+

@@ -43,3 +43,23 @@ hgatp page tables
    for such change root page table must be 4 * larger and aligned to 16KB
 
 2. ptes in this page table must be marked with PTE_U flag
+
+
+==================
+syntax was correct
+==================
+
+Could not get line 6 to execute. But why?
+...
+1	va = (uint64) text;
+2	pa = KVA2PA((uint64) text);
+3	size = (unsigned int) (etext - text);
+4	while (map_pages(root, va, pa, size, PTE_R | PTE_X | PTE_G))
+5
+6	va = (uint64) rodata;
+7	pa = KVA2PA((uint64) rodata);
+8	size = (unsigned int) (erodata - rodata);
+9	while (map_pages(root, va, pa, size, PTE_R | PTE_G));
+...
+
+It turns out I forgot to add semicolon at the end of while on line 4
