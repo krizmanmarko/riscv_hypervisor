@@ -20,6 +20,7 @@ struct_defines()
 {
 	// cpu.h
 	DEFINE_SIZE(CPU_SIZE, struct cpu);
+	DEFINE_OFFSET(CPU_HARTID_OFF, struct cpu, hartid);
 	DEFINE_OFFSET(CPU_STACK_OFF, struct cpu, stack);
 
 	// lock.h

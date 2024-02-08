@@ -21,10 +21,38 @@
 	srli \pa, \pa, 10
 .endm
 
+# \i = \root + \i * 8
 .macro IDX2PTR root, i
 	slli \i, \i, 3
 	add \i, \root, \i
 .endm
+
+# pgtable[va2idx(addr)] = pte(pa, RWX)
+.macro MAP_GIGAPAGE pgtable, addr, pa
+	# generate pte
+	li t0, \pa
+	PTEGEN t0, PTE_R | PTE_W | PTE_X
+	# get index
+	li t1, (\addr >> 12 >> 9 >> 9) & 0x1ff
+	# pgtable[index] = pte
+	la t2, \pgtable
+	IDX2PTR t2, t1
+	sd t0, 0(t1)
+.endm
+
+.section ".boot.data", "aw"
+.globl bsp_root
+.globl init_for_c_sym
+
+.balign 8
+init_for_c_sym: .8byte text
+wait_for_master: .byte 1
+
+.section ".boot.bsp", "aw"
+.balign PAGE_SIZE
+# boot strap pages root
+bsp_root: .zero PAGE_SIZE
+
 
 .section ".boot.text.s", "ax"
 .globl setup
@@ -32,20 +60,41 @@
 # a0: hart id
 # a1: dtb
 setup:
-	# in case we trigger an exception in boot code
+	# install exception handler early
 	la t0, sboot_fail
 	csrw stvec, t0
 
 	call init_bootstrap_pages
 
+	# awaken other harts
+	mv tp, a0
+	mv t0, a1
+	la a1, enter_vas
+	mv a2, t0
+	li a6, 0
+	li a7, 0x48534d
+
+	li t2, 1
+	li t1, DTB_NR_CPUS
+1:	beq t2, t1, 2f
+	addi t1, t1, -1
+	mv a0, t1
+	ecall
+	j 1b
+2:	mv a0, tp
+	mv a1, t0
+
 enter_vas:
-	# convert init_for_c PA to VA
+	# store hartid in tp
+	mv tp, a0
+
+	# PA2KVA(init_for_c) by hand
 	la t0, eboot
 	li t2, DTB_MEMORY
-	li t3, VAS_BASE
+	li t3, VAS_KERNEL
 	sub t0, t0, t2
 	add t0, t0, t3
-	
+
 	# setup satp (ATP_MODE_Sv39 | (bsp_root >> 12))
 	li t1, 1
 	slli t1, t1, 63
@@ -54,99 +103,41 @@ enter_vas:
 	or t1, t1, t2
 	csrw satp, t1
 	sfence.vma
-	jr t0		# t0=PA2VA(init_for_c)
-
-# va -> pa
-# [0x80000000, dynamic] -> [0x80000000, dynamic] (just use gigapage (easy to unmap)
-# [0xffffffc000000000, pa2va(dynamic)] -> [0x80000000, dynamic]
-# [pa2va(dynamic), max_va] -> [dynamic, max_ram]
-
-# i need identity mapping to perform switching vas
-# i want to map hypervisor to 0xffffffc000000000, .+KERNEL_SIZE
-# i want every cpu struct to map at 0xffffffc040000000, .+sizeof(struct cpu)
-# i want dynamic to be at 0xffffffe000000000
-# max_va 0xfffffff000000000
-# we need
-#	root pt (with following entries):
-#		# kernel image
-#		root[256][0]
-#			root[256][0][0]
-#			...
-#			root[256][0][i] (depending on kernel size)
-#		# cpu stack
-#		root[257][0]
-#			root[257][0][0]
-#			...
-#			root[257][0][j] (depending on cpu stack size)
-#
-#		# dynamic (root[384])
-#		root[384][0]
-#			root[384][0][0]
-#			...
-#			root[384][0][k] (depending on leftover memory)
+	jr t0		# t0=PA2KVA(init_for_c)
 
 # WARNING!
-# if kernel image ever exceeds 1GB this must be reworked
+# kernel image exceeds 1GB -> rework
 
-# map 2 gigapages (it just avoids dynamic memory management for now)
-# 0x80000000 -> 0x80000000
-# VAS_BASE   -> 0x80000000
-# DTB_SERIAL -> DTB_SERIAL
+# map gigapages (without dynamic memory management)
 init_bootstrap_pages:
-	# t0 <- pte
-	# t1 <- root_pt[i] address
-
-	li t0, DTB_MEMORY
-	la t2, bsp_root
-	PTEGEN t0, PTE_R | PTE_W | PTE_X
-
-	# bsp_root[2]   -> DTB_MEMORY
-	li t1, 2
-	IDX2PTR t2, t1
-	sd t0, 0(t1)
-
-	# bsp_root[256] -> DTB_MEMORY
-	li t1, 256
-	IDX2PTR t2, t1
-	sd t0, 0(t1)
-
-	# bsp_root[0] -> 0 (includes DTB_SERIAL)
-	li t0, 0
-	PTEGEN t0, PTE_R | PTE_W
-	li t1, 0
-	IDX2PTR t2, t1
-	sd t0, 0(t1)
-
+	MAP_GIGAPAGE bsp_root, 0, 0	# this is for DTB_SERIAL
+	MAP_GIGAPAGE bsp_root, DTB_MEMORY, DTB_MEMORY
+	MAP_GIGAPAGE bsp_root, VAS_KERNEL, DTB_MEMORY
+	MAP_GIGAPAGE bsp_root, VAS_RAM, DTB_MEMORY
 	ret
 
 .balign 4
 sboot_fail:
 	j .
 
-
-.section ".boot.data", "aw"
-.globl bsp_root
-.globl init_for_c_sym
-
-.balign 8
-init_for_c_sym: .8byte text
-
-.section ".boot.bsp", "aw"
-.balign PAGE_SIZE
-# boot strap pages root
-bsp_root: .zero PAGE_SIZE
-
 .section ".text.entry", "ax"
-init_for_c:
-	# store hartid in tp
-	mv tp, a0
+# TODO: this is still trash, where is stack going to be?
+# where is synchronisation between harts
+# do not store hartid in tp but rather in cpu struct
+# map cpu struct that also has stack
 
+init_for_c:
 	# init stack - last used, grows towards smaller, 16-bit aligned
 	la t0, cpus
 	li t1, CPU_SIZE
-	addi t2, tp, 1
-	mul t1, t1, t2
-	add sp, t0, t1
+	addi t2, a0, 1
+	mul t2, t1, t2
+	add sp, t0, t2
+
+	# store hartid in cpu struct
+	mul t2, t1, a0
+	add t2, t0, t2
+	sw a0, CPU_HARTID_OFF(t2)
 
 	# init gp (not actually necessary, boost performance)
 	.option push
@@ -155,7 +146,4 @@ init_for_c:
 	.option pop
 
 	# finally goto C
-	call main
-
-	# should never be reached
-	j .
+	j main

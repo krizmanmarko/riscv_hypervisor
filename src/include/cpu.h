@@ -2,14 +2,16 @@
 #define CPU_H
 
 #include "memory.h"
+#include "types.h"
 
-#define CPU_STACK_SIZE PAGE_SIZE
+#define CPU_STACK_SIZE (2 * PAGE_SIZE)
 
 #ifndef __ASSEMBLER__
 
-// per cpu allocations (mapped to VAS_CPU_BASE)
+// per cpu allocations
 struct cpu {
 	// interrupts
+	uint64 hartid;
 	int int_enable;	// stored for push and pop
 	int noff;	// times interrupt_disable was pushed but not popped
 

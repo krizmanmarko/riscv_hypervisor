@@ -11,13 +11,22 @@
 #define PAGE_SHIFT 12
 #define PAGE_SIZE (1 << PAGE_SHIFT)
 
-#define VAS_BASE (0xffffffc000000000)
-#define VAS_CPU_STACK (0xffffffc040000000)
-#define VAS_SIZE (MAX_VA - VAS_BASE)
+#define VAS_KERNEL (0xffffffc000000000)
+#define VAS_CPU_STRUCT (0xffffffc040000000)
+#define VAS_RAM (0xffffffe000000000)
 #define MAX_VA (0xffffffffffffffff)
 
-#define VA2PA(va) ((va) - VAS_BASE + DTB_MEMORY)
-#define PA2VA(pa) ((pa) - DTB_MEMORY + VAS_BASE)
+// kpa - kernel physical address (address of linearly mapped RAM)
+// pa - physical address (actual physical address)
+// kva - kernel virtual address (kernel image address)
+#define KPA2PA(kpa) (((kpa) & ~VAS_RAM) + DTB_MEMORY)
+#define PA2KPA(pa) (((pa) - DTB_MEMORY) | VAS_RAM)
+
+// kernel_va to pa
+#define KVA2PA(kva) ((kva) - VAS_KERNEL + DTB_MEMORY)
+#define PA2KVA(pa) ((pa) - DTB_MEMORY + VAS_KERNEL)
+#define KVA2KPA(kva) ((kva) - VAS_KERNEL + VAS_RAM)
+#define KPA2KVA(kpa) ((kpa) - VAS_RAM + VAS_KERNEL)
 
 // nothing else is needed by linkerscript
 #ifndef __LINKER_SCRIPT__
@@ -39,7 +48,7 @@
 
 // get ppn to correct offset
 #define PA2PTE(pa) ((pte_t) (((pa) >> 12) << 10))
-#define PTE2PA(pte) ((void *) (((pte) >> 10) << 12))
+#define PTE2PA(pte) ((uint64) (((pte) >> 10) << 12))
 
 // vpn[2], vpn[1], vpn[0], offset -> vpn[level]
 #define VA2IDX(level, va) ((((va) >> PAGE_SHIFT) >> ((level) * 9)) & 0x1ff)

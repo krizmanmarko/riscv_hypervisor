@@ -154,7 +154,7 @@ hstrapvec:
 
 1:	call hs_exception_handler
 
-vm_entry:
+2:
 	ld x31, 31*8(sp)
 	ld x30, 30*8(sp)
 	ld x29, 29*8(sp)

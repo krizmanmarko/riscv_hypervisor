@@ -10,7 +10,7 @@
 #define panic(fmt, ...) \
 	do { \
 		printf("\033[38;2;255;0;0m[PANIC(%d) %s:%d]: ", \
-			hartid(), \
+			get_hartid(), \
 			__FILE__, \
 			__LINE__ \
 		); \

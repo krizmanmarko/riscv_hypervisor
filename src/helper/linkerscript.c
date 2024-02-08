@@ -21,6 +21,8 @@ ENTRY(setup)
 SECTIONS
 {
 	. = DTB_MEMORY + FIRMWARE_SIZE;
+	phys_base = .;
+	kernel_base = PA2KVA(phys_base);
 
 	/* start boot section */
 	/* this is special because VMA == LMA */
@@ -47,50 +49,57 @@ SECTIONS
 
 	/* keep physical and virtual memory in sync */
 	. = ALIGN(PAGE_SIZE);
-	phys_locctr = .;
-	. = . - DTB_MEMORY + VAS_BASE;
+	offset = . - phys_base;
+	. = kernel_base + offset;
 
 	/* start RX section */
-	.text ALIGN(PAGE_SIZE) : AT(phys_locctr) {
+	.text ALIGN(PAGE_SIZE) : AT(phys_base + offset) {
 		PROVIDE(text = .);
 		*(.text.entry)
 		*(.text .text.*)
 	}
 	PROVIDE(etext = .);
-	phys_locctr = ALIGN(phys_locctr + SIZEOF(.text), PAGE_SIZE);
+	offset = ALIGN(offset + SIZEOF(.text), PAGE_SIZE);
 
 	/* start RO section in new page */
-	.rodata ALIGN(PAGE_SIZE) : AT(phys_locctr) {
+	.rodata ALIGN(PAGE_SIZE) : AT(phys_base + offset) {
 		PROVIDE(rodata = .);
 		. = ALIGN(16);
 		*(.rodata .rodata.*)
 	}
 	PROVIDE(erodata = .);
-	phys_locctr = ALIGN(phys_locctr + SIZEOF(.rodata), PAGE_SIZE);
+	offset = ALIGN(offset + SIZEOF(.rodata), PAGE_SIZE);
 
 	/* start RW section in new page */
-	.data ALIGN(PAGE_SIZE) : AT(phys_locctr) {
+	.data ALIGN(PAGE_SIZE) : AT(phys_base + offset) {
 		PROVIDE(data = .);
 		. = ALIGN(16);
 		PROVIDE(__global_pointer$ = . + 0x800);
 		*(.data .data.*)
 	}
-	phys_locctr = ALIGN(phys_locctr + SIZEOF(.data), PAGE_SIZE);
+	offset = ALIGN(offset + SIZEOF(.data), PAGE_SIZE);
 
-	.bss ALIGN(PAGE_SIZE) : AT(phys_locctr) {
+	.bss ALIGN(PAGE_SIZE) : AT(phys_base + offset) {
 		. = ALIGN(16);
 		*(.bss .bss.*)
 		*(.sbss .sbss.*)
 	}
 	PROVIDE(edata = .);
-	phys_locctr = ALIGN(phys_locctr + SIZEOF(.bss), PAGE_SIZE);
-	. = ALIGN(PAGE_SIZE);
+	offset = ALIGN(offset + SIZEOF(.bss), PAGE_SIZE);
 
-	.vm_images ALIGN(PAGE_SIZE) : AT(phys_locctr) {
+	.cpu_structs ALIGN(PAGE_SIZE) : AT(phys_base + offset) {
+		PROVIDE(cpu_structs = .);
+		. = ALIGN(16);
+		*(.cpu_structs .cpu_structs.*)
+	}
+	PROVIDE(ecpu_structs = .);
+	offset = ALIGN(offset + SIZEOF(.cpu_structs), PAGE_SIZE);
+
+	.vm_images ALIGN(PAGE_SIZE) : AT(phys_base + offset) {
 		*(.vm_image_guest .vm_image_guest.*)
 	}
 
 	. = ALIGN(PAGE_SIZE);
-	PROVIDE(dynamic = .);
+	PROVIDE(dynamic = .);	// kernel va
 
 }

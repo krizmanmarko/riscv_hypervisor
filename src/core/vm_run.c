@@ -39,7 +39,7 @@ init_hs()
 	CSRW(htinst, 0ULL);
 
 	init_hs_pgtable();
-	CSRW(hgatp, ATP_MODE_SV39 | ((VA2PA((uint64) vm_pgtable)) >> 12));
+	CSRW(hgatp, ATP_MODE_SV39 | ((KPA2PA((uint64) vm_pgtable)) >> 12));
 	asm volatile("hfence.gvma");	// TODO: needed?
 }
 
@@ -68,7 +68,7 @@ vm_run()
 	// prepare for sret
 	CSRS(sstatus, SSTATUS_SPP);
 	CSRW(sepc, 0x80000000ULL);
-	vm_entry();
+	//vm_entry();
 	while (1);	// this and noreturn removes function epilogue
 }
 

@@ -27,7 +27,7 @@ acquire:
 
 	# lock->hartid = hartid
 	mv t0, a0
-	call hartid
+	call get_hartid
 	sw a0, LOCK_HARTID_OFF(t0)
 
 	ld t0, 0(sp)

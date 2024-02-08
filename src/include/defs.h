@@ -22,13 +22,14 @@ void hstrapvec();
 void __attribute__((noreturn)) vm_run();
 
 // driver/cpu.c
-uint64 hartid();
+struct cpu *mycpu();
+uint64 get_hartid();
 void interrupt_enable();
 void interrupt_disable();
 void push_int_disable();
 void pop_int_disable();
 int interrupt_status();
-void init_hart();
+void init_hart(pte_t *pgtable);
 
 // driver/uart.c
 void uartputc(char c);
@@ -43,7 +44,7 @@ void init_kmem();
 pte_t *walk(pte_t *pgtable, uint64 va, int alloc);
 int map_page(pte_t *pgtable, uint64 va, uint64 pa, int pte_flags);
 int map_pages(pte_t *pgtable, uint64 va, uint64 pa, uint64 size, int pte_flags);
-void init_vmem();
+pte_t *init_vmem();
 
 // linkerscript (phys)
 extern char boottext[];
@@ -61,6 +62,8 @@ extern char rodata[];
 extern char erodata[];
 extern char data[];
 extern char edata[];
+extern char cpu_structs[];
+extern char ecpu_structs[];
 extern char dynamic[];
 
 #endif // DEFS_H

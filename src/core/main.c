@@ -1,3 +1,4 @@
+#include "cpu.h"
 #include "defs.h"
 #include "dtb.h"
 #include "lock.h"
@@ -7,19 +8,22 @@
 
 void __attribute__((noreturn)) main();
 
-struct barrier bar = BARRIER_INITIALIZER(DTB_NR_CPUS);
+static struct barrier bar = BARRIER_INITIALIZER(DTB_NR_CPUS);
 
 void __attribute__((noreturn))
-main()
+main(uint64 hartid)
 {
-	if (hartid() == 0) {
+	pte_t *pgtable;
+
+	if (hartid == 0) {
 		init_kmem();
 		init_uart();
 		printf("Booting!\n");
-		init_vmem();
 	}
 	wait_barrier(&bar);
-	init_hart();
+	pgtable = init_vmem();
+	init_hart(pgtable);
 
-	vm_run();
+	//vm_run();
+	while (1);
 }

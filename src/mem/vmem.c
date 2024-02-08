@@ -1,5 +1,6 @@
 #include "defs.h"
 #include "dtb.h"
+#include "cpu.h"
 #include "memory.h"
 #include "riscv.h"
 #include "stdio.h"
@@ -7,32 +8,30 @@
 
 static int map_gigapage(pte_t *pgtable, uint64 va, uint64 pa, int pte_flags);
 
-pte_t *kernel_pgtable;
-
 // returns page table entry on success or 0 on fail
 // currently does not support megapages or gigapages
 pte_t *
 walk(pte_t *pgtable, uint64 va, int alloc)
 {
 	pte_t *pte;	// page table entry
-	pte_t *pa;	// physical address (of page table)
+	pte_t *kpa;	// not actual physical address (of page table)
 
 	if (pgtable == 0)
 		panic("root page table doesn't exist");
 
-	pa = pgtable;
+	kpa = pgtable;
 	for (int level = LEVELS - 1; level > 0; level--) {
-		pte = &pa[VA2IDX(level, va)];
+		pte = &kpa[VA2IDX(level, va)];
 		if (*pte & PTE_V) {
-			pa = PTE2PA(*pte);
+			kpa = (pte_t *)PA2KPA(PTE2PA(*pte));
 		} else {
-			if (!alloc || (pa = kmalloc()) == 0)
+			if (!alloc || (kpa = kmalloc()) == 0)
 				return 0;
-			memset(pa, '\x00', PAGE_SIZE);
-			*pte = PA2PTE((uint64) pa) | PTE_V;
+			memset(kpa, '\x00', PAGE_SIZE);
+			*pte = PA2PTE((uint64) KPA2PA((uint64) kpa)) | PTE_V;
 		}
 	}
-	return &pa[VA2IDX(0, va)];
+	return &kpa[VA2IDX(0, va)];
 }
 
 // returns 0 on success, -1 on fail
@@ -81,8 +80,7 @@ map_pages(pte_t *pgtable, uint64 va, uint64 pa, uint64 size, int pte_flags)
 	return 0;
 }
 
-// creates page table supervisor will actually use
-void
+pte_t *
 init_vmem()
 {
 	pte_t *root;
@@ -91,38 +89,49 @@ init_vmem()
 
 	if ((root = (pte_t *)kmalloc()) == 0)
 		panic("couldn't allocate root page table");
+	memset(root, '\x00', PAGE_SIZE);
 
-	memset(root, '\x00', PAGE_SIZE);	// make every entry invalid
-
-	rv = map_page(root, DTB_FLASH, DTB_FLASH, PTE_R | PTE_W);
-	rv += map_page(root, DTB_PLATFORM_BUS, DTB_PLATFORM_BUS, PTE_R | PTE_W);
-	rv += map_page(root, DTB_RTC, DTB_RTC, PTE_R | PTE_W);
-	rv += map_page(root, DTB_SERIAL, DTB_SERIAL, PTE_R | PTE_W);
-	rv += map_pages(root, DTB_CLINT, DTB_CLINT, 0x10000, PTE_R | PTE_W);
+	// map MMIO
+	rv = map_page(root, DTB_FLASH, DTB_FLASH, PTE_R | PTE_W | PTE_G);
+	rv += map_page(root, DTB_PLATFORM_BUS, DTB_PLATFORM_BUS, PTE_R | PTE_W | PTE_G);
+	rv += map_page(root, DTB_RTC, DTB_RTC, PTE_R | PTE_W | PTE_G);
+	rv += map_page(root, DTB_SERIAL, DTB_SERIAL, PTE_R | PTE_W | PTE_G);
+	rv += map_pages(root, DTB_CLINT, DTB_CLINT, 0x10000, PTE_R | PTE_W | PTE_G);
 	if (rv < 0)
 		panic("failed to map %s", "MMIO");
 
 	// map kernel image
 	va = (uint64) text;
-	pa = VA2PA((uint64) text);
+	pa = KVA2PA((uint64) text);
 	size = (unsigned int) (etext - text);
-	if (map_pages(root, va, pa, size, PTE_R | PTE_X))
+	if (map_pages(root, va, pa, size, PTE_R | PTE_X | PTE_G))
 		panic("failed to map %s", ".text");
 
 	va = (uint64) rodata;
-	pa = VA2PA((uint64) rodata);
+	pa = KVA2PA((uint64) rodata);
 	size = (unsigned int) (erodata - rodata);
-	if (map_pages(root, va, pa, size, PTE_R))
+	if (map_pages(root, va, pa, size, PTE_R | PTE_G))
 		panic("failed to map %s", ".rodata");
 
 	va = (uint64) data;
-	pa = VA2PA((uint64) data);
+	pa = KVA2PA((uint64) data);
 	size = (unsigned int) (edata - data);
-	if (map_pages(root, va, pa, size, PTE_R | PTE_W))
-		panic("failed to map %s", "data");
+	if (map_pages(root, va, pa, size, PTE_R | PTE_W | PTE_G))
+		panic("failed to map %s", ".data");
 
-	if (map_pages(root, DTB_MEMORY, DTB_MEMORY, DTB_MEMORY_SIZE, PTE_R | PTE_W | PTE_X))
+	// map stack
+	va = VAS_CPU_STRUCT;
+	pa = KVA2PA((uint64) mycpu());
+	size = sizeof(struct cpu);
+	if (map_pages(root, va, pa, size, PTE_R | PTE_W))
+		panic("failed to map %s", "cpu struct");
+
+	// map whole RAM
+	va = VAS_RAM;
+	pa = DTB_MEMORY;
+	size = DTB_MEMORY_SIZE;
+	if (map_pages(root, va, pa, size, PTE_R | PTE_W | PTE_X | PTE_G))
 		panic("failed to map %s", "RAM");
 
-	kernel_pgtable = root;
+	return root;
 }
