@@ -73,10 +73,11 @@ setup:
 	li a6, 0
 	li a7, 0x48534d
 
-	li t2, 1
+	li t2, 0
 	li t1, DTB_NR_CPUS
 1:	beq t2, t1, 2f
 	addi t1, t1, -1
+	beq tp, t1, 1b	# if (current) continue;
 	mv a0, t1
 	ecall
 	j 1b
