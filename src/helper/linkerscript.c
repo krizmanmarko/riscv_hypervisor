@@ -74,7 +74,6 @@ SECTIONS
 	.data ALIGN(PAGE_SIZE) : AT(phys_base + offset) {
 		PROVIDE(data = .);
 		. = ALIGN(16);
-		PROVIDE(__global_pointer$ = . + 0x800);
 		*(.data .data.*)
 	}
 	offset = ALIGN(offset + SIZEOF(.data), PAGE_SIZE);

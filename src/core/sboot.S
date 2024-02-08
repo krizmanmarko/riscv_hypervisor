@@ -46,7 +46,6 @@
 
 .balign 8
 init_for_c_sym: .8byte text
-wait_for_master: .byte 1
 
 .section ".boot.bsp", "aw"
 .balign PAGE_SIZE
@@ -133,17 +132,6 @@ init_for_c:
 	addi t2, a0, 1
 	mul t2, t1, t2
 	add sp, t0, t2
-
-	# store hartid in cpu struct
-	mul t2, t1, a0
-	add t2, t0, t2
-	sw a0, CPU_HARTID_OFF(t2)
-
-	# init gp (not actually necessary, boost performance)
-	.option push
-	.option norelax
-	la gp, __global_pointer$
-	.option pop
 
 	# finally goto C
 	j main

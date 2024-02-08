@@ -66,7 +66,6 @@ interrupt_status()
 	return (CSRR(sstatus) & SSTATUS_SIE) ? 1 : 0;
 }
 
-#include "stdio.h"	// TODO: delete this
 void
 init_hart(pte_t *pgtable)
 {
@@ -98,6 +97,5 @@ init_hart(pte_t *pgtable)
 	sp -= tp * sizeof(struct cpu);
 	sp -= (uint64) cpu_structs;
 	sp += VAS_CPU_STRUCT;
-
 	cpu_mapped = 1;
 }
