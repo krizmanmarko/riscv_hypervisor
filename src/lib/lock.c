@@ -11,7 +11,6 @@ void
 init_lock(struct lock *lk)
 {
 	lk->locked = 0;
-	lk->hartid = -1;
 }
 
 

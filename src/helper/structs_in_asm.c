@@ -25,5 +25,4 @@ struct_defines()
 
 	// lock.h
 	DEFINE_OFFSET(LOCK_LOCKED_OFF, struct lock, locked);
-	DEFINE_OFFSET(LOCK_HARTID_OFF, struct lock, hartid);
 }

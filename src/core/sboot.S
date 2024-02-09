@@ -68,8 +68,6 @@ setup:
 	# awaken other harts
 	mv tp, a0
 	mv t0, a1
-	la a1, enter_vas
-	mv a2, t0
 	li a6, 0
 	li a7, 0x48534d
 
@@ -79,6 +77,8 @@ setup:
 	addi t1, t1, -1
 	beq tp, t1, 1b	# if (current) continue;
 	mv a0, t1
+	la a1, enter_vas
+	mv a2, t0
 	ecall
 	j 1b
 2:	mv a0, tp

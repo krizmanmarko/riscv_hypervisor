@@ -39,8 +39,8 @@ init_hs()
 	CSRW(htinst, 0ULL);
 
 	init_hs_pgtable();
-	CSRW(hgatp, ATP_MODE_SV39 | ((KPA2PA((uint64) vm_pgtable)) >> 12));
-	asm volatile("hfence.gvma");	// TODO: needed?
+	CSRW(hgatp, ATP_MODE_SV39 | ((KVA2PA((uint64) vm_pgtable)) >> 12));
+	asm volatile("hfence.gvma");
 }
 
 static void
@@ -62,6 +62,9 @@ vm_run()
 {
 	init_vs();
 	init_hs();
+
+	// init 
+	//init_vcpu();
 
 	//CSRS(scounteren, SCOUNTEREN_TM);	// enable U-mode to access time
 

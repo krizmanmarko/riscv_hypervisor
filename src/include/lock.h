@@ -2,12 +2,10 @@
 #define LOCK_H
 
 #ifndef __ASSEMBLER__
-	
+
+// TODO: should this be typedef if there is only one element???
 struct lock {
 	int locked;
-
-	// debugging
-	int hartid;	// hartid of cpu holding the lock
 };
 
 struct barrier {
@@ -18,8 +16,7 @@ struct barrier {
 
 #define LOCK_INITIALIZER \
 { \
-	.locked = 0, \
-	.hartid = -1 \
+	.locked = 0 \
 }
 
 #define BARRIER_INITIALIZER(cnt) \

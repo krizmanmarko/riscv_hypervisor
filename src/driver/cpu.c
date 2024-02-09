@@ -7,7 +7,7 @@
 
 __attribute__((__section__(".cpu_structs"))) struct cpu cpus[DTB_NR_CPUS];
 
-static int cpu_mapped = 0;
+volatile int cpu_mapped = 0;
 
 struct cpu *
 mycpu()
@@ -29,44 +29,6 @@ get_hartid()
 }
 
 void
-interrupt_enable()
-{
-	mycpu()->int_enable = 1;
-	CSRS(sstatus, SSTATUS_SIE);
-}
-
-void
-interrupt_disable()
-{
-	mycpu()->int_enable = 0;
-	CSRC(sstatus, SSTATUS_SIE);
-}
-
-void
-push_int_disable()
-{
-	if (mycpu()->noff == 0)
-		if (mycpu()->int_enable)
-			interrupt_disable();
-	mycpu()->noff += 1;
-}
-
-void
-pop_int_disable()
-{
-	mycpu()->noff -= 1;
-	if (mycpu()->noff == 0)
-		if (mycpu()->int_enable)
-			interrupt_enable();
-}
-
-int
-interrupt_status()
-{
-	return (CSRR(sstatus) & SSTATUS_SIE) ? 1 : 0;
-}
-
-void
 init_hart(pte_t *pgtable)
 {
 	uint64 reg;
@@ -75,8 +37,6 @@ init_hart(pte_t *pgtable)
 
 	// STRUCT CPU INIT
 	mycpu()->hartid = tp;
-	mycpu()->int_enable = 0;
-	mycpu()->noff = 0;
 
 	// ACTUAL HART INIT (sstatus, sie, sip, satp, stvec)
 	CSRS(sstatus, SSTATUS_SIE);
@@ -97,5 +57,4 @@ init_hart(pte_t *pgtable)
 	sp -= tp * sizeof(struct cpu);
 	sp -= (uint64) cpu_structs;
 	sp += VAS_CPU_STRUCT;
-	cpu_mapped = 1;
 }

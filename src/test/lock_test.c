@@ -13,6 +13,13 @@ static int hart1_finished = 0;
 static int hart2_finished = 0;
 static int written_note = 0;
 
+static uint64 hartid()
+{
+	uint64 id;
+	asm volatile("mv %0, tp" : "=r" (id));
+	return id;
+}
+
 void
 spinlock_test()
 {
