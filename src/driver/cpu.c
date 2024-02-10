@@ -32,7 +32,7 @@ void
 init_hart(pte_t *pgtable)
 {
 	uint64 reg;
-	register uint64 sp asm("sp");
+	register uint64 a0 asm("a0");
 	register uint64 tp asm("tp");
 
 	// STRUCT CPU INIT
@@ -50,11 +50,16 @@ init_hart(pte_t *pgtable)
 
 	reg = (KPA2PA((uint64) pgtable)) >> 12;
 	reg |= ATP_MODE_SV39;
+
+	// BEGIN WARNING: super delicate code section
 	CSRW(satp, reg);
 	asm volatile("sfence.vma");	// flush TLB
+	// code here must not use sp/fp relative addresses
+	a0 = VAS_CPU_STRUCT;
+	a0 -= tp * sizeof(struct cpu);
+	a0 -= (uint64) cpu_structs;
+	relocate_stack(a0);
+	// END OF WARNING: super delicate code section
 
-	// setup sp correctly
-	sp -= tp * sizeof(struct cpu);
-	sp -= (uint64) cpu_structs;
-	sp += VAS_CPU_STRUCT;
+	return;
 }

@@ -121,10 +121,7 @@ sboot_fail:
 	j .
 
 .section ".text.entry", "ax"
-# TODO: this is still trash, where is stack going to be?
-# where is synchronisation between harts
-# do not store hartid in tp but rather in cpu struct
-# map cpu struct that also has stack
+.globl relocate_stack
 
 init_for_c:
 	# init stack - last used, grows towards smaller, 16-bit aligned
@@ -136,3 +133,17 @@ init_for_c:
 
 	# finally goto C
 	j main
+
+# void relocate_stack(uint64 offset);
+relocate_stack:
+	# first change sp and fp
+	add sp, sp, a0
+	add fp, fp, a0
+
+	# only after stack is relocated modify stored fp (on stack)
+	# and since main is the first function using stack, we do not have to
+	# change any other frames' stored fp
+	ld a1, -16(fp)
+	add a1, a1, a0
+	sd a1, -16(fp)
+	ret

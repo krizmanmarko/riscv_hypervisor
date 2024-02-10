@@ -6,6 +6,8 @@
 #include "sbi.h"
 #include "riscv.h"
 
+#include "test.h"
+
 extern int cpu_mapped;
 
 void __attribute__((noreturn)) main();
@@ -22,7 +24,6 @@ main(uint64 hartid)
 		init_uart();
 		printf("Booting!\n");
 	}
-
 	wait_barrier(&bar);
 	pgtable = init_vmem();
 	init_hart(pgtable);
