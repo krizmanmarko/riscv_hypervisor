@@ -6,8 +6,6 @@
 #include "sbi.h"
 #include "riscv.h"
 
-#include "test.h"
-
 extern int cpu_mapped;
 
 void __attribute__((noreturn)) main();

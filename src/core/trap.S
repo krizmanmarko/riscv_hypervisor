@@ -1,40 +1,9 @@
+/* WARNING: locks do not disable interrupts */
+
 .section ".text", "ax"
 
 .globl hstrapvec
 .globl vm_entry
-
-.macro LD_REGS
-	ld x1, 0(x31)
-	ld x2, 8(x31)
-	ld x3, 16(x31)
-	ld x4, 24(x31)
-	ld x5, 32(x31)
-	ld x6, 40(x31)
-	ld x7, 48(x31)
-	ld x8, 56(x31)
-	ld x9, 64(x31)
-	ld x10, 72(x31)
-	ld x11, 80(x31)
-	ld x12, 88(x31)
-	ld x13, 96(x31)
-	ld x14, 104(x31)
-	ld x15, 112(x31)
-	ld x16, 120(x31)
-	ld x17, 128(x31)
-	ld x18, 136(x31)
-	ld x19, 144(x31)
-	ld x20, 152(x31)
-	ld x21, 160(x31)
-	ld x22, 168(x31)
-	ld x23, 176(x31)
-	ld x24, 184(x31)
-	ld x25, 192(x31)
-	ld x26, 200(x31)
-	ld x27, 208(x31)
-	ld x28, 216(x31)
-	ld x29, 224(x31)
-	ld x30, 232(x31)
-.endm
 
 .macro VM_ENTER
 	csr swap x31, sscratch, x31

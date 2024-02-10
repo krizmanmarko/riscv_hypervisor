@@ -7,11 +7,11 @@
 
 // I do not want to rely on barriers for lock testing since barriers use locks
 static struct lock lock_test_lk = LOCK_INITIALIZER;
-static int init_finished = 0;
-static int hart0_finished = 0;
-static int hart1_finished = 0;
-static int hart2_finished = 0;
-static int written_note = 0;
+static volatile int init_finished = 0;
+static volatile int hart0_finished = 0;
+static volatile int hart1_finished = 0;
+static volatile int hart2_finished = 0;
+static volatile int written_note = 0;
 
 static uint64 hartid()
 {

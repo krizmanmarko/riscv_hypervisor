@@ -4,7 +4,8 @@
 #include "stdio.h"	// TODO: only for debugging with printf and panic
 
 // WARNING!
-// Locks do not disable interrupts. Do not use them in interrupt handlers unless// you know what you are doing. This also means no printf()
+// Locks do not disable interrupts. Do not use them in interrupt handlers unless
+// you know what you are doing. This also means no printf()
 
 void
 hs_interrupt_handler(uint64 scause)

@@ -10,6 +10,7 @@ void __attribute__((noreturn)) main();
 
 // core/sboot.S
 void setup(uint64 hartid, void *dtb);
+void relocate_stack(uint64 offset);
 
 // core/trap.c
 void hs_interrupt_handler(uint64 scause);
@@ -24,11 +25,6 @@ void __attribute__((noreturn)) vm_run();
 // driver/cpu.c
 struct cpu *mycpu();
 uint64 get_hartid();
-void interrupt_enable();
-void interrupt_disable();
-void push_int_disable();
-void pop_int_disable();
-int interrupt_status();
 void init_hart(pte_t *pgtable);
 
 // driver/uart.c

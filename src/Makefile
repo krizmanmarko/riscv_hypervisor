@@ -51,7 +51,7 @@ $(BUILD_DIR)hypervisor.bin: $(BUILD_DIR)hypervisor
 
 # watch out! linkerscript.ld must be before $(OBJECTS) because it is an argument for -T switch
 $(BUILD_DIR)hypervisor: $(BUILD_DIR)linkerscript.ld $(OBJECTS)
-	@cd guest/printer && make
+	@cd guest/printer && make --no-print-directory
 	@$(objcopy) --input binary --output elf64-littleriscv --rename-section .data=.vm_image_guest --set-section-flags .vm_image_guest=code,contents,alloc,load,readonly $(BUILD_DIR)printer/imgs/printer.bin $(BUILD_DIR)guest.o
 	@$(ld) $(LDFLAGS) -T $^ -o $@ $(BUILD_DIR)guest.o
 	@echo "\e[32m[+] Successfuly built $@!\e[0m"

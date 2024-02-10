@@ -7,19 +7,16 @@
 
 __attribute__((__section__(".cpu_structs"))) struct cpu cpus[DTB_NR_CPUS];
 
-volatile int cpu_mapped = 0;
+int cpu_mapped = 0;
 
 struct cpu *
 mycpu()
 {
-	uint64 id;
-	if (cpu_mapped) {
+	register uint64 tp asm("tp");	// hartid is stored in tp during boot
+	if (cpu_mapped)
 		return (struct cpu *)VAS_CPU_STRUCT;
-	} else {
-		// hartid is stored in tp during boot
-		asm volatile("mv %0, tp" : "=r" (id));
-		return &cpus[id];
-	}
+	else
+		return &cpus[tp];
 }
 
 uint64

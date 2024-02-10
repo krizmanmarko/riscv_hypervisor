@@ -8,7 +8,14 @@
 struct vcpu vcpus[NR_VMS];
 
 void
-init_vcpu(int vm_id)
+init_vcpu(int id)
 {
-	memset(vcpus[vm_id], '\x00', sizeof(struct vcpu));
+	memset(vcpus[id], '\x00', sizeof(struct vcpu));
+}
+
+void
+activate_vcpu(int id)
+{
+	CSRW(sscratch, &vcpus[id]);
+	vm_entry();
 }

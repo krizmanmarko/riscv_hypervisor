@@ -3,9 +3,8 @@
 
 #ifndef __ASSEMBLER__
 
-// TODO: should this be typedef if there is only one element???
 struct lock {
-	int locked;
+	volatile int locked;
 };
 
 struct barrier {

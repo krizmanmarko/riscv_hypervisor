@@ -2,7 +2,6 @@
 
 
 // SPINLOCK
-// no need for lock destructor (since nothing extra is allocated)
 
 void acquire(struct lock *lk);		// from spinlock.S
 void release(struct lock *lk);		// from spinlock.S
@@ -15,7 +14,6 @@ init_lock(struct lock *lk)
 
 
 // BARRIER (self-resetting / eco-friendly)
-// no need for barrier destructor (since nothing extra is allocated)
 
 // How self-resetting barrier works:
 // 1. every hit to the barrier removes a token
