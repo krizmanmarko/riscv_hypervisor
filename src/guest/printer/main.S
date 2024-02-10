@@ -5,11 +5,11 @@ _start:
 	la t1, trap
 	csrw stvec, t1
 
-	li sp, 0x80000800
+	li sp, 0x80001000
 
-	li t0, 0x10000000
+	li s0, 0x10000000
 	li t1, 0x41
-	sb t1, 0(t0)
+	sb t1, 0(s0)
 
 	call set_timer
 
@@ -21,22 +21,26 @@ _start:
 	csrw sie, t1
 	
 	li t1, 0x42
-	sb t1, 0(t0)
-	j .
+	sb t1, 0(s0)
+suspend:
+	wfi
+	j suspend
 
 .section ".text", "ax"
 set_timer:
+	mv t0, ra
 	csrr a0, time
 	li t2, 10000000
 	add a0, a0, t2
 	call sbi_set_timer
+	mv ra, t0
 	ret
 
 .balign 4
 trap:
 	li t1, 0x43
-	sb t1, 0(t0)
+	sb t1, 0(s0)
 	li t1, 10	/* ACK that we reached handler */
-	sb t1, 0(t0)
+	sb t1, 0(s0)
 	call set_timer
 	sret

@@ -12,4 +12,4 @@ build_dir="./build/"
 	-smp 1 \
 	-m 1G \
 	-gdb tcp::1111 \
-	#-S
+	-S

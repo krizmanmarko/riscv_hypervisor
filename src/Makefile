@@ -7,7 +7,7 @@ BUILD_DIR=../build/
 
 # TODO: maybe abuse gcc dependency files?
 
-OBJFILES=trap.o main.o cpu.o kmem.o lock.o vmem.o printf.o uart.o string.o sbi.o vm_run.o
+OBJFILES=trap.o main.o cpu.o kmem.o lock.o vmem.o printf.o uart.o string.o sbi.o vm_run.o vcpu.o
 OBJFILES+= asm_sboot.o asm_trap.o asm_spinlock.o
 
 #TESTS=printf_test.o lock_test.o asm_exception_tests.o

@@ -18,6 +18,11 @@ void hs_exception_handler(uint64 scause);
 
 // core/trap.S
 void hstrapvec();
+void vm_enter();
+
+// core/vcpu.c
+void init_vcpu(int id);
+void activate_vcpu(int id);
 
 // core/vm_run.c
 void __attribute__((noreturn)) vm_run();

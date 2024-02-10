@@ -6,6 +6,7 @@
 #include "riscv.h"
 #include "stdio.h"
 #include "string.h"
+#include "vcpu.h"
 
 static void init_hs_pgtable();
 static void init_hs();
@@ -19,7 +20,7 @@ init_hs_pgtable()
 {
 	memset(vm_pgtable, '\x00', PAGE_SIZE * 4);	// make every entry invalid
 	map_page(vm_pgtable, DTB_SERIAL, DTB_SERIAL, PTE_U | PTE_R | PTE_W);
-	map_page(vm_pgtable, DTB_MEMORY, DTB_MEMORY + FIRMWARE_SIZE + 0x11000, PTE_U | PTE_R | PTE_W | PTE_X);
+	map_page(vm_pgtable, DTB_MEMORY, DTB_MEMORY + 0x114000, PTE_U | PTE_R | PTE_W | PTE_X);
 }
 
 static void
@@ -55,6 +56,7 @@ init_vs()
 	CSRW(vscause, 0ULL);
 	CSRW(vstval, 0ULL);
 	CSRW(vsatp, 0ULL);
+	CSRW(vstimecmp, -1LL);
 }
 
 void __attribute__((noreturn))
@@ -64,14 +66,14 @@ vm_run()
 	init_hs();
 
 	// init 
-	//init_vcpu();
+	init_vcpu(0);
 
 	//CSRS(scounteren, SCOUNTEREN_TM);	// enable U-mode to access time
 
 	// prepare for sret
 	CSRS(sstatus, SSTATUS_SPP);
 	CSRW(sepc, 0x80000000ULL);
-	//vm_entry();
+	activate_vcpu(0);
 	while (1);	// this and noreturn removes function epilogue
 }
 

@@ -24,7 +24,7 @@ void
 hs_exception_handler(uint64 scause)
 {
 	if (scause == EXC_ECALL_FROM_VS) {
-		printf("hello from exception %u\n", scause);
+		//printf("hello from exception %u\n", scause);
 		CSRW(vstimecmp, CSRR(time) + 10000000);
 		CSRW(sepc, CSRR(sepc) + 4);
 	}

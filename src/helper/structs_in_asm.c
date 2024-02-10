@@ -12,8 +12,8 @@
 #define DEFINE_OFFSET(sym, struct, field) \
 	DEFINE(sym, offsetof(struct, field));
 
-#define DEFINE_SIZE(sym, struct) \
-	DEFINE(sym, sizeof(struct));
+#define DEFINE_SIZE(sym, type) \
+	DEFINE(sym, sizeof(type));
 
 void
 struct_defines()
@@ -22,6 +22,7 @@ struct_defines()
 	DEFINE_SIZE(CPU_SIZE, struct cpu);
 	DEFINE_OFFSET(CPU_HARTID_OFF, struct cpu, hartid);
 	DEFINE_OFFSET(CPU_STACK_OFF, struct cpu, stack);
+	DEFINE_SIZE(CPU_STACK_SIZE, ((struct cpu *)0)->stack);
 
 	// lock.h
 	DEFINE_OFFSET(LOCK_LOCKED_OFF, struct lock, locked);

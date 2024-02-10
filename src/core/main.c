@@ -31,6 +31,6 @@ main(uint64 hartid)
 		cpu_mapped = 1;
 	wait_barrier(&bar);	// do not allow any mycpu() call before toggling
 
-	//vm_run();
+	vm_run();
 	while (1);
 }

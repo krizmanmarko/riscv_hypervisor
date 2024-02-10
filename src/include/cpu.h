@@ -4,15 +4,13 @@
 #include "memory.h"
 #include "types.h"
 
-#define CPU_STACK_SIZE (2 * PAGE_SIZE)
-
 #ifndef __ASSEMBLER__
 
-// per cpu allocations
+// per cpu allocations (WARNING: stack must be last, for easier sp handling)
 struct cpu {
 	uint64 hartid;
 	// stack - last used, grows towards smaller address, 16-bit aligned
-	char stack[CPU_STACK_SIZE] __attribute__((aligned(PAGE_SIZE)));
+	char stack[2 * PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
 };
 
 #endif // __ASSEMBLER__
