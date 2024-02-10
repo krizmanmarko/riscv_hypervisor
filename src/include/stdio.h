@@ -18,7 +18,7 @@
 		while (1); \
 	} while (0);
 
-void printf(char *fmt, ...);
+void printf(const char *fmt, ...);
 void init_printf();
 
 #endif // STDIO_H
