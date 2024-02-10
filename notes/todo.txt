@@ -1,20 +1,14 @@
-MEMORY
-======
-
-maybe: map stack to STACK_BASE, DYNAMIC to dynamic ...
-
-create function that removes mapping and deallocates what can be deallocated
-
 CPU
 ===
 
 figure out how to provide VM information and run baremetal app
 
-
-[+] sbi.h
 vcpu (context switching memory reservation)
 vm entry, vm exit
 
 [+] timer interrupt
 ipi?
 external interrupt / plic
+
+[+] check which variables need volatile (only lock->locked)
+[+] check where a noirq_lock can be used (but I completely removed irq_lock)

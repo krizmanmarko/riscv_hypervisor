@@ -17,7 +17,7 @@ OBJECTS=$(patsubst %, $(BUILD_DIR)%, $(OBJFILES))
 
 INCLUDES=-I ./include -I$(BUILD_DIR)
 
-CFLAGS=-W -Wall -ggdb $(INCLUDES)
+CFLAGS=-W -Wall -ggdb $(INCLUDES) -std=gnu17
 CFLAGS+= -march=rv64gch
 # isolate from host environment
 CFLAGS+=-ffreestanding -fno-common -nodefaultlibs -nostdlib

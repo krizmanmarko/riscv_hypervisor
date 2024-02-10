@@ -274,7 +274,7 @@
 // K -> https://gcc.gnu.org/onlinedocs/gcc/Machine-Constraints.html under risc-v
 #define CSRR(csr) ({ \
 	unsigned long _temp; \
-	asm volatile("csrr  %0, " #csr "\n\r" \
+	__asm__ volatile("csrr  %0, " #csr "\n\r" \
 		: "=r"(_temp) \
 		: \
 		: "memory"); \
@@ -282,13 +282,13 @@
 })
 
 #define CSRW(csr, val) \
-	asm volatile("csrw  " #csr ", %0\n\r" : : "rK" (val) : "memory")
+	__asm__ volatile("csrw  " #csr ", %0\n\r" : : "rK" (val) : "memory")
 
 #define CSRC(csr, mask) \
-	asm volatile("csrc " #csr ", %0\n\n" : : "rK" (mask) : "memory")
+	__asm__ volatile("csrc " #csr ", %0\n\n" : : "rK" (mask) : "memory")
 
 #define CSRS(csr, mask) \
-	asm volatile("csrs " #csr ", %0\n\n" : : "rK" (mask) : "memory")
+	__asm__ volatile("csrs " #csr ", %0\n\n" : : "rK" (mask) : "memory")
 
 #endif // __ASSEMBLER__
 #endif // RISCV_H

@@ -7,7 +7,7 @@
 #include "lock.h"
 
 #define DEFINE(sym, val) \
-	asm volatile("\n-> " #sym " %0 " #val "\n" : : "i" (val))
+	__asm__ volatile("\n-> " #sym " %0 " #val "\n" : : "i" (val))
 
 #define DEFINE_OFFSET(sym, struct, field) \
 	DEFINE(sym, offsetof(struct, field));

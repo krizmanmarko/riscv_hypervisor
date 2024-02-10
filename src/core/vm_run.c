@@ -40,7 +40,7 @@ init_hs()
 
 	init_hs_pgtable();
 	CSRW(hgatp, ATP_MODE_SV39 | ((KVA2PA((uint64) vm_pgtable)) >> 12));
-	asm volatile("hfence.gvma");
+	__asm__ volatile("hfence.gvma");
 }
 
 static void

@@ -13,7 +13,7 @@ sbi_ecall(long eid, long fid, long a0, long a1, long a2, long a3, long a4,
 	register long _a6 asm("a6") = fid;
 	register long _a7 asm("a7") = eid;
 
-	asm volatile("ecall"
+	__asm__ volatile("ecall"
 		: "+r"(_a0), "+r"(_a1)
 		: "r"(_a2), "r"(_a3), "r"(_a4), "r"(_a5), "r"(_a6), "r"(_a7)
 		: "memory");

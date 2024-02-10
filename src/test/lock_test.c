@@ -16,7 +16,7 @@ static volatile int written_note = 0;
 static uint64 hartid()
 {
 	uint64 id;
-	asm volatile("mv %0, tp" : "=r" (id));
+	__asm__ volatile("mv %0, tp" : "=r" (id));
 	return id;
 }
 

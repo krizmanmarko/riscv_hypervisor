@@ -12,7 +12,7 @@ int cpu_mapped = 0;
 struct cpu *
 mycpu()
 {
-	register uint64 tp asm("tp");	// hartid is stored in tp during boot
+	register uint64 tp __asm__("tp");	// hartid is in tp during boot
 	if (cpu_mapped)
 		return (struct cpu *)VAS_CPU_STRUCT;
 	else
@@ -29,8 +29,8 @@ void
 init_hart(pte_t *pgtable)
 {
 	uint64 reg;
-	register uint64 a0 asm("a0");
-	register uint64 tp asm("tp");
+	register uint64 a0 __asm__("a0");
+	register uint64 tp __asm__("tp");
 
 	// STRUCT CPU INIT
 	mycpu()->hartid = tp;
@@ -50,7 +50,7 @@ init_hart(pte_t *pgtable)
 
 	// BEGIN WARNING: super delicate code section
 	CSRW(satp, reg);
-	asm volatile("sfence.vma");	// flush TLB
+	__asm__ volatile("sfence.vma");	// flush TLB
 	// code here must not use sp/fp relative addresses
 	a0 = VAS_CPU_STRUCT;
 	a0 -= tp * sizeof(struct cpu);
