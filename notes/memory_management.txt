@@ -39,7 +39,7 @@ before C code
 -------------
 
 Master hart builds primitive page table using only gigapages. This way we can
-completely avoid dynamic memory management at this point (before entering VAS).
+defer dynamic memory management for a while.
 
 1. 0x0000000000000000 -> 0x0000000000000000 (for serial console device)
 2. 0x0000000080000000 -> 0x0000000080000000 (identity mapping)
@@ -54,7 +54,7 @@ physical memory (physical memory allocator depends on this mapping).
 
 [NOTE 1]
 > Imagine we do not use this identity mapping and write to satp.
-> Pc will point to instruction after `write satp`.
+> Pc will point to instruction after `write satp` instruction.
 > Since that address is not mapped we page fault.
 
 
@@ -76,6 +76,5 @@ Virtual memory manager (mem/vmem.c)
 -----------------------------------
 
 Creates page table according to hartid. Every mapping is global except for cpu
-struct. These are the final page tables used for this hypervisor.
-
-
+struct. These are the final page tables used for this hypervisor (Shown at the
+top of this document).
