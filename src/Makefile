@@ -1,116 +1,79 @@
 ## CONFIG
+CROSS_COMPILE = /home/marko/shit/riscv-gnu-toolchain-from-source/mybuild/bin/riscv64-unknown-elf-
+BUILD_DIR = ../build
+CODE_DIRS = core driver guest lib mem test
+## END CONFIG
 
-CROSS_COMPILE=/home/marko/shit/riscv-gnu-toolchain-from-source/mybuild/bin/riscv64-unknown-elf-
-BUILD_DIR=../build/
+# build directory creation
+$(shell mkdir -p $(BUILD_DIR))
+$(foreach DIR,$(CODE_DIRS),$(shell mkdir -p $(BUILD_DIR)/$(DIR)))
 
-## END OF CONFIG
+CC = $(CROSS_COMPILE)gcc
+LD = $(CROSS_COMPILE)ld
 
-# TODO: maybe abuse gcc dependency files?
+DEPFLAGS = -MP -MD
+INCLUDES = -I./include -I$(BUILD_DIR)
+LDFLAGS = -z common-page-size=4096 -z max-page-size=4096
 
-OBJFILES=trap.o main.o cpu.o kmem.o lock.o vmem.o printf.o uart.o string.o sbi.o vm_run.o vcpu.o
-OBJFILES+= asm_sboot.o asm_trap.o asm_spinlock.o
-
-#TESTS=printf_test.o lock_test.o asm_exception_tests.o
-
-OBJFILES+= $(TESTS)
-OBJECTS=$(patsubst %, $(BUILD_DIR)%, $(OBJFILES))
-
-INCLUDES=-I ./include -I$(BUILD_DIR)
-
-CFLAGS=-W -Wall -ggdb $(INCLUDES) -std=gnu17
-CFLAGS+= -march=rv64gch
-# isolate from host environment
-CFLAGS+=-ffreestanding -fno-common -nodefaultlibs -nostdlib
-# PC-relative code
-CFLAGS+= -mcmodel=medany -fno-pic
-
+CFLAGS = -W -Wall -ggdb $(INCLUDES) $(LDFLAGS)
+CFLAGS += -ffreestanding -fno-common -nodefaultlibs -nostdlib
 # from linux source arch/riscv/mm/init.c line 806
 # 1) It should use PC-relative addressing for accessing kernel symbols.
 #    To achieve this we always use GCC cmodel=medany.
+CFLAGS += -std=gnu17 -march=rv64gch -mcmodel=medany -fno-pic
 
-PAGE_SIZE=4096
-LDFLAGS=-nostdlib
-LDFLAGS+= -z common-page-size=$(PAGE_SIZE) -z max-page-size=$(PAGE_SIZE)
+# spinlock.c, spinlock.S -> must generate different named object file
+C_FILES = $(foreach DIR,$(CODE_DIRS),$(wildcard $(DIR)/*.c))
+ASM_FILES = $(foreach DIR,$(CODE_DIRS),$(wildcard $(DIR)/*.S))
+OBJECTS = $(patsubst %.c,$(BUILD_DIR)/%.o,$(C_FILES))
+OBJECTS += $(patsubst %.S,$(BUILD_DIR)/%_asm.o,$(ASM_FILES))
+DEPFILES = $(patsubst %.o,%.d,$(OBJECTS))
 
-cc=$(CROSS_COMPILE)gcc
-ld=$(CROSS_COMPILE)ld
-as=$(CROSS_COMPILE)as
-objcopy=$(CROSS_COMPILE)objcopy
+# compile(input, output)
+define compile
+	@$(CC) $(CFLAGS) $(DEPFLAGS) -c $1 -o $2
+	@echo "[+] $1 -> $2"
+endef
 
+########################################################
+# THIS IS directly EVALED so we need double $ somewhere
+########################################################
+# generate(subdir)
+define generate
+$(BUILD_DIR)/$1/%_asm.o: $1/%.S $(BUILD_DIR)/structs_in_asm.h
+	@mkdir -p $1
+	$(call compile,$$<,$$@)
+$(BUILD_DIR)/$1/%.o: $1/%.c
+	@mkdir -p $1
+	$(call compile,$$<,$$@)
+endef
+########################################################
 
-.PHONY: all clean
+default: $(BUILD_DIR)/hypervisor
 
-all: clean tags $(BUILD_DIR)hypervisor
+# generate rules for all subdirectories
+$(foreach DIR, $(CODE_DIRS), $(eval $(call generate,$(DIR))))
 
-tags: $(BUILD_DIR)structs_in_asm.h
-	@ctags -R . $^
-	@echo "[i] created tags"
-
-$(BUILD_DIR)hypervisor.bin: $(BUILD_DIR)hypervisor
-	$(objcopy) -O binary $^ $@
-
-# watch out! linkerscript.ld must be before $(OBJECTS) because it is an argument for -T switch
-$(BUILD_DIR)hypervisor: $(BUILD_DIR)linkerscript.ld $(OBJECTS)
-	@cd guest/printer && make --no-print-directory
-	@$(objcopy) --input binary --output elf64-littleriscv --rename-section .data=.vm_image_guest --set-section-flags .vm_image_guest=code,contents,alloc,load,readonly $(BUILD_DIR)printer/imgs/printer.bin $(BUILD_DIR)guest.o
-	@$(ld) $(LDFLAGS) -T $^ -o $@ $(BUILD_DIR)guest.o
-	@echo "\e[32m[+] Successfuly built $@!\e[0m"
-
-# i guess bao copied this https://stackoverflow.com/questions/8259447/give-structure-offset-attribute-to-assembler
-$(BUILD_DIR)structs_in_asm.h: helper/structs_in_asm.c
-	@$(cc) $(CFLAGS) -S $^ -o - \
+$(BUILD_DIR)/structs_in_asm.h: helper/structs_in_asm.c
+	@$(CC) $(CFLAGS) -S $^ -o - \
 		| awk '($$1 == "->") { print "#define " $$2 " (" $$3 ")" }' >$@
 	@echo "[i] created structs_in_asm.h"
 
-$(BUILD_DIR)linkerscript.ld: helper/linkerscript.c
-	@gcc $(INCLUDES) -P -E $^ -o $@
-	@echo "[+] $^ -> $@"
+tags: $(BUILD_DIR)/structs_in_asm.h
+	@ctags -R . $^
+	@echo "[i] created tags"
 
-$(BUILD_DIR)asm_%.o: %.S $(BUILD_DIR)structs_in_asm.h
-	@$(cc) $(CFLAGS) -c $< -o $@
-	@echo "[+] $< -> $@"
+$(BUILD_DIR)/linkerscript.ld: helper/linkerscript.c
+	@$(CC) $(INCLUDES) -P -E $^ -o $@
 
-$(BUILD_DIR)%.o: %.c
-	@$(cc) $(CFLAGS) -c $^ -o $@
-	@echo "[+] $^ -> $@"
-
-$(BUILD_DIR)%.o: driver/%.c
-	@$(cc) $(CFLAGS) -c $^ -o $@
-	@echo "[+] $^ -> $@"
-
-$(BUILD_DIR)%.o: lib/%.c
-	@$(cc) $(CFLAGS) -c $^ -o $@
-	@echo "[+] $^ -> $@"
-
-$(BUILD_DIR)asm_%.o: lib/%.S $(BUILD_DIR)structs_in_asm.h
-	@$(cc) $(CFLAGS) -c $< -o $@
-	@echo "[+] $< -> $@"
-
-$(BUILD_DIR)%.o: mem/%.c
-	@$(cc) $(CFLAGS) -c $^ -o $@
-	@echo "[+] $^ -> $@"
-
-$(BUILD_DIR)asm_%.o: mem/%.S $(BUILD_DIR)structs_in_asm.h
-	@$(cc) $(CFLAGS) -c $< -o $@
-	@echo "[+] $< -> $@"
-
-$(BUILD_DIR)%.o: core/%.c
-	@$(cc) $(CFLAGS) -c $^ -o $@
-	@echo "[+] $^ -> $@"
-
-$(BUILD_DIR)asm_%.o: core/%.S $(BUILD_DIR)structs_in_asm.h
-	@$(cc) $(CFLAGS) -c $< -o $@
-	@echo "[+] $< -> $@"
-
-$(BUILD_DIR)%.o: test/%.c
-	@$(cc) $(CFLAGS) -c $^ -o $@
-	@echo "[+] $^ -> $@"
-
-$(BUILD_DIR)asm_%.o: test/%.S $(BUILD_DIR)structs_in_asm.h
-	@$(cc) $(CFLAGS) -c $< -o $@
-	@echo "[+] $< -> $@"
+# WARNING: linkerscript.ld must be first dependency because -T
+$(BUILD_DIR)/hypervisor: $(BUILD_DIR)/linkerscript.ld $(OBJECTS)
+	@$(CC) $(CFLAGS) -T $^ -o $@
+	@echo "\e[32m[+] Successfuly built $@!\e[0m"
 
 clean:
 	@rm -f tags
-	@rm -rf $(BUILD_DIR)*
+	@rm -rf $(BUILD_DIR)/*
 	@echo "[i] cleaned up"
+
+-include $(DEPFILES)
