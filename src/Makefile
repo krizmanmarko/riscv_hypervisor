@@ -1,7 +1,7 @@
 ## CONFIG
 CROSS_COMPILE = /home/marko/shit/riscv-gnu-toolchain-from-source/mybuild/bin/riscv64-unknown-elf-
 BUILD_DIR = ../build
-CODE_DIRS = core driver guest lib mem test
+CODE_DIRS = core driver guest lib mem #test
 ## END CONFIG
 
 # build directory creation
@@ -9,7 +9,6 @@ $(shell mkdir -p $(BUILD_DIR))
 $(foreach DIR,$(CODE_DIRS),$(shell mkdir -p $(BUILD_DIR)/$(DIR)))
 
 CC = $(CROSS_COMPILE)gcc
-LD = $(CROSS_COMPILE)ld
 
 DEPFLAGS = -MP -MD
 INCLUDES = -I./include -I$(BUILD_DIR)
@@ -41,15 +40,13 @@ endef
 # generate(subdir)
 define generate
 $(BUILD_DIR)/$1/%_asm.o: $1/%.S $(BUILD_DIR)/structs_in_asm.h
-	@mkdir -p $1
 	$(call compile,$$<,$$@)
 $(BUILD_DIR)/$1/%.o: $1/%.c
-	@mkdir -p $1
 	$(call compile,$$<,$$@)
 endef
 ########################################################
 
-default: $(BUILD_DIR)/hypervisor
+default: $(BUILD_DIR)/hypervisor tags
 
 # generate rules for all subdirectories
 $(foreach DIR, $(CODE_DIRS), $(eval $(call generate,$(DIR))))

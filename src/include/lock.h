@@ -3,6 +3,7 @@
 
 #ifndef __ASSEMBLER__
 
+// TODO: why is this a structure?
 struct lock {
 	volatile int locked;
 };

@@ -7,7 +7,6 @@
 # void acquire(struct lock *lk)
 acquire:
 	li a1, 1
-	addi a0, a0, LOCK_LOCKED_OFF
 1:	lw a2, (a0)			# non-atomical test
 	bnez a2, 1b
 	amoswap.w.aq a2, a1, (a0)	# atomic test-and-set
