@@ -3,7 +3,7 @@
 
 #ifndef __ASSEMBLER__
 
-// TODO: why is this a structure?
+// TODO: why is this a structure? - maybe to hide volatile
 struct lock {
 	volatile int locked;
 };

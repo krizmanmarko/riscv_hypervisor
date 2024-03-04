@@ -13,6 +13,7 @@ static void init_hs();
 static void init_vs();
 void __attribute__((noreturn)) vm_run();
 
+// this is statically allocated, because we need contiguous pages
 pte_t vm_pgtable[512 * 4] __attribute__((aligned(4 * PAGE_SIZE)));
 
 static void

@@ -3,7 +3,7 @@ ENTRY(_start)
 
 SECTIONS
 {
-	. = 0x80100000;
+	. = 0x80200000;
 
 	.boot : {
 		*(.boot .boot.*)
@@ -13,8 +13,4 @@ SECTIONS
 		*(.text .text.*)
 	}
 
-	. = ALIGN(4K);
-	.data : {
-		*(.data .data.*)
-	}
 }

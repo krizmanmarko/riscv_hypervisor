@@ -63,3 +63,12 @@ Could not get line 6 to execute. But why?
 ...
 
 It turns out I forgot to add semicolon at the end of while on line 4
+
+
+====================================
+Makefile directories as dependencies
+====================================
+
+neki: $(BUILD_DIR)
+
+neki se izvede ob vsakem updateu katerekoli datoteke v BUILD_DIR.

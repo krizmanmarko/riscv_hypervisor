@@ -1,3 +1,11 @@
+.pushsection .vm_image_name, "a"
+	.global _name_vm_beg
+	_name_vm_beg: .incbin "/path/to/name.bin"
+	_name_vm_end:
+	.global _name_vm_size
+	.set _name_vm_size, (_name_vm_end - name_vm_beg)
+.popsection
+	
 Uses openSBI with FW_JUMP=0x80200000
 
 

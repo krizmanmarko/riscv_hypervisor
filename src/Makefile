@@ -1,4 +1,5 @@
 ## CONFIG
+NAME=hypervisor
 CROSS_COMPILE = /home/marko/shit/riscv-gnu-toolchain-from-source/mybuild/bin/riscv64-unknown-elf-
 BUILD_DIR = ../build
 CODE_DIRS = core driver guest lib mem #test
@@ -46,7 +47,7 @@ $(BUILD_DIR)/$1/%.o: $1/%.c
 endef
 ########################################################
 
-default: $(BUILD_DIR)/hypervisor tags
+default: $(BUILD_DIR)/$(NAME) tags
 
 # generate rules for all subdirectories
 $(foreach DIR, $(CODE_DIRS), $(eval $(call generate,$(DIR))))
@@ -64,13 +65,14 @@ $(BUILD_DIR)/linkerscript.ld: helper/linkerscript.c
 	@$(CC) $(INCLUDES) -P -E $^ -o $@
 
 # WARNING: linkerscript.ld must be first dependency because -T
-$(BUILD_DIR)/hypervisor: $(BUILD_DIR)/linkerscript.ld $(OBJECTS)
+$(BUILD_DIR)/$(NAME): $(BUILD_DIR)/linkerscript.ld $(OBJECTS)
 	@$(CC) $(CFLAGS) -T $^ -o $@
 	@echo "\e[32m[+] Successfuly built $@!\e[0m"
 
 clean:
 	@rm -f tags
 	@rm -rf $(BUILD_DIR)/*
+	@rm -rf guest/imgs/*.bin
 	@echo "[i] cleaned up"
 
 -include $(DEPFILES)

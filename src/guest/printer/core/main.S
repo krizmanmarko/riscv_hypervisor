@@ -5,7 +5,7 @@ _start:
 	la t1, trap
 	csrw stvec, t1
 
-	li sp, 0x80001000
+	li sp, 0x80101000
 
 	li s0, 0x10000000
 	li t1, 0x41
@@ -36,6 +36,13 @@ set_timer:
 	mv ra, t0
 	ret
 
+send_ipi:
+	mv t0, ra
+	la a0, hart_mask
+	call sbi_send_ipi
+	mv ra, t0
+	ret
+
 .balign 4
 trap:
 	li t1, 0x43
@@ -43,4 +50,9 @@ trap:
 	li t1, 10	/* ACK that we reached handler */
 	sb t1, 0(s0)
 	call set_timer
+/*	call send_ipi */
 	sret
+
+.section ".data", "aw"
+hart_mask:
+	.quad 2

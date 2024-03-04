@@ -12,3 +12,6 @@ external interrupt / plic
 
 [+] check which variables need volatile (only lock->locked)
 [+] check where a noirq_lock can be used (but I completely removed irq_lock)
+
+struct lock does not need to be struct really,
+structs_in_asm.h does not need to export LOCK_stuff <- legacy code

@@ -1,0 +1,24 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+ASM_FILES	Makefile	/^ASM_FILES = $(foreach DIR,$(CODE_DIRS),$(wildcard $(DIR)\/*.S))$/;"	m
+BUILD_DIR	Makefile	/^BUILD_DIR = .\/build$/;"	m
+CC	Makefile	/^CC = $(CROSS_COMPILE)gcc$/;"	m
+CFLAGS	Makefile	/^CFLAGS = -W -Wall -ggdb $(INCLUDES) $(LDFLAGS)$/;"	m
+CODE_DIRS	Makefile	/^CODE_DIRS = core$/;"	m
+CROSS_COMPILE	Makefile	/^CROSS_COMPILE = \/home\/marko\/shit\/riscv-gnu-toolchain-from-source\/mybuild\/bin\/riscv64-unknown-elf-$/;"	m
+C_FILES	Makefile	/^C_FILES = $(foreach DIR,$(CODE_DIRS),$(wildcard $(DIR)\/*.c))$/;"	m
+DEPFILES	Makefile	/^DEPFILES = $(patsubst %.o,%.d,$(OBJECTS))$/;"	m
+DEPFLAGS	Makefile	/^DEPFLAGS = -MP -MD$/;"	m
+INCLUDES	Makefile	/^INCLUDES = -I.\/include -I$(BUILD_DIR)$/;"	m
+LDFLAGS	Makefile	/^LDFLAGS = -z common-page-size=4096 -z max-page-size=4096$/;"	m
+NAME	Makefile	/^NAME=iscream$/;"	m
+OBJCOPY	Makefile	/^OBJCOPY = $(CROSS_COMPILE)objcopy$/;"	m
+OBJECTS	Makefile	/^OBJECTS = $(patsubst %.c,$(BUILD_DIR)\/%.o,$(C_FILES))$/;"	m
+_start	core/main.S	/^_start:$/;"	l
+compile	Makefile	/^define compile$/;"	m
+generate	Makefile	/^define generate$/;"	m
+trap	core/main.S	/^trap:$/;"	l
