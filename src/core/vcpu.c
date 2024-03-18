@@ -2,22 +2,11 @@
 #include "riscv.h"
 #include "string.h"
 #include "vcpu.h"
-
-// this is not necessarily equal to DTB_NR_CPUS
-// TODO: this value is obtained from VM config struct
-#define NR_VMS 1
-
-struct vcpu vcpus[NR_VMS];
+#include "vm_config.h"
 
 void
-init_vcpu(int id)
+init_vcpu(struct vm_config *conf)
 {
-	memset(&vcpus[id], '\x00', sizeof(struct vcpu));
-}
-
-void
-activate_vcpu(int id)
-{
-	CSRW(sscratch, &vcpus[id]);
-	vm_enter();
+	memset(&conf->vcpu, '\x00', sizeof(struct vcpu));
+	CSRW(sscratch, &conf->vcpu);
 }

@@ -2,6 +2,7 @@
 #define DEFS_H
 
 #include "types.h"
+#include "vm_config.h"
 
 // {lib,test}/* should be seperated
 
@@ -21,11 +22,10 @@ void hstrapvec();
 void vm_enter();
 
 // core/vcpu.c
-void init_vcpu(int id);
-void activate_vcpu(int id);
+void init_vcpu(struct vm_config *conf);
 
 // core/vm_run.c
-void __attribute__((noreturn)) vm_run();
+void __attribute__((noreturn)) vm_run(uint64 hartid);
 
 // driver/cpu.c
 struct cpu *mycpu();

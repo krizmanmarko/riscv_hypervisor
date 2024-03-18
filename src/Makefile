@@ -72,7 +72,6 @@ $(BUILD_DIR)/$(NAME): $(BUILD_DIR)/linkerscript.ld $(OBJECTS)
 clean:
 	@rm -f tags
 	@rm -rf $(BUILD_DIR)/*
-	@rm -rf guest/imgs/*.bin
 	@echo "[i] cleaned up"
 
 -include $(DEPFILES)
