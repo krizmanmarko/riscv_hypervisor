@@ -31,6 +31,17 @@ main(uint64 hartid)
 		cpu_mapped = 1;
 	wait_barrier(&bar);	// do not allow any mycpu() call before toggling
 
+// TODO: testing (external interrupt passthrough)
+	plic_set_priority(10, 1);
+	// target supervisor mode
+	plic_set_enabled(hartid*2 + 1, 10, 1);
+	plic_set_threshold(hartid*2 + 1, 0);
+	CSRS(hgeie, -1);
+	CSRS(hie, -1);
+	CSRS(sie, -1);
+	CSRS(hideleg, -1);
+// end testing
+
 	vm_run(hartid);
 	while (1);
 }

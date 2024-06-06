@@ -1,3 +1,5 @@
+// TODO: this whole file is just debugging
+#include "defs.h"	// TODO: only for debugging for now
 #include "riscv.h"
 #include "types.h"
 #include "sbi.h"
@@ -16,8 +18,14 @@ hs_interrupt_handler(uint64 scause)
 // sbi_set_timer
 // 	timer 1 sekunda -> 10**7
 
-	if (scause == INT_STI)
+	scause &= ~0x8000000000000000;
+	if (scause == INT_SUPERVISOR_TIM)
 		sbi_set_timer(CSRR(time) + 10000000);
+	else if (scause == INT_SUPERVISOR_EXT) {
+		uint32 id = plic_claim(1);
+		printf("grabbed %u\n", ((char *)DTB_SERIAL)[0]);
+		plic_complete(1, id);
+	}
 }
 
 void

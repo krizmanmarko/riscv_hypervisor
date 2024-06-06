@@ -22,11 +22,16 @@ init_hs_pgtable(struct vm_config *conf)
 		conf->vm_pgtable,
 		conf->memory_base,	// va
 		conf->image_base,	// pa
-		conf->memory_size,	//size
+		conf->memory_size,	// size
 		PTE_U | PTE_R | PTE_W | PTE_X
 	);
 
 	// devices
+	// xv6 uses these MMIO devices:
+	// kvmmap(kpgtbl, UART0, UART0, PGSIZE, PTE_R | PTE_W);
+	// kvmmap(kpgtbl, VIRTIO0, VIRTIO0, PGSIZE, PTE_R | PTE_W);
+	// kvmmap(kpgtbl, PLIC, PLIC, 0x400000, PTE_R | PTE_W);
+
 	// TODO use struct config
 	map_page(conf->vm_pgtable, DTB_SERIAL, DTB_SERIAL, PTE_U | PTE_R | PTE_W);
 }

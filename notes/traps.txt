@@ -11,11 +11,11 @@ Interrupts
 
 --- Sources
 
-1. software interrupt
+1. software interrupt (IPC)
     when clint.mswi.msip = 1
 2. timer interrupt
     when clint.mtimer.mtime >= clint.mtimer.mtimecmp
-3. external interrupt
+3. external interrupt (devices)
     PLIC (but how where what and who)
 
 --- Handling

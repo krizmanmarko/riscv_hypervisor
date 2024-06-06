@@ -139,4 +139,7 @@ init_uart()
 
 	// no control flow
 	W_REG(MCR, 0);
+
+	// TODO: enable recv interrupts
+	W_REG(IER, IER_RECEIVED_DATA_AVAILABLE);
 }

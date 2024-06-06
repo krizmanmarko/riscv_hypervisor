@@ -36,6 +36,13 @@ void init_hart(pte_t *pgtable);
 void uartputc(char c);
 void init_uart();
 
+// driver/plic.c
+void plic_set_priority(int interrupt_source, uint32 priority);
+void plic_set_enabled(int interrupt_source, int context, int enable);
+void plic_set_threshold(int context, uint32 threshold);
+uint32 plic_claim(int context);
+void plic_complete(int context, uint32 interrupt_id);
+
 // mem/kmem.c
 void *kmalloc();
 void kfree(void *pa);
