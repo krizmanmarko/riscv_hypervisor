@@ -74,9 +74,11 @@ map_pages(pte_t *pgtable, uint64 va, uint64 pa, uint64 size, int pte_flags)
 		pa += 0x40000000;
 		size -= 0x40000000;
 	}
-	for (uint64 i = 0; i < PGROUNDUP(size); i += PAGE_SIZE)
-		if (map_page(pgtable, va + i, pa + i, pte_flags) < 0)
+	for (uint64 i = 0; i < PGROUNDUP(size); i += PAGE_SIZE) {
+		if (map_page(pgtable, va + i, pa + i, pte_flags) < 0) {
 			return -1;
+		}
+	}
 	return 0;
 }
 

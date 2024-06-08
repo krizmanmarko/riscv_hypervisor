@@ -9,10 +9,10 @@ build_dir="./build/"
 	-machine virt \
 	-kernel ${build_dir}hypervisor \
 	-cpu rv64 \
-	-smp 1 \
+	-smp 2 \
 	-m 1G \
 	-gdb tcp::1111 \
-	#-S
+	-S
 
 
 # when changing smp value, do not forget to set DTB_NR_CPUS in include/dtb.h

@@ -2,7 +2,7 @@
 NAME=hypervisor
 CROSS_COMPILE = /home/marko/shit/riscv-gnu-toolchain-from-source/mybuild/bin/riscv64-unknown-elf-
 BUILD_DIR = ../build
-CODE_DIRS = core driver guest lib mem #test
+CODE_DIRS = core driver guest lib mem virtual #test
 ## END CONFIG
 
 MAKEFLAGS := --jobs=$(shell nproc)

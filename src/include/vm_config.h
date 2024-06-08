@@ -5,15 +5,11 @@
 #include "types.h"
 #include "vcpu.h"
 
-#define NR_VMS 2
-
 #define ADDRESS(vm_image_start) ((uint64) KVA2PA(vm_image_start))
 
 // https://developers.redhat.com/blog/2019/07/05/how-to-store-large-amounts-of-data-in-a-program#the_incbin_directive
 // Note: cannot have do {} while (0) because it is used in top namespace.
 #define EMBED(img_name, img_path) \
-	extern char img_name[]; \
-	extern char img_name##_end[]; \
 	__asm__( \
 		".pushsection ." #img_name ", \"a\", @progbits;" \
 		".globl " #img_name ";" \
@@ -22,15 +18,17 @@
 		".globl " #img_name "_end;" \
 		#img_name "_end:" \
 		".popsection;" \
-	)
+	); \
+	extern char img_name[]; \
+	extern char img_name##_end[]; \
 
 struct vm_config {
 	// config
 	int nr_vcpus;
 	int cpu_affinity;
 	uint64 memory_base;
-	uint64 memory_size;
 	uint64 image_base;
+	uint64 image_size;
 	uint64 entry;
 	//struct dev_config devices;
 
@@ -50,11 +48,7 @@ struct vm_config {
 //	irq
 //};
 
-struct config {
-	int nr_vms;
-	struct vm_config vm[];
-};
-
-extern struct config config;
+extern int nr_vms;
+extern struct vm_config config[];
 
 #endif // VM_CONFIG_H

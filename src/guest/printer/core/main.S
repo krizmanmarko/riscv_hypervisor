@@ -2,14 +2,13 @@
 .globl _start
 
 _start:
+	mv tp, a0
 	la t1, trap
 	csrw stvec, t1
 
 	li sp, 0x80101000
 
-	li s0, 0x10000000
-	li t1, 0x41
-	sb t1, 0(s0)
+	call print_hartid
 
 	call set_timer
 
@@ -19,14 +18,19 @@ _start:
 	csrr t1, sie
 	ori t1, t1, 0b100000
 	csrw sie, t1
-	
-	li t1, 0x42
-	sb t1, 0(s0)
 suspend:
 	wfi
 	j suspend
 
 .section ".text", "ax"
+print_hartid:
+	li s0, 0x10000000
+	add t1, tp, 48	# print ascii hartid
+	sb t1, 0(s0)
+	li t1, '\n'
+	sb t1, 0(s0)
+	ret
+
 set_timer:
 	mv t0, ra
 	csrr a0, time
@@ -36,23 +40,8 @@ set_timer:
 	mv ra, t0
 	ret
 
-send_ipi:
-	mv t0, ra
-	la a0, hart_mask
-	call sbi_send_ipi
-	mv ra, t0
-	ret
-
 .balign 4
 trap:
-	li t1, 0x43
-	sb t1, 0(s0)
-	li t1, 10	/* ACK that we reached handler */
-	sb t1, 0(s0)
+	call print_hartid
 	call set_timer
-/*	call send_ipi */
 	sret
-
-.section ".data", "aw"
-hart_mask:
-	.quad 2

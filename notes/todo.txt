@@ -1,17 +1,9 @@
-CPU
-===
 
-figure out how to provide VM information and run baremetal app
-
-vcpu (context switching memory reservation)
-vm entry, vm exit
-
-[+] timer interrupt
 ipi?
 external interrupt / plic
 
-[+] check which variables need volatile (only lock->locked)
-[+] check where a noirq_lock can be used (but I completely removed irq_lock)
+virtualize PLIC
+	map pages with no permissions and handle in traps
+	(there is really no better alternative)
 
-struct lock does not need to be struct really,
-structs_in_asm.h does not need to export LOCK_stuff <- legacy code
+every vm's hartids start at 0 not at arbitrary number
