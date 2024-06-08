@@ -78,3 +78,8 @@ Virtual memory manager (mem/vmem.c)
 Creates page table according to hartid. Every mapping is global except for cpu
 struct. These are the final page tables used for this hypervisor (Shown at the
 top of this document).
+
+Some big words
+==============
+- identity mapping -> va == pa
+- direct/linear mapping -> va == pa + offset

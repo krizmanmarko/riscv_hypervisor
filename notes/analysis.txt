@@ -1,7 +1,3 @@
-identity mapping -> va == pa
-direct/linear mapping -> va == pa + offset
-
-
 bao-project/helloworld
 
 1. whole RAM identity mapping
@@ -33,45 +29,3 @@ linux page tables
 	kernel image
 		0xffffffff80000000 -> 0x90400000
 		0xffffffff81800000 -> 0x91c00000
-
-bao on VMM entry
-================
-
-void vmm_arch_init()
-    CSRW(CSR_HIDELEG, HIDELEG_VSSI | HIDELEG_VSTI | HIDELEG_VSEI);
-    CSRW(CSR_HEDELEG, HEDELEG_ECU | HEDELEG_IPF | HEDELEG_LPF | HEDELEG_SPF);
-
-(actually do not do this since as->type == AS_VM) create identity mapping using gigapages
-
-
-vcpu_arch_reset(struct *vcpu, vaddr_t entry)
-    CSRW(sscratch, &vcpu->regs);
-
-    vcpu->regs.hstatus = HSTATUS_SPV | HSTATUS_VSXL_64;
-    vcpu->regs.sstatus = SSTATUS_SPP_BIT | SSTATUS_FS_DIRTY | SSTATUS_XS_DIRTY;
-    vcpu->regs.sepc = entry;
-    vcpu->regs.a0 = vcpu->arch.hart_id = vcpu->id;
-    vcpu->regs.a1 = 0;  // according to sbi it should be the dtb load address
-
-    CSRW(CSR_HCOUNTEREN, HCOUNTEREN_TM);
-    CSRW(CSR_HTIMEDELTA, 0);
-    CSRW(CSR_VSSTATUS, SSTATUS_SD | SSTATUS_FS_DIRTY | SSTATUS_XS_DIRTY);
-    CSRW(CSR_HIE, 0);
-    CSRW(CSR_VSTVEC, 0);
-    CSRW(CSR_VSSCRATCH, 0);
-    CSRW(CSR_VSEPC, 0);
-    CSRW(CSR_VSCAUSE, 0);
-    CSRW(CSR_VSTVAL, 0);
-    CSRW(CSR_HVIP, 0);
-    CSRW(CSR_VSATP, 0);
-
-void vm_arch_init(struct vm *vm, const struct vm_config *config)
-    CSRW(CSR_HGATP, hgatp);
-
-    vplic init
-
-parse config file
-
-VM_ENTRY
-
-

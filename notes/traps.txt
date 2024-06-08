@@ -1,36 +1,64 @@
-enter VS-mode exception handler
-V == 1 (before the trap)
-check medeleg -> check hedeleg -> exception handler in VS-mode
+================================================================================
+Traps
+================================================================================
 
-enter VS-mode interrupt
-check mideleg -> check hideleg -> interrupt handler in VS-mode
+1. Interrupts (can happen anytime - asynchronous)
+2. Exceptions (only when executing instructions - synchronous)
+
+Important registers (listed only for M-mode):
+	- mtvec
+	- mcause (MSB == 1 ? interrupt : exception)
+	- mepc
+	- mtval
+	- mtval2
 
 
+================================================================================
 Interrupts
-==========
+================================================================================
 
---- Sources
-
-1. software interrupt (IPC)
-    when clint.mswi.msip = 1
-2. timer interrupt
-    when clint.mtimer.mtime >= clint.mtimer.mtimecmp
-3. external interrupt (devices)
-    PLIC (but how where what and who)
-
---- Handling
-
-check corresponding mideleg bit
-    0 -> mtrapvec
-    1 -> check corresponding hideleg bit
-        0 -> hstrapvec
-	1 -> vstrapvec
+3 types:
+	- software (CLINT): when clint.mswi.msip = 1
+	- timer (CLINT): when clint.mtimer.mtime >= clint.mtimer.mtimecmp
+	- external (PLIC): when external source asserts interrupt
 
 
+Interrupt registers
+===================
+
+mideleg, hideleg
+mip, mie
+sip, sie
+hip, hie, hvip, hgeip, hgeie
+vsip, vsie
+
+Extra notes
+-----------
+1. interrupt delegation
+	mideleg: M -> HS
+	hideleg: HS -> VS
+
+2. enter VS-mode interrupt
+	V == 1 (before the trap)
+	check mideleg -> check hideleg -> interrupt handler in VS-mode
+
+3. sie/sip and hie/hip bits are mutually exclusive
+	sie | hie -> hypervisor interrupt enable
+	sip | hip -> hypervisor interrupt pending
+	sie ^ hie == 0
+	sip ^ hip == 0
+
+
+================================================================================
 Exceptions
-==========
+================================================================================
 
---- sources
+enter VS-mode exception handler:
+	check medeleg -> check hedeleg -> exception handler in VS-mode
+
+Legend:
+	'-': standard risc-v
+	'+': hypervisor extension
 
 1. instruction
     - instruction address misaligned (0)

@@ -1,6 +1,8 @@
-Platform Level Interrupt Controller
+================================================================================
+PLIC (Platform Level Interrupt Controller)
+================================================================================
 
-MMIO, multiplexes interrupts to hart contexts
+memory mapped, multiplexes interrupts to hart contexts
 
 32-bit registers
 ----------------
@@ -24,6 +26,13 @@ MMIO, multiplexes interrupts to hart contexts
 6. interrupt id is waiting in interrupt claim register
 	- R -> interrupt is claimed (you get interrupt ID)
 	- W -> interrupt is marked completed (you write interrupt ID)
+
+// on qemu-virt
+context 0 -> hart 0 M-mode
+context 1 -> hart 0 S-mode
+context 2 -> hart 1 M-mode
+context 2 -> hart 1 S-mode
+...
 
 PLIC Memory Map
 base + 0x000000: Reserved (interrupt source 0 does not exist)

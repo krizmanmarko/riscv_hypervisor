@@ -57,8 +57,6 @@ Legend: s - store
 > data dependency: result of A is used to determine value written by B(s)
 
 
-
-
 --- Load value axiom
 Loads return the value written by the most recent preceding store to
 the same address

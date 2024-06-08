@@ -1,0 +1,24 @@
+Physical Memory Attributes
+==========================
+
+PMAs are inherent properties of the underlying hardware and rarely change
+during system operation.
+
+1. Main memory
+Always supports read/write of any access width, optionally if fetching
+is supported.
+
+2. I/O memory
+I/O regions can specify which combinations of read, write, or execute
+accesses to which data widths are supported.
+
+3. vacant memory (not used memory)
+
+
+Physical Memory Protection
+==========================
+
+rwx bits for physical memory accesses (from S, U-mode or via translation)
+
+memory access control. By default S, U modes have no permissions. M has
+full permissions. Very platform dependent

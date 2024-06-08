@@ -1,7 +1,8 @@
 Description of every single HART in qemu-virt
 
+================================================================================
 Registers
-=========
+================================================================================
 
 --- General purpose registers ---
 
@@ -175,35 +176,3 @@ x31     t6      tmp				caller
     instret (minstret)
     hpmcounterx (mhpmcounterx)
     time (mtime + htimedelta)
-
-
-
-Interrupt registers
-===================
-
-mideleg, hideleg
-mip, mie
-sip, sie
-hip, hie, hvip, hgeip, hgeie
-vsip, vsie
-
-mideleg: M -> HS
-hideleg: HS -> VS
-
-M: mip, mie
-HS: sip, hip, sie, hie
-VS: vsip, vsie (alias of hip, hie if VS bits in hideleg are set, else RO 0)
-
-Every writeable bit in sie is read-only 0 in hie and vice versa
-Every writeable bit in sip is read-only 0 in hip and vice versa
-    sie | hie -> hypervisor interrupt enable
-    sip | hip -> hypervisor interrupt pending
-    sie ^ hie == 0
-    sip ^ hip == 0
-
-When bit 10 of hideleg is zero, vsip.SEIP and vsie.SEIE are read-only zeros.
-  Else, vsip.SEIP and vsie.SEIE are aliases of hip.VSEIP and hie.VSEIE.
-When bit 6 of hideleg is zero, vsip.STIP and vsie.STIE are read-only zeros.
-  Else, vsip.STIP and vsie.STIE are aliases of hip.VSTIP and hie.VSTIE.
-When bit 2 of hideleg is zero, vsip.SSIP and vsie.SSIE are read-only zeros.
-  Else, vsip.SSIP and vsie.SSIE are aliases of hip.VSSIP and hie.VSSIE.
