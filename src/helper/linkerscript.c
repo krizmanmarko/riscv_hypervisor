@@ -65,6 +65,7 @@ SECTIONS
 	.rodata ALIGN(PAGE_SIZE) : AT(phys_base + offset) {
 		PROVIDE(rodata = .);
 		*(.rodata .rodata.*)
+		*(.srodata .srodata.*)
 	}
 	PROVIDE(erodata = .);
 	offset = ALIGN(offset + SIZEOF(.rodata), PAGE_SIZE);
@@ -73,15 +74,12 @@ SECTIONS
 	.data ALIGN(PAGE_SIZE) : AT(phys_base + offset) {
 		PROVIDE(data = .);
 		*(.data .data.*)
-	}
-	offset = ALIGN(offset + SIZEOF(.data), PAGE_SIZE);
-
-	.bss ALIGN(PAGE_SIZE) : AT(phys_base + offset) {
+		*(.sdata .sdata.*)
 		*(.bss .bss.*)
 		*(.sbss .sbss.*)
 	}
 	PROVIDE(edata = .);
-	offset = ALIGN(offset + SIZEOF(.bss), PAGE_SIZE);
+	offset = ALIGN(offset + SIZEOF(.data), PAGE_SIZE);
 
 	.cpu_structs ALIGN(PAGE_SIZE) : AT(phys_base + offset) {
 		PROVIDE(cpu_structs = .);
@@ -90,7 +88,7 @@ SECTIONS
 	PROVIDE(ecpu_structs = .);
 	offset = ALIGN(offset + SIZEOF(.cpu_structs), PAGE_SIZE);
 
-	.vm_images : AT(phys_base + offset) SUBALIGN(PAGE_SIZE) {
+	.vm_images ALIGN(PAGE_SIZE) : AT(phys_base + offset) SUBALIGN(PAGE_SIZE) {
 		KEEP(*(.vm_*))
 	}
 
