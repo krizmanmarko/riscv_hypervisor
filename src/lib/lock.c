@@ -22,6 +22,9 @@ init_lock(struct lock *lk)
 // 4. barrier is now ready for use as if it has just been initialized
 
 // TODO: Will this haunt me in any way?
+// YES -> if last hart is fast it can get stuck on next same barrier while
+//        others have still not passed the first iteration of this lock
+//     I added passed parameter to save myself here
 // why have self-resetting barrier
 //   it is annoying to allocate many barriers (for example) in main to just
 //   sync same harts at many points. Now I can use the same barrier
@@ -38,10 +41,16 @@ wait_barrier(struct barrier *bar)
 	bar->tokens--;
 	release(&bar->lk);
 
-	if (LAST_HART)
+	if (LAST_HART) {
+		bar->passed = 1;
 		bar->tokens = bar->initial;		// reset
-	else
+		while (bar->passed != bar->initial);	// let others pass
+	} else {
 		while (bar->tokens != bar->initial);	// wait for reset
+		acquire(&bar->lk);
+		bar->passed++;				// just pass
+		release(&bar->lk);
+	}
 }
 
 void

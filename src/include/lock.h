@@ -9,8 +9,9 @@ struct lock {
 };
 
 struct barrier {
-	int tokens;	// number of harts we are still waiting for
 	int initial;	// initial token count
+	volatile int tokens;	// number of harts we are still waiting for
+	volatile int passed;	// number of harts already that passed through
 	struct lock lk;
 };
 
