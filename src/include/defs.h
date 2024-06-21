@@ -22,7 +22,7 @@ void hstrapvec();
 void vm_enter();
 
 // core/vcpu.c
-void init_vcpu(struct vm_config *conf);
+uint64 init_vcpu(struct vm_config *conf);
 
 // core/vm_run.c
 void __attribute__((noreturn)) vm_run(uint64 hartid);

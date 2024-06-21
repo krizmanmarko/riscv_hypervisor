@@ -48,6 +48,27 @@ Extra notes
 	sie ^ hie == 0
 	sip ^ hip == 0
 
+Comprehensive Interrupt Handling
+--------------------------------
+
+Interrupt happens
+Interrupt arrives to M-mode
+	1. check mstatus
+		mstatus.MIE = 0		<- interrupts are disabled
+		mstatus.MIE = 1		<- interrupts are enabled
+	2. check mideleg
+		mideleg not set
+			goto 3
+		mideleg is set
+			handle in HS-mode
+	3. check mie
+
+Interrupt arrives to HS-mode
+	1. check sstatus
+		sstatus.SIE = 0		<- interrupts are disabled
+		sstatus.SIE = 1		<- interrupts are enabled
+	2. check hideleg
+
 
 ================================================================================
 Exceptions

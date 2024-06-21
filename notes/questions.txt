@@ -6,6 +6,10 @@ In sv39 virtual address size is 39 bits while physical address size is 56 bits
 
 --- Solved ---
 
+should I use risc-v Advanced interrupt architecture (aia vs plic)
+- in bao source code plic is considerably smaller, I guess I am using that
+  plic requires trap n emulate approach
+
 When using indirect kernel page tables, how do we create new page tables?
 Problem is that we do not have access to physical addresses (do we just use
 some base offset / mask for translating va to pa in software?)

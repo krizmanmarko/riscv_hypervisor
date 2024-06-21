@@ -1,6 +1,7 @@
 #ifndef VM_CONFIG_H
 #define VM_CONFIG_H
 
+#include "lock.h"
 #include "memory.h"
 #include "types.h"
 #include "vcpu.h"
@@ -20,20 +21,21 @@
 		".popsection;" \
 	); \
 	extern char img_name[]; \
-	extern char img_name##_end[]; \
+	extern char img_name##_end[];
 
 struct vm_config {
 	// config
 	int nr_vcpus;
 	int cpu_affinity;
-	uint64 memory_base;
-	uint64 image_base;
-	uint64 image_size;
+	uint64 image_base;	// where binary in physical memory
+	uint64 image_size;	// size of binary
+	uint64 memory_base;	// location of RAM
+	uint64 memory_size;	// allocated RAM for this VM
 	uint64 entry;
 	//struct dev_config devices;
 
 	// per vm memory allocations
-	struct vcpu vcpu;
+	struct barrier bar;
 	pte_t vm_pgtable[512 * 4] __attribute__((aligned(4 * PAGE_SIZE)));
 };
 

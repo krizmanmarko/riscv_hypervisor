@@ -4,9 +4,12 @@
 #include "types.h"
 
 struct vcpu {
-	uint64 x[32];	// zero is always 0 (need only 31 spaces, but indexing)
-} __attribute__((__packed__, aligned(sizeof(uint64))));
+	uint64 vhartid;
+	struct __attribute__((__packed__, aligned(sizeof(uint64)))) {
+		uint64 x[32];
+	} regs;
+};
 
-_Static_assert(sizeof(struct vcpu) == (32) * sizeof(uint64), "struct vcpu is weird");
+_Static_assert(sizeof(((struct vcpu *)0)->regs) == (32) * sizeof(uint64), "struct regs is weird");
 
 #endif // VCPU_H

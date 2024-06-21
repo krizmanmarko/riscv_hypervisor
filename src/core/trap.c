@@ -18,7 +18,7 @@ hs_interrupt_handler(uint64 scause)
 // sbi_set_timer
 // 	timer 1 sekunda -> 10**7
 
-	scause &= ~0x8000000000000000;
+	scause = scause << 1 >> 1;
 	if (scause == INT_SUPERVISOR_TIM)
 		sbi_set_timer(CSRR(time) + 10000000);
 	else if (scause == INT_SUPERVISOR_EXT) {

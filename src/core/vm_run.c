@@ -1,5 +1,6 @@
 #include "defs.h"
 #include "dtb.h"
+#include "lock.h"
 #include "memory.h"
 #include "riscv.h"
 #include "stdio.h"
@@ -11,6 +12,8 @@ static void init_hs_pgtable();
 static void init_hs();
 static void init_vs();
 void __attribute__((noreturn)) vm_run();
+
+static struct barrier bar = BARRIER_INITIALIZER(DTB_NR_CPUS);
 
 static void
 init_hs_pgtable(struct vm_config *conf)
@@ -34,17 +37,9 @@ init_hs_pgtable(struct vm_config *conf)
 	// kvmmap(kpgtbl, VIRTIO0, VIRTIO0, PGSIZE, PTE_R | PTE_W);
 	// kvmmap(kpgtbl, PLIC, PLIC, 0x400000, PTE_R | PTE_W);
 
-// TODO: testing (external interrupt passthrough)
-// WARNING: you should not initialize PLIC, just multiplex it correctly
-	int hartid = 0;
-	plic_set_priority(10, 1);
-	// target supervisor mode
-	plic_set_enabled(hartid*2 + 1, 10, 1);
-	plic_set_threshold(hartid*2 + 1, 0);
-// end testing
-
 	// TODO use struct config
 	map_page(conf->vm_pgtable, DTB_SERIAL, DTB_SERIAL, PTE_U | PTE_R | PTE_W);
+	map_pages(conf->vm_pgtable, DTB_PLIC, DTB_PLIC, 0x600000, PTE_U | PTE_R | PTE_W);
 }
 
 static void
@@ -52,14 +47,13 @@ init_hs(struct vm_config *conf)
 {
 	uint64 pgtable_pa;
 
-	init_hs_pgtable(conf);
 	pgtable_pa = KVA2PA((uint64) conf->vm_pgtable);
 	CSRW(hgatp, ATP_MODE_SV39 | pgtable_pa >> 12);
 	__asm__ volatile("hfence.gvma");
 
 	CSRW(hstatus, HSTATUS_VSXL | HSTATUS_SPV);
 	CSRW(hedeleg, 0ULL);
-	CSRW(hideleg, HIDELEG_VSTI | HIDELEG_VSEI);
+	CSRW(hideleg, HIDELEG_VSTI);
 	CSRW(hvip, 0ULL);
 	CSRW(hip, 0ULL);
 	CSRW(hie, 0ULL);
@@ -68,6 +62,22 @@ init_hs(struct vm_config *conf)
 	CSRW(htimedelta, 0ULL);
 	CSRW(htval, 0ULL);
 	CSRW(htinst, 0ULL);
+
+#define PRINTCSR(reg) printf(#reg "	: %p\n", CSRR(reg));
+
+	// testing external interrupts
+	PRINTCSR(hideleg)
+	PRINTCSR(sstatus)
+	CSRS(sie, -1);
+	PRINTCSR(sie)
+	CSRS(hie, -1);
+	PRINTCSR(hie)
+	CSRS(hideleg, -1);
+	PRINTCSR(hideleg)
+	CSRS(hstatus, 1 << 12);		// set smallest VGEIN possible
+	PRINTCSR(hstatus)
+	CSRS(hgeie, -1);
+	PRINTCSR(hgeie)
 }
 
 static void
@@ -89,7 +99,6 @@ static struct vm_config *
 get_config_for_cpu(uint64 hartid)
 {
 	struct vm_config *conf = 0;
-	printf("%p\n", nr_vms);
 	for (int i = 0; i < nr_vms; i++) {
 		if (config[i].cpu_affinity & (1 << hartid)) {
 			if (conf == 0) {
@@ -107,12 +116,21 @@ get_config_for_cpu(uint64 hartid)
 void __attribute__((noreturn))
 vm_run(uint64 hartid)
 {
+	uint64 vhartid;
 	struct vm_config *conf = get_config_for_cpu(hartid);
 
-	init_vs();
+	// initialize per vm barriers
+	for (int i = 0; hartid == 0 && i < nr_vms; i++)
+		init_barrier(&config[i].bar, config[i].nr_vcpus);
+	wait_barrier(&bar);
+
+	vhartid = init_vcpu(conf);
+	if (vhartid == 0)
+		init_hs_pgtable(conf);
+	wait_barrier(&conf->bar);
+
 	init_hs(conf);
-	init_vcpu(conf);
-	(conf->vcpu).x[10] = hartid;	// TODO: this is just testing
+	init_vs();
 
 	CSRS(sstatus, SSTATUS_SPP);
 	CSRW(sepc, conf->entry);

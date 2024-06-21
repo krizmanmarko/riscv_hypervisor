@@ -22,7 +22,7 @@
 #define STATUS_MPP_U (U_MODE << 11)
 #define STATUS_FS (0b11UL << 13)	// Floating-point Unit State
 #define STATUS_XS (0b11UL << 15)	// User Mode extensions
-#define STATUS_MPRV (1UL << 17)		// Modify Privilege (set effective privilege)
+#define STATUS_MPRV (1UL << 17)		// Modify Privilege (use previous privilege privileges for loads and stores)
 #define STATUS_SUM (1UL << 18)		// Permit Supervisor User Memory access
 #define STATUS_MXR (1UL << 19)		// Make Executable Readable
 #define STATUS_TVM (1UL << 20)		// Trap Virtual Memory
@@ -213,7 +213,7 @@
 #define HIE_VSSIE INT_VSSI
 #define HIE_VSTIE INT_VSTI
 #define HIE_VSEIE INT_VSEI
-#define HIE_SGEIE INT_SGEI
+#define HIE_SGEIE INT_SGEI	// TODO: is this correct? should it be SIE_...
 
 // Hypervisor Guest External Interrupt Pending Register
 // Hypervisor Guest External Interrupt Enable Register

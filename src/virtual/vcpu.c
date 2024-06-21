@@ -5,11 +5,34 @@
 #include "vcpu.h"
 #include "vm_config.h"
 
-void
+#include "stdio.h"	// TODO: testing only
+
+struct vcpu vcpus[DTB_NR_CPUS];
+
+uint64
+get_vhartid(struct vm_config *conf)
+{
+	int tmp = conf->cpu_affinity;
+	uint64 vhartid = 0;
+	for (uint64 i = 0; i < get_hartid(); i++) {
+		if (tmp & 1) {
+			vhartid++;
+		}
+		tmp >>= 1;
+	}
+	return vhartid;
+}
+
+
+uint64
 init_vcpu(struct vm_config *conf)
 {
-	memset(&conf->vcpu, '\x00', sizeof(struct vcpu));
-	CSRW(sscratch, &conf->vcpu);
-	// figure out which virtual hartid this is -> a0
-	//(conf->vcpu).x[10] = 0x7;
+	struct vcpu *vcpu = &vcpus[get_hartid()];
+
+	vcpu->vhartid = get_vhartid(conf);
+	memset(&vcpu->regs, '\x00', sizeof(vcpu->regs));
+	vcpu->regs.x[10] = vcpu->vhartid;
+	CSRW(sscratch, &vcpu->regs);
+
+	return vcpu->vhartid;
 }
