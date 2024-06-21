@@ -1,3 +1,4 @@
+#include "bits.h"
 #include "defs.h"
 #include "dtb.h"
 #include "lock.h"
@@ -5,6 +6,7 @@
 #include "riscv.h"
 #include "stdio.h"
 #include "string.h"
+#include "types.h"
 #include "vcpu.h"
 #include "vm_config.h"
 
@@ -98,32 +100,53 @@ init_vs()
 static struct vm_config *
 get_config_for_cpu(uint64 hartid)
 {
-	struct vm_config *conf = 0;
+	for (int i = 0; i < nr_vms; i++)
+		if (config[i].cpu_affinity & (1 << hartid))
+			return &config[i];
+	panic("No way (CPU configuration was already checked)");
+}
+
+static void
+init_vm_barriers()
+{
 	for (int i = 0; i < nr_vms; i++) {
-		if (config[i].cpu_affinity & (1 << hartid)) {
-			if (conf == 0) {
-				conf = &config[i];
-			} else {
-				panic("single CPU assigned to multiple VMs");
-			}
-		}
+		init_barrier(
+			&config[i].bar,
+			count_set_bits(config[i].cpu_affinity)
+		);
 	}
-	if (conf == 0)
-		panic("CPU active, but not assigned to any VM");
-	return conf;
+}
+
+void
+check_cpu_configuration()
+{
+	int nr_cpus = 0;
+
+	for (int i = 0; i < nr_vms; i++)
+		for (int j = 0; j < i; j++)
+			if (config[i].cpu_affinity & config[j].cpu_affinity)
+				panic("some VMs share the same CPU (%d, %d)", j, i);
+
+	for (int i = 0; i < nr_vms; i++)
+		nr_cpus += count_set_bits(config[i].cpu_affinity);
+
+	if (nr_cpus != DTB_NR_CPUS)
+		panic("number of CPUs not configured correctly\nvm_config: %d, dtb: %d", nr_cpus, DTB_NR_CPUS);
 }
 
 void __attribute__((noreturn))
 vm_run(uint64 hartid)
 {
 	uint64 vhartid;
-	struct vm_config *conf = get_config_for_cpu(hartid);
+	struct vm_config *conf;
 
-	// initialize per vm barriers
-	for (int i = 0; hartid == 0 && i < nr_vms; i++)
-		init_barrier(&config[i].bar, config[i].nr_vcpus);
+	if (hartid == 0) {
+		init_vm_barriers();
+		check_cpu_configuration();
+	}
 	wait_barrier(&bar);
 
+	conf = get_config_for_cpu(hartid);
 	vhartid = init_vcpu(conf);
 	if (vhartid == 0)
 		init_hs_pgtable(conf);
@@ -138,4 +161,3 @@ vm_run(uint64 hartid)
 
 	while (1);	// this and noreturn removes function epilogue
 }
-

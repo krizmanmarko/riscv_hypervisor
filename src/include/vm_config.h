@@ -25,8 +25,7 @@
 
 struct vm_config {
 	// config
-	int nr_vcpus;
-	int cpu_affinity;
+	uint64 cpu_affinity;
 	uint64 image_base;	// where binary in physical memory
 	uint64 image_size;	// size of binary
 	uint64 memory_base;	// location of RAM
