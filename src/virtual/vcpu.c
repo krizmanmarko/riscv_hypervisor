@@ -1,38 +1,46 @@
 #include "defs.h"
 #include "riscv.h"
+#include "stdio.h"
 #include "string.h"
 #include "types.h"
 #include "vcpu.h"
 #include "vm_config.h"
 
-#include "stdio.h"	// TODO: testing only
-
 struct vcpu vcpus[DTB_NR_CPUS];
 
-uint64
-get_vhartid(struct vm_config *conf)
+static struct vm_config *
+get_config_for_cpu(uint64 hartid)
 {
-	uint64 tmp = conf->cpu_affinity;
+	for (int i = 0; i < nr_vms; i++)
+		if (config[i].cpu_affinity & (1 << hartid))
+			return &config[i];
+	panic("No way (CPU configuration was already checked)");
+}
+
+
+static uint64
+get_vhartid(uint64 hartid, uint64 cpu_affinity)
+{
 	uint64 vhartid = 0;
-	for (uint64 i = 0; i < get_hartid(); i++) {
-		if (tmp & 1) {
+	for (uint64 i = 0; i < hartid; i++) {
+		if (cpu_affinity & 1)
 			vhartid++;
-		}
-		tmp >>= 1;
+		cpu_affinity >>= 1;
 	}
 	return vhartid;
 }
 
-
-uint64
-init_vcpu(struct vm_config *conf)
+struct vcpu *
+init_vcpu()
 {
-	struct vcpu *vcpu = &vcpus[get_hartid()];
+	uint64 hartid = get_hartid();
+	struct vcpu *vcpu = &vcpus[hartid];
 
-	vcpu->vhartid = get_vhartid(conf);
+	vcpu->conf = get_config_for_cpu(hartid);
 	memset(&vcpu->regs, '\x00', sizeof(vcpu->regs));
+	vcpu->vhartid = get_vhartid(hartid, vcpu->conf->cpu_affinity);
 	vcpu->regs.x[10] = vcpu->vhartid;
 	CSRW(sscratch, &vcpu->regs);
 
-	return vcpu->vhartid;
+	return vcpu;
 }

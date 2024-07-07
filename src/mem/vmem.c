@@ -98,8 +98,8 @@ init_vmem()
 	rv += map_page(root, DTB_PLATFORM_BUS, DTB_PLATFORM_BUS, PTE_R | PTE_W | PTE_G);
 	rv += map_page(root, DTB_RTC, DTB_RTC, PTE_R | PTE_W | PTE_G);
 	rv += map_page(root, DTB_SERIAL, DTB_SERIAL, PTE_R | PTE_W | PTE_G);
-	rv += map_pages(root, DTB_PLIC, DTB_PLIC, 0x600000, PTE_R | PTE_W | PTE_G);
-	rv += map_pages(root, DTB_CLINT, DTB_CLINT, 0x10000, PTE_R | PTE_W | PTE_G);
+	rv += map_pages(root, DTB_PLIC, DTB_PLIC, DTB_PLIC_SIZE, PTE_R | PTE_W | PTE_G);
+	rv += map_pages(root, DTB_CLINT, DTB_CLINT, DTB_CLINT_SIZE, PTE_R | PTE_W | PTE_G);
 	if (rv < 0)
 		panic("failed to map %s", "MMIO");
 
@@ -133,7 +133,7 @@ init_vmem()
 	va = VAS_RAM;
 	pa = DTB_MEMORY;
 	size = DTB_MEMORY_SIZE;
-	if (map_pages(root, va, pa, size, PTE_R | PTE_W | PTE_X | PTE_G))
+	if (map_pages(root, va, pa, size, PTE_R | PTE_W | PTE_G))
 		panic("failed to map %s", "RAM");
 
 	return root;

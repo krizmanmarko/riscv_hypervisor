@@ -107,3 +107,5 @@ Legend:
     + instruction guest page fault (20)
     + load guest page fault (21)
     + store or amo guest page fault (23)
+
+htval -> guest physical address that faulted (shifted right by 2)

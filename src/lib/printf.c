@@ -12,7 +12,7 @@
 #include "defs.h"
 #include "types.h"
 
-#define PRINT_UINT(uvar, utype) \
+#define PRINT_UINT(uvar, utype, base, length) \
 	do { \
 		uvar = va_arg(ap, utype); \
 		if (base == 2 || base == 16) \
@@ -21,7 +21,7 @@
 			print_uint(uvar, base); \
 	} while (0);
 
-#define PRINT_INT(var, type) \
+#define PRINT_INT(var, type, base, length) \
 	do { \
 		var = va_arg(ap, type); \
 		if (var < 0) { \
@@ -82,8 +82,11 @@ print_padded(uint64 num, int base, int bytes)
 	end = sizeof(uint64) * chars_for_byte;
 	for (int i = 0; i < start; i++)
 		num <<= bits_in_char;
-	for (int i = start; i < end; i++, num <<= bits_in_char)
+	for (int i = start; i < end; i++, num <<= bits_in_char) {
+		if (i != start && bits_in_char == 1 && i % chars_for_byte == 0)
+			uartputc('_');	// split binary
 		uartputc(digits[num >> (sizeof(uint64) * 8 - bits_in_char)]);
+	}
 }
 
 void
@@ -178,17 +181,17 @@ decide_type:
 			switch (length) {
 			case 1:
 				// int is correct type
-				PRINT_INT(tmp.i8, int);
+				PRINT_INT(tmp.i8, int, base, length);
 				break;
 			case 2:
 				// int is correct type
-				PRINT_INT(tmp.i16, int);
+				PRINT_INT(tmp.i16, int, base, length);
 				break;
 			case 4:
-				PRINT_INT(tmp.i32, int32);
+				PRINT_INT(tmp.i32, int32, base, length);
 				break;
 			case 8:
-				PRINT_INT(tmp.i64, int64);
+				PRINT_INT(tmp.i64, int64, base, length);
 				break;
 			default:
 				invalid_length = 1;
@@ -199,16 +202,16 @@ decide_type:
 			switch (length) {
 			case 1:
 				// unsigned int is correct type
-				PRINT_UINT(tmp.ui8, unsigned int);
+				PRINT_UINT(tmp.ui8, unsigned int, base, length);
 				break;
 			case 2:
-				PRINT_UINT(tmp.ui16, unsigned int);
+				PRINT_UINT(tmp.ui16, unsigned int, base, length);
 				break;
 			case 4:
-				PRINT_UINT(tmp.ui32, uint32);
+				PRINT_UINT(tmp.ui32, uint32, base, length);
 				break;
 			case 8:
-				PRINT_UINT(tmp.ui64, uint64);
+				PRINT_UINT(tmp.ui64, uint64, base, length);
 				break;
 			default:
 				invalid_length = 1;

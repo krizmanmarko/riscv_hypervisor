@@ -72,3 +72,28 @@ Makefile directories as dependencies
 neki: $(BUILD_DIR)
 
 neki se izvede ob vsakem updateu katerekoli datoteke v BUILD_DIR.
+
+
+======================================================
+I do not understand but these produce different output
+======================================================
+def get_pgdirs(pa, level):
+        pgdir = get_pgdir(pa)
+        pgdirs = [None] * 512
+        for i, pte in enumerate(pgdir):
+                if pte == None:
+                        continue
+                if pte & pte_rwx:
+                        pgdirs[i] = pte         # found Mega/Giga page
+                        continue
+                if pte & pte_v:
+                        if level > 0:
+				# Works correctly
+                                pgdirs[i] = get_pgdirs(pte2pa(pte), level - 1)
+
+				# Does not work correctly
+				#level -= 1
+                                #pgdirs[i] = get_pgdirs(pte2pa(pte), level)
+                        else:
+                                pgdirs[i] = pte # found page
+        return pgdirs

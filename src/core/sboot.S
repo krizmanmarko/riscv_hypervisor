@@ -106,7 +106,7 @@ enter_vas:
 	jr t0		# t0=PA2KVA(init_for_c)
 
 # WARNING!
-# kernel image exceeds 1GB -> rework
+# when kernel image exceeds 1GB -> rework
 
 # map gigapages (without dynamic memory management)
 init_bootstrap_pages:

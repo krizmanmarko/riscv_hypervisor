@@ -20,6 +20,9 @@ static struct barrier bar = BARRIER_INITIALIZER(DTB_NR_CPUS);
 static void
 init_hs_pgtable(struct vm_config *conf)
 {
+	int i, rv;
+	struct mmio_dev *dev;
+
 	memset(conf->vm_pgtable, '\x00', PAGE_SIZE * 4);
 
 	// map vm image
@@ -39,9 +42,19 @@ init_hs_pgtable(struct vm_config *conf)
 	// kvmmap(kpgtbl, VIRTIO0, VIRTIO0, PGSIZE, PTE_R | PTE_W);
 	// kvmmap(kpgtbl, PLIC, PLIC, 0x400000, PTE_R | PTE_W);
 
-	// TODO use struct config
-	map_page(conf->vm_pgtable, DTB_SERIAL, DTB_SERIAL, PTE_U | PTE_R | PTE_W);
-	map_pages(conf->vm_pgtable, DTB_PLIC, DTB_PLIC, 0x600000, PTE_U | PTE_R | PTE_W);
+	i = 0;
+	while ((dev = conf->devices[i++]) != 0) {	// dev != 0
+		rv = map_pages(
+			conf->vm_pgtable,
+			dev->base_virt,
+			dev->base_phys,
+			dev->size,
+			dev->perm | PTE_U
+		);
+		if (rv < 0) {
+			panic("Failed to map MMIO device %d", i);
+		}
+	}
 }
 
 static void
@@ -58,28 +71,12 @@ init_hs(struct vm_config *conf)
 	CSRW(hideleg, HIDELEG_VSTI);
 	CSRW(hvip, 0ULL);
 	CSRW(hip, 0ULL);
-	CSRW(hie, 0ULL);
+	CSRW(hie, HIE_VSTIE);
 	CSRW(hgeie, 0ULL);
 	CSRW(hcounteren, HCOUNTEREN_TM);	// vm can now read time
 	CSRW(htimedelta, 0ULL);
 	CSRW(htval, 0ULL);
 	CSRW(htinst, 0ULL);
-
-#define PRINTCSR(reg) printf(#reg "	: %p\n", CSRR(reg));
-
-	// testing external interrupts
-	PRINTCSR(hideleg)
-	PRINTCSR(sstatus)
-	CSRS(sie, -1);
-	PRINTCSR(sie)
-	CSRS(hie, -1);
-	PRINTCSR(hie)
-	CSRS(hideleg, -1);
-	PRINTCSR(hideleg)
-	CSRS(hstatus, 1 << 12);		// set smallest VGEIN possible
-	PRINTCSR(hstatus)
-	CSRS(hgeie, -1);
-	PRINTCSR(hgeie)
 }
 
 static void
@@ -95,15 +92,6 @@ init_vs()
 	CSRW(vstval, 0ULL);
 	CSRW(vsatp, 0ULL);
 	CSRW(vstimecmp, -1LL);
-}
-
-static struct vm_config *
-get_config_for_cpu(uint64 hartid)
-{
-	for (int i = 0; i < nr_vms; i++)
-		if (config[i].cpu_affinity & (1 << hartid))
-			return &config[i];
-	panic("No way (CPU configuration was already checked)");
 }
 
 static void
@@ -122,23 +110,24 @@ check_cpu_configuration()
 {
 	int nr_cpus = 0;
 
+	// check CPU affinity overlap
 	for (int i = 0; i < nr_vms; i++)
 		for (int j = 0; j < i; j++)
 			if (config[i].cpu_affinity & config[j].cpu_affinity)
-				panic("some VMs share the same CPU (%d, %d)", j, i);
+				panic("VMs share the same CPU (%d, %d)", j, i);
 
+	// check number of CPUs assigned
 	for (int i = 0; i < nr_vms; i++)
 		nr_cpus += count_set_bits(config[i].cpu_affinity);
-
 	if (nr_cpus != DTB_NR_CPUS)
-		panic("number of CPUs not configured correctly\nvm_config: %d, dtb: %d", nr_cpus, DTB_NR_CPUS);
+		panic("CPU number misconfiguration\nvm_config: %d, dtb: %d",
+			nr_cpus, DTB_NR_CPUS);
 }
 
 void __attribute__((noreturn))
 vm_run(uint64 hartid)
 {
-	uint64 vhartid;
-	struct vm_config *conf;
+	struct vcpu *vcpu;
 
 	if (hartid == 0) {
 		init_vm_barriers();
@@ -146,18 +135,17 @@ vm_run(uint64 hartid)
 	}
 	wait_barrier(&bar);
 
-	conf = get_config_for_cpu(hartid);
-	vhartid = init_vcpu(conf);
-	if (vhartid == 0)
-		init_hs_pgtable(conf);
-	wait_barrier(&conf->bar);
+	vcpu = init_vcpu();
+	if (vcpu->vhartid == 0)
+		init_hs_pgtable(vcpu->conf);
+	wait_barrier(&vcpu->conf->bar);
 
-	init_hs(conf);
 	init_vs();
+	init_hs(vcpu->conf);
 
 	CSRS(sstatus, SSTATUS_SPP);
-	CSRW(sepc, conf->entry);
+	CSRW(sepc, vcpu->conf->entry);
 	vm_enter();
 
-	while (1);	// this and noreturn removes function epilogue
+	while (1);	// this combined with noreturn removes function epilogue
 }

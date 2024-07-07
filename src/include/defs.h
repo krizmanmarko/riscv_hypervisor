@@ -4,6 +4,7 @@
 #include "types.h"
 #include "vm_config.h"
 
+// find . -name '*.S' -or -name '*.c' | sort
 // {lib,test}/* should be seperated
 
 // core/main.c
@@ -21,9 +22,6 @@ void hs_exception_handler(uint64 scause);
 void hstrapvec();
 void vm_enter();
 
-// core/vcpu.c
-uint64 init_vcpu(struct vm_config *conf);
-
 // core/vm_run.c
 void __attribute__((noreturn)) vm_run(uint64 hartid);
 
@@ -32,16 +30,16 @@ struct cpu *mycpu();
 uint64 get_hartid();
 void init_hart(pte_t *pgtable);
 
-// driver/uart.c
-void uartputc(char c);
-void init_uart();
-
 // driver/plic.c
 void plic_set_priority(int interrupt_source, uint32 priority);
 void plic_set_enabled(int interrupt_source, int context, int enable);
 void plic_set_threshold(int context, uint32 threshold);
 uint32 plic_claim(int context);
 void plic_complete(int context, uint32 interrupt_id);
+
+// driver/uart.c
+void uartputc(char c);
+void init_uart();
 
 // mem/kmem.c
 void *kmalloc();
@@ -53,6 +51,13 @@ pte_t *walk(pte_t *pgtable, uint64 va, int alloc);
 int map_page(pte_t *pgtable, uint64 va, uint64 pa, int pte_flags);
 int map_pages(pte_t *pgtable, uint64 va, uint64 pa, uint64 size, int pte_flags);
 pte_t *init_vmem();
+
+// virtual/vcpu.c
+struct vcpu *init_vcpu();
+
+//virtual/vplic.c
+void vplic_handle_load_page_fault();
+void vplic_handle_store_or_amo_page_fault();
 
 // linkerscript (phys)
 extern char boottext[];

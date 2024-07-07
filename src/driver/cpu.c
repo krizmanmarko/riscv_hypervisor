@@ -37,8 +37,8 @@ init_hart(pte_t *pgtable)
 
 	// ACTUAL HART INIT (sstatus, sie, sip, satp, stvec)
 	CSRS(sstatus, SSTATUS_SIE);
-	CSRC(sie, SIE_STIE);
-	CSRS(hie, HIE_VSTIE);
+	CSRS(sie, SIE_SEIE);	// emulate external interrupts
+	CSRC(sie, SIE_STIE);	// pass-through timer (enable in hie)
 
 	reg = (uint64) hstrapvec;
 	reg &= TVEC_MODE;

@@ -1,5 +1,5 @@
 ## CONFIG
-NAME=iscream
+NAME=test_plic_emulation
 CROSS_COMPILE = /home/marko/shit/riscv-gnu-toolchain-from-source/mybuild/bin/riscv64-unknown-elf-
 BUILD_DIR = ./build
 CODE_DIRS = core

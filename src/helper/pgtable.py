@@ -18,17 +18,20 @@ def get_pgdir(pa):
 			pgdir.append(int(entry, 16))
 	return pgdir
 
-def get_pgdirs(pa):
+def get_pgdirs(pa, level):
 	pgdir = get_pgdir(pa)
 	pgdirs = [None] * 512
 	for i, pte in enumerate(pgdir):
 		if pte == None:
 			continue
 		if pte & pte_rwx:
-			pgdirs[i] = pte		# actual page
+			pgdirs[i] = pte		# found Mega/Giga page
 			continue
 		if pte & pte_v:
-			pgdirs[i] = get_pgdirs(pte2pa(pte))
+			if level > 0:
+				pgdirs[i] = get_pgdirs(pte2pa(pte), level - 1)
+			else:
+				pgdirs[i] = pte	# found page
 	return pgdirs
 
 def parse_pte(pte):
@@ -36,7 +39,9 @@ def parse_pte(pte):
 	r = 'r' if pte & (1 << 1) else '-'
 	w = 'w' if pte & (1 << 2) else '-'
 	x = 'x' if pte & (1 << 3) else '-'
-	return (pa, r, w, x)
+	u = 'u' if pte & (1 << 4) else '-'
+	g = 'g' if pte & (1 << 4) else '-'
+	return (pa, r, w, x, u, g)
 
 def get_va(i=None, j=None, k=None):
 	if i == None:
@@ -57,7 +62,7 @@ def get_va(i=None, j=None, k=None):
 
 def print_pte(root, pte, i=None, j=None, k=None):
 	va = get_va(i, j, k)
-	pa, r, w, x = parse_pte(pte)
+	pa, r, w, x, u, g = parse_pte(pte)
 	size = None
 	if i != None and j == None and k == None:
 		size = '1G'
@@ -71,10 +76,10 @@ def print_pte(root, pte, i=None, j=None, k=None):
 	else:
 		print('something went wrong...')
 		exit(1)
-	print(f'{root:16x}[{i:3d}][{j:3d}][{k:3d}] {size} {r}{w}{x}: {hex(va)} -> {hex(pa)}')
+	print(f'{root:16x}[{i:3d}][{j:3d}][{k:3d}] {size} {r}{w}{x} {u}{g}: {hex(va)} -> {hex(pa)}')
 
 def print_pgtable_sv39(pa):
-	l2 = get_pgdirs(pa)
+	l2 = get_pgdirs(pa, 2)
 	root = pa
 	for i, l2entry in enumerate(l2):
 		if isinstance(l2entry, int):

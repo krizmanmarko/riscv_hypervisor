@@ -228,8 +228,13 @@
 #define HCOUNTEREN_HPM(n) COUNT_HPM(n)
 
 // Hypervisor Time Delta Register
+
 // Hypervisor Trap Value Register
+//#define HTVAL_
+
 // Hypervisor Trap Instruction Register
+#define HTINST_READ 0x3000
+#define HTINST_WRITE 0x3020
 
 // Hypervisor Guest Address Translation and Protection Register
 #define HGATP_PPN ATP_PPN
@@ -273,22 +278,43 @@
 // r -> register
 // K -> https://gcc.gnu.org/onlinedocs/gcc/Machine-Constraints.html under risc-v
 #define CSRR(csr) ({ \
-	unsigned long _temp; \
-	__asm__ volatile("csrr  %0, " #csr "\n\r" \
-		: "=r"(_temp) \
+	unsigned long _tmp; \
+	__asm__ volatile("csrr  %0, " #csr ";" \
+		: "=r" (_tmp) \
 		: \
-		: "memory"); \
-	_temp; \
+		: "memory" \
+	); \
+	_tmp; \
 })
 
 #define CSRW(csr, val) \
-	__asm__ volatile("csrw  " #csr ", %0\n\r" : : "rK" (val) : "memory")
+	__asm__ volatile("csrw  " #csr ", %0;" : : "rK" (val) : "memory")
 
 #define CSRC(csr, mask) \
-	__asm__ volatile("csrc " #csr ", %0\n\n" : : "rK" (mask) : "memory")
+	__asm__ volatile("csrc " #csr ", %0;" : : "rK" (mask) : "memory")
 
 #define CSRS(csr, mask) \
-	__asm__ volatile("csrs " #csr ", %0\n\n" : : "rK" (mask) : "memory")
+	__asm__ volatile("csrs " #csr ", %0;" : : "rK" (mask) : "memory")
+
+// width is one of: b, bu, h, hu, w, wu, d
+#define HLV(width, addr) ({\
+	unsigned long _tmp; \
+	__asm__ volatile("hlv." #width " %1, 0(%0);" \
+		: "=r" (_tmp) \
+		: "rK" (addr) \
+		: "memory" \
+	); \
+	_tmp; \
+})
+
+#define HSV(width, val, addr) \
+	__asm__ volatile("hsv." #width " %0, 0(%1);" \
+		: \
+		: "r" (val), "r" (addr) \
+		: "memory" \
+	);
+
+//#define HLVX()
 
 #endif // __ASSEMBLER__
 #endif // RISCV_H

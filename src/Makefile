@@ -72,6 +72,7 @@ $(BUILD_DIR)/$(NAME): $(BUILD_DIR)/linkerscript.ld $(OBJECTS)
 	@$(CC) $(CFLAGS) -T $^ -o $@
 	@echo "\e[32m[+] Successfuly built $@!\e[0m"
 
+.PHONY: clean
 clean:
 	@rm -f tags
 	@rm -rf $(BUILD_DIR)/*

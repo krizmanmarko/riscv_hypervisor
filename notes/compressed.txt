@@ -1,0 +1,5 @@
+C instruction is used when:
+	- immediate/offset is small
+	- one of the registers is x0, x1 or x2
+	- rd == rs1
+	- registers used are from x8-x15
