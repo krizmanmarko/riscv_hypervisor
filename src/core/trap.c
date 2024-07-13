@@ -4,11 +4,11 @@
 #include "riscv.h"
 #include "types.h"
 #include "sbi.h"
-#include "stdio.h"
+#include "stdio.h"	// TODO: look at the warning
 
 // WARNING!
 // Locks do not disable interrupts. Do not use them in interrupt handlers unless
-// you know what you are doing. This also means no printf()
+// you know what you are doing. This also means printf() could be problematic
 
 void
 hs_interrupt_handler(uint64 scause)
@@ -19,13 +19,19 @@ hs_interrupt_handler(uint64 scause)
 // sbi_set_timer
 // 	timer 1 sekunda -> 10**7
 
-	scause = scause << 1 >> 1;
-	if (scause == INT_SUPERVISOR_TIM)
+	switch (scause << 1 >> 1) {
+	case INT_SUPERVISOR_TIM:
 		sbi_set_timer(CSRR(time) + 10000000);
-	else if (scause == INT_SUPERVISOR_EXT) {
+		break;
+	case INT_SUPERVISOR_EXT:
 		uint32 id = plic_claim(1);
-		printf("grabbed %u\n", ((char *)DTB_SERIAL)[0]);
-		plic_complete(1, id);
+		printf("HS grab\n");
+		vcpus[get_hartid()].last_claimed_irq_id = id;
+		CSRS(hvip, HVIP_VSEIP);
+		// plic_claim happens in vplic on store
+		break;
+	default:
+		panic("unknown interrupt %d\n", scause);
 	}
 }
 
@@ -66,17 +72,3 @@ hs_exception_handler(uint64 scause)
 		panic("unknown exception %d\n", scause);
 	}
 }
-
-/*
-I: imm[12] rs1[5] funct3[3] rd[5] opcode[7]
-lb	Load Byte	I	0000011	0x0	rd = M[rs1+imm][0:7]
-lh	Load Half	I	0000011	0x1	rd = M[rs1+imm][0:15]
-lw	Load Word	I	0000011	0x2	rd = M[rs1+imm][0:31]
-lbu	Load Byte (U)	I	0000011	0x4	rd = M[rs1+imm][0:7]	zero-extends
-lhu	Load Half (U)	I	0000011	0x5	rd = M[rs1+imm][0:15] zero-extends
-
-S: imm[7] rs2[5] rs1[5] funct3 imm[4:0] opcode
-sb	Store Byte 	S	0100011	0x0	M[rs1+imm][0:7]	= rs2[0:7]
-sh	Store Half 	S	0100011	0x1	M[rs1+imm][0:15] = rs2[0:15]
-sw	Store Word 	S	0100011	0x2	M[rs1+imm][0:31] = rs2[0:31]
-*/

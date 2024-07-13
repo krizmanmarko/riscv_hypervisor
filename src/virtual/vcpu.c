@@ -39,6 +39,7 @@ init_vcpu()
 	vcpu->conf = get_config_for_cpu(hartid);
 	memset(&vcpu->regs, '\x00', sizeof(vcpu->regs));
 	vcpu->vhartid = get_vhartid(hartid, vcpu->conf->cpu_affinity);
+	vcpu->last_claimed_irq_id = 0;
 	vcpu->regs.x[10] = vcpu->vhartid;
 	CSRW(sscratch, &vcpu->regs);
 

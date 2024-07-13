@@ -1,0 +1,9 @@
+qemu 8.0.2 -> download tarball i guess
+https://github.com/riscv-collab/riscv-gnu-toolchain/commit/8c969a9efe68a811cf524174d25255632029f3d3
+
+
+
+maybe???
+added another uart in qemu virt memory map (like this guy)
+https://github.com/qemu/qemu/compare/v5.2.0...vppillai:theButterRobot#diff-9d4fd54d50705c3869e1bf07967886f8da033c7dbad2890298f364b1df03f637
+hw/riscv/virt.c

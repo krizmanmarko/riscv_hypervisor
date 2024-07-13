@@ -1,19 +1,18 @@
 #!/bin/bash
 
-build_dir="../build/"
+src_dir=../src/
+build_dir=../build/
+
 /home/marko/shit/qemu-8.0.2/build/qemu-system-riscv64 \
 	-nographic \
 	-machine virt \
 	-kernel ${build_dir}hypervisor \
-	-smp 3 \
+	-cpu rv64 \
+	-smp $(grep DTB_NR_CPUS ${src_dir}include/dtb.h | cut -d' ' -f3) \
 	-m 1G \
-	-s -S \
-	-machine dumpdtb=riscv64-virt.dts
+	-machine dumpdtb=riscv64-virt.dtb \
+	-device pci-serial,chardev=pciserial -chardev socket,id=pciserial,host=localhost,port=4444,server \
 
-#/home/marko/shit/qemu-8.0.2/build/qemu-system-riscv64 \
-#	-machine virt \
-#	-smp 3 \
-#	-m 512M \
-#	-machine dumpdtb=riscv64-virt.dts
+dtc riscv64-virt.dtb > riscv64-virt.dts
 
-dtc riscv64-virt.dts > dtb.txt
+	#-device virtio-serial-device -chardev pty,id=serial3 -device virtconsole,chardev=serial3 \

@@ -4,6 +4,8 @@
 #include "stdio.h"
 #include "types.h"
 
+// TODO: make use of device struct (irq_phys -> irq_virt, hartid -> vhartid)
+
 // idea of this device is to multiplex plic accesses between virtual machines
 // claim/complete and thresholds just have to be correctly mapped
 // but other plic registers actually need hypervisor intervention
@@ -42,20 +44,25 @@ allow_word_access_to_enable_regs(uint64 offset, uint64 context)
 	return 0;
 }
 
-// handler area: threshold, claim/complete, reserved
 static int
-allow_word_access_to_handler_area(uint64 offset, uint64 context)
+allow_word_access_to_threshold_reg(uint64 offset, uint64 context)
 {
-	uint64 lowest, highest;
-	lowest = 0x200000 + 0x1000 * context;
-	highest = lowest + 0x1000;
-	if (lowest <= offset && offset < highest)
+	if (offset == 0x200000 + context * 0x1000)
+		return 1;
+	return 0;
+}
+
+static int
+allow_word_access_to_claim_complete_reg(uint64 offset, uint64 context)
+{
+	if (offset == 0x200004 + context * 0x1000)
 		return 1;
 	return 0;
 }
 
 // TODO: test this function
-static uint32
+// returns 32 bit mask or negative if claim/complete was accessed
+static int64
 get_restricted_mask(uint64 offset, int vcontext, struct mmio_dev *dev)
 {
 	if (dev->irq_virt == 0) {	// 0 - meaning no interrupts
@@ -69,17 +76,20 @@ get_restricted_mask(uint64 offset, int vcontext, struct mmio_dev *dev)
 	} else if (allow_word_access_to_enable_regs(offset, vcontext)) {
 		printf("allowing access to enable regs\n");
 		return 0xffffffff;
-	} else if (allow_word_access_to_handler_area(offset, vcontext)) {
-		printf("allowing read to handler area\n");
+	} else if (allow_word_access_to_threshold_reg(offset, vcontext)) {
+		printf("allowing access to threshold reg\n");
 		return 0xffffffff;
+	} else if (allow_word_access_to_claim_complete_reg(offset, vcontext)) {
+		printf("faking access to claim/complete reg\n");
+		return 0x8000000000000000;
 	}
 	return 0;
 }
 
-static uint32
+static int64
 verify_access(uint64 offset, int vcontext, struct mmio_dev **devs)
 {
-	uint32 mask;
+	int64 mask;
 	struct mmio_dev *dev;
 
 	mask = 0;
@@ -93,7 +103,7 @@ verify_access(uint64 offset, int vcontext, struct mmio_dev **devs)
 static void
 try_emulate_lwu(struct vcpu *vcpu, uint8 rd, uint64 addr)
 {
-	uint32 mask;	// restricted view (for interrupt pending bits)
+	int64 mask;	// restricted view (for interrupt pending bits)
 
 	// TODO: USE config struct for dtb_plic
 	mask = verify_access(
@@ -102,9 +112,13 @@ try_emulate_lwu(struct vcpu *vcpu, uint8 rd, uint64 addr)
 		vcpu->conf->devices
 	);
 
-	// TODO: use HLV.w
-	// execute restricted load
-	vcpu->regs.x[rd] = mask & *(uint32 *)addr;
+	if (mask < 0) {
+		// fake access to claim register
+		vcpu->regs.x[rd] = vcpu->last_claimed_irq_id;
+	} else {
+		// execute restricted load
+		vcpu->regs.x[rd] = mask & *(uint32 *)addr;
+	}
 }
 
 // lw sign extends 32-bit value and stores into 64-bit register
@@ -113,7 +127,7 @@ try_emulate_lw(struct vcpu *vcpu, uint8 rd, uint64 addr)
 {
 	try_emulate_lwu(vcpu, rd, addr);
 	// add sign extension
-	if (vcpu->regs.x[rd] | 0x80000000)
+	if (vcpu->regs.x[rd] & 0x80000000)
 		vcpu->regs.x[rd] |= 0xffffffff00000000;
 }
 
@@ -174,7 +188,7 @@ vplic_handle_load_page_fault()
 static void
 try_emulate_sw(struct vcpu *vcpu, uint8 rs2, uint64 addr)
 {
-	uint32 mask;	// restricted view (for interrupt pending bits)
+	int64 mask;	// restricted view (for interrupt pending bits)
 
 	// TODO: USE config struct for dtb_plic
 	mask = verify_access(
@@ -183,8 +197,15 @@ try_emulate_sw(struct vcpu *vcpu, uint8 rs2, uint64 addr)
 		vcpu->conf->devices
 	);
 
-	// TODO: use HSV.w
-	// execute restricted store
+	if (mask < 0) {		// this access is plic_complete
+		// complete with wrong irq_id is ignored
+		if (vcpu->last_claimed_irq_id == vcpu->regs.x[rs2]) {
+			vcpu->last_claimed_irq_id = 0;
+			CSRC(hvip, HVIP_VSEIP);
+			mask = 0xffffffff;
+		}
+	}
+	// execute restricted store or plic_complete
 	*(uint32 *)addr = mask & vcpu->regs.x[rs2];
 }
 

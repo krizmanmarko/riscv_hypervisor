@@ -48,14 +48,14 @@ trap:
 	add a0, a0, 1
 	call plic_claim
 	beq zero, a0, 1f	# if (claimed == 0) return
-	mv t0, a0
+	mv s1, a0
 
 	li s0, DTB_SERIAL
 	lb a0, 0(s0)
 	call uartputc
 	sll a0, tp, 1
 	add a0, a0, 1
-	mv a1, t0
+	mv a1, s1
 	call plic_complete
 
 	li a0, 10

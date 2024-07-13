@@ -68,10 +68,10 @@ init_hs(struct vm_config *conf)
 
 	CSRW(hstatus, HSTATUS_VSXL | HSTATUS_SPV);
 	CSRW(hedeleg, 0ULL);
-	CSRW(hideleg, HIDELEG_VSTI);
+	CSRW(hideleg, HIDELEG_VSTI | HIDELEG_VSEI);
 	CSRW(hvip, 0ULL);
 	CSRW(hip, 0ULL);
-	CSRW(hie, HIE_VSTIE);
+	CSRW(hie, 0); // if set in hideleg cannot be set here
 	CSRW(hgeie, 0ULL);
 	CSRW(hcounteren, HCOUNTEREN_TM);	// vm can now read time
 	CSRW(htimedelta, 0ULL);
@@ -140,8 +140,8 @@ vm_run(uint64 hartid)
 		init_hs_pgtable(vcpu->conf);
 	wait_barrier(&vcpu->conf->bar);
 
-	init_vs();
 	init_hs(vcpu->conf);
+	init_vs();
 
 	CSRS(sstatus, SSTATUS_SPP);
 	CSRW(sepc, vcpu->conf->entry);
