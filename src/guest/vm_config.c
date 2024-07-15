@@ -13,8 +13,8 @@ struct mmio_dev serial = {
 	.base_virt = DTB_SERIAL,
 	.size = PAGE_SIZE,
 	.perm = PTE_R | PTE_W,
-	.irq_phys = 10,
-	.irq_virt = 10
+	.phys_irq = 10,
+	.virt_irq = 10
 };
 
 struct mmio_dev emulated_plic = {
@@ -22,8 +22,8 @@ struct mmio_dev emulated_plic = {
 	.base_virt = DTB_PLIC,
 	.size = DTB_PLIC_SIZE,
 	.perm = 0,
-	.irq_phys = 0,
-	.irq_virt = 0
+	.phys_irq = 0,
+	.virt_irq = 0
 };
 
 struct vm_config config[] = {

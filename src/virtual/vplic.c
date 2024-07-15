@@ -1,283 +1,325 @@
 #include "bits.h"
 #include "defs.h"
+#include "memory.h"
 #include "riscv.h"
 #include "stdio.h"
 #include "types.h"
-
-// TODO: make use of device struct (irq_phys -> irq_virt, hartid -> vhartid)
-
-// idea of this device is to multiplex plic accesses between virtual machines
-// claim/complete and thresholds just have to be correctly mapped
-// but other plic registers actually need hypervisor intervention
-// luckily guests only setup these registers once so this shouldn't effect perf
-// VM hartid always starts at 0
-
-// From RISC-V privileged specification
-//    Hart IDs might not necessarily be numbered contiguously in a
-//    multiprocessor system, but at least one hart must have a hart ID of zero.
-
+#include "vplic.h"
 
 static int
-allow_word_access_to_priority_regs(uint64 offset, unsigned int irq_id)
+is_access_to_priority_reg(uint64 offset)
 {
-	if (offset == irq_id * 4)
+	if (offset < 0x1000)	// uint always >= 0
 		return 1;
 	return 0;
 }
 
 static int
-allow_word_access_to_pending_regs(uint64 offset, unsigned int irq_id)
+is_access_to_pending_regs(uint64 offset)
 {
-	if (offset == 0x1000 + irq_id / 32)
+	if (0x1000 <= offset && offset < 0x1080)
 		return 1;
 	return 0;
 }
 
 static int
-allow_word_access_to_enable_regs(uint64 offset, uint64 context)
+is_access_to_enable_regs(uint64 offset)
 {
-	uint64 lowest, highest;
-	lowest = 0x2000 + context * 0x80;
-	highest = lowest + 0x80;
-	if (lowest <= offset && offset < highest)
+	if (0x2000 <= offset && offset < 0x200000)
 		return 1;
 	return 0;
 }
 
 static int
-allow_word_access_to_threshold_reg(uint64 offset, uint64 context)
+is_access_to_threshold_reg(uint64 offset)
 {
-	if (offset == 0x200000 + context * 0x1000)
-		return 1;
+	for (unsigned int ctx = 0; ctx < 15872; ctx++)
+		if (0x200000 + ctx * 0x1000 == offset)
+			return 1;
 	return 0;
 }
 
 static int
-allow_word_access_to_claim_complete_reg(uint64 offset, uint64 context)
+is_access_to_claim_complete_reg(uint64 offset)
 {
-	if (offset == 0x200004 + context * 0x1000)
-		return 1;
+	for (unsigned int ctx = 0; ctx < 15872; ctx++)
+		if (0x200004 + ctx * 0x1000 == offset)
+			return 1;
 	return 0;
-}
-
-// TODO: test this function
-// returns 32 bit mask or negative if claim/complete was accessed
-static int64
-get_restricted_mask(uint64 offset, int vcontext, struct mmio_dev *dev)
-{
-	if (dev->irq_virt == 0) {	// 0 - meaning no interrupts
-		return 0;
-	} else if (allow_word_access_to_priority_regs(offset, dev->irq_virt)) {
-		printf("allowing access to priority regs\n");
-		return 0xffffffff;
-	} else if (allow_word_access_to_pending_regs(offset, dev->irq_virt)) {
-		printf("allowing access to pending regs\n");
-		return 1 << dev->irq_virt % 32;
-	} else if (allow_word_access_to_enable_regs(offset, vcontext)) {
-		printf("allowing access to enable regs\n");
-		return 0xffffffff;
-	} else if (allow_word_access_to_threshold_reg(offset, vcontext)) {
-		printf("allowing access to threshold reg\n");
-		return 0xffffffff;
-	} else if (allow_word_access_to_claim_complete_reg(offset, vcontext)) {
-		printf("faking access to claim/complete reg\n");
-		return 0x8000000000000000;
-	}
-	return 0;
-}
-
-static int64
-verify_access(uint64 offset, int vcontext, struct mmio_dev **devs)
-{
-	int64 mask;
-	struct mmio_dev *dev;
-
-	mask = 0;
-	dev = devs[0];
-	for (int i = 0; i < MAX_DEVICES && dev != 0; dev = devs[++i])
-		mask |= get_restricted_mask(offset, vcontext, dev);
-	return mask;
-}
-
-// lwu zero extends 32-bit value and stores into 64-bit register
-static void
-try_emulate_lwu(struct vcpu *vcpu, uint8 rd, uint64 addr)
-{
-	int64 mask;	// restricted view (for interrupt pending bits)
-
-	// TODO: USE config struct for dtb_plic
-	mask = verify_access(
-		addr - DTB_PLIC,
-		2 * vcpu->vhartid + 1,
-		vcpu->conf->devices
-	);
-
-	if (mask < 0) {
-		// fake access to claim register
-		vcpu->regs.x[rd] = vcpu->last_claimed_irq_id;
-	} else {
-		// execute restricted load
-		vcpu->regs.x[rd] = mask & *(uint32 *)addr;
-	}
-}
-
-// lw sign extends 32-bit value and stores into 64-bit register
-static void
-try_emulate_lw(struct vcpu *vcpu, uint8 rd, uint64 addr)
-{
-	try_emulate_lwu(vcpu, rd, addr);
-	// add sign extension
-	if (vcpu->regs.x[rd] & 0x80000000)
-		vcpu->regs.x[rd] |= 0xffffffff00000000;
 }
 
 static void
-try_emulate_load(struct vcpu *vcpu, uint64 addr)
+parse_htinst(struct instr *instr)
 {
-	uint64 htinst;
-	uint8 opcode, rd, funct3, addr_offset;
+	uint64 htinst = CSRR(htinst);
 
-	htinst = CSRR(htinst);	// 0... addr_offset[5] funct3[3] rd[5] opcode[7]
+	instr->opcode = get_value(htinst, 0, 7);
+	instr->rd = get_value(htinst, 7, 5);
+	instr->funct3 = get_value(htinst, 12, 3);
+	instr->addr_offset = get_value(htinst, 15, 5);
+	instr->rs2 = get_value(htinst, 20, 5);
 
-	opcode = get_value(htinst, 0, 7) | 2;	// replacing bit 1 by 1
-	rd = get_value(htinst, 7, 5);
-	funct3 = get_value(htinst, 12, 3);
-	// this is non zero only on misaligned access -> always zero in my case
-	addr_offset = get_value(htinst, 15, 5);
-
-	if (opcode != 0x3)
-		panic("Bad opcode for load");
-	if (addr_offset != 0)
+	if (instr->addr_offset != 0)
 		panic("Misaligned access with C extension???");
+	if (get_value(htinst, 25, 7) != 0)
+		panic("VPLIC does not support this instruction (AMO?)");
+}
 
-	switch (funct3) {
-	case 2:
-		try_emulate_lw(vcpu, rd, addr);
-		break;
-	case 6:
-		try_emulate_lwu(vcpu, rd, addr);
-		break;
-	default:
-		panic("Bad funct3 for load");
+static int
+virt_to_phys_irq(struct mmio_dev **devs, int virt_irq)
+{
+	for (int i = 0; i < MAX_DEVS && devs[i] != 0; i++)
+		if (virt_irq == devs[i]->virt_irq)
+			return devs[i]->phys_irq;
+	return 0;
+}
+
+static int
+phys_to_virt_irq(struct mmio_dev **devs, int phys_irq)
+{
+	for (int i = 0; i < MAX_DEVS && devs[i] != 0; i++)
+		if (phys_irq == devs[i]->phys_irq)
+			return devs[i]->virt_irq;
+	return 0;
+}
+
+static uint32
+handle_priority_reg_load(struct mmio_dev **devs, uint64 offset)
+{
+	int virt_irq, phys_irq;
+
+	virt_irq = offset / 4;
+	phys_irq = virt_to_phys_irq(devs, virt_irq);
+	return plic_get_priority(phys_irq);
+}
+
+static uint32
+handle_pending_regs_load(struct mmio_dev **devs, uint64 offset)
+{
+	int virt_irq, phys_irq;
+	int virt_irq_group;	// 32 bits together
+	uint32 masked;
+
+	virt_irq_group = (offset - 0x1000) / 4;
+	masked = 0;
+	for (int i = 0; i < 32; i++) {
+		virt_irq = virt_irq_group * 32 + i;
+		phys_irq = virt_to_phys_irq(devs, virt_irq);
+		if (plic_get_pending(phys_irq))
+			masked |= 1 << i;	// set virt_irq in this group
+	}
+	return masked;
+}
+
+static uint32
+handle_enable_regs_load(struct mmio_dev **devs,
+			uint64 offset,
+			uint64 vctx,
+			uint64 pctx)
+{
+	int virt_irq, phys_irq;
+	int virt_irq_group;	// 32 bits together
+	uint32 masked;
+
+	// bad access for this hart's vctx
+	if (vctx != (offset - 0x2000) / 0x80)
+		return 0;
+	virt_irq_group = (offset - 0x2000 - vctx * 0x80) / 4;
+	masked = 0;
+	for (int i = 0; i < 32; i++) {
+		virt_irq = virt_irq_group * 32 + i;
+		phys_irq = virt_to_phys_irq(devs, virt_irq);
+		if (plic_get_enabled(pctx, phys_irq))
+			masked |= 1 << i;	// set virt_irq in this group
+	}
+	return masked;
+}
+
+static uint32
+handle_threshold_reg_load(uint64 offset, uint64 vctx, uint64 pctx)
+{
+	// bad access for this hart's vctx
+	if (vctx != (offset - 0x200000) / 0x1000)
+		return 0;
+	return plic_get_threshold(pctx);
+}
+
+static uint32
+handle_claim_reg_load(struct mmio_dev **devs, uint64 offset, uint64 vctx)
+{
+	if (vctx != (offset - 0x200004) / 0x1000)
+		return 0;
+	// do not ACTUALLY plic_claim, just fake it
+	return phys_to_virt_irq(devs, get_vcpu()->last_claimed_irq_id);
+}
+
+static void
+emulate_load(struct instr *instr)
+{
+	struct vcpu *vcpu;
+	struct mmio_dev **devs;
+	uint64 offset, vctx, pctx;
+	uint32 val;
+
+	vcpu = get_vcpu();
+	devs = vcpu->conf->devices;
+	offset = instr->addr - DTB_PLIC;
+	vctx = 2 * vcpu->vhartid + 1;
+	pctx = 2 * get_hartid() + 1;
+	if (is_access_to_priority_reg(offset)) {
+		val = handle_priority_reg_load(devs, offset);
+	} else if (is_access_to_pending_regs(offset)) {
+		val = handle_pending_regs_load(devs, offset);
+	} else if (is_access_to_enable_regs(offset)) {
+		val = handle_enable_regs_load(devs, offset, vctx, pctx);
+	} else if (is_access_to_threshold_reg(offset)) {
+		val = handle_threshold_reg_load(offset, vctx, pctx);
+	} else if (is_access_to_claim_complete_reg(offset)) {
+		val = handle_claim_reg_load(devs, offset, vctx);
+	} else {
+		panic("Bad PLIC access");
 	}
 
-	// TODO: let's hope this is the only difference when using compressed
-	// For a standard compressed instruction (16-bit size), the transformed
-	// instruction is found as follows:
-	//   1. Expand the compressed instruction to its 32-bit equivalent.
-	//   2. Transform the 32-bit equivalent instruction.
-	//   3. Replace bit 1 with a 0.
-	if (CSRR(htinst) & 2)
+	vcpu->regs.x[instr->rd] = val;
+	if (instr->funct3 == 2 && val & 0x80000000)	// lw (signed load)
+		vcpu->regs.x[instr->rd] |= 0xffffffff00000000;
+
+	if (instr->opcode & 2)
 		CSRW(sepc, CSRR(sepc) + 4);	// uncompressed load
 	else
 		CSRW(sepc, CSRR(sepc) + 2);	// compressed load
 }
 
 void
-vplic_handle_load_page_fault()
+vplic_handle_load_page_fault(uint64 addr)
 {
-	uint64 addr;
-	struct vcpu *vcpu;
+	struct instr instr;
+	parse_htinst(&instr);
+	if ((instr.opcode | 2) != 0x3)	// replacing bit 1 with 1 (isa 8.6.3)
+		panic("Bad opcode for load");
+	if (instr.funct3 != 2 && instr.funct3 != 6)
+		panic("Bad funct3 for load");
 
-	addr = CSRR(stval);
-	vcpu = &vcpus[get_hartid()];
-	try_emulate_load(vcpu, addr);
+	instr.addr = addr;
+	emulate_load(&instr);
 }
 
-// lwu zero extends 32-bit value and stores into 64-bit register
 static void
-try_emulate_sw(struct vcpu *vcpu, uint8 rs2, uint64 addr)
+handle_priority_reg_store(struct mmio_dev **devs, uint64 offset, uint32 val)
 {
-	int64 mask;	// restricted view (for interrupt pending bits)
+	int virt_irq, phys_irq;
 
-	// TODO: USE config struct for dtb_plic
-	mask = verify_access(
-		addr - DTB_PLIC,
-		2 * vcpu->vhartid + 1,
-		vcpu->conf->devices
-	);
+	virt_irq = offset / 4;
+	phys_irq = virt_to_phys_irq(devs, virt_irq);
+	plic_set_priority(phys_irq, val);
+}
 
-	if (mask < 0) {		// this access is plic_complete
-		// complete with wrong irq_id is ignored
-		if (vcpu->last_claimed_irq_id == vcpu->regs.x[rs2]) {
-			vcpu->last_claimed_irq_id = 0;
-			CSRC(hvip, HVIP_VSEIP);
-			mask = 0xffffffff;
-		}
+static void
+handle_enable_regs_store(struct mmio_dev **devs,
+			 uint64 offset,
+			 uint32 val,
+			 uint64 vctx,
+			 uint64 pctx)
+{
+	int virt_irq, phys_irq;
+	int virt_irq_group;	// 32 bits together
+
+	// bad access for this hart's vctx
+	if (vctx != (offset - 0x2000) / 0x80)
+		return;
+	virt_irq_group = (offset - 0x2000 - vctx * 0x80) / 4;
+	for (int i = 0; i < 32; i++) {
+		virt_irq = virt_irq_group * 32 + i;
+		phys_irq = virt_to_phys_irq(devs, virt_irq);
+		plic_set_enabled(pctx, phys_irq, 1 << i & val);
 	}
-	// execute restricted store or plic_complete
-	*(uint32 *)addr = mask & vcpu->regs.x[rs2];
 }
 
 static void
-try_emulate_store_or_amo(struct vcpu *vcpu, uint64 addr)
+handle_threshold_reg_store(uint64 offset, uint64 vctx, uint64 pctx, uint64 val)
 {
-	// how does amo look???? -> check aq and rl bits and exit if set
-	uint64 htinst;
-	uint8 opcode, funct3, addr_offset, rs2;
+	if (vctx != (offset - 0x200000) / 0x1000)
+		return;
+	return plic_set_threshold(pctx, val);
+}
 
-	htinst = CSRR(htinst);
-	opcode = get_value(htinst, 0, 7) | 2;	// replacing bit 1 by 1
-	funct3 = get_value(htinst, 12, 3);
-	addr_offset = get_value(htinst, 15, 5);
-	rs2 = get_value(htinst, 20, 5);
-	if ((get_value(htinst, 7, 5) | get_value(htinst, 25, 7)) != 0)
-		panic("VPLIC does not support AMO");
+static void
+handle_complete_reg_store(struct vcpu *vcpu,
+			  uint64 offset,
+			  uint64 vctx,
+			  uint64 pctx,
+			  uint32 val)
+{
+	uint32 phys_irq;
+	if (vctx != (offset - 0x200004) / 0x1000)
+		return;
+	phys_irq = virt_to_phys_irq(vcpu->conf->devices, val);
+	if (phys_irq == vcpu->last_claimed_irq_id) {
+		plic_complete(pctx, phys_irq);
+		vcpu->last_claimed_irq_id = 0;
+		CSRC(hvip, HVIP_VSEIP);
+	}
+}
 
-	if (opcode != 0x23)
-		panic("Bad opcode for store");
-	if (addr_offset != 0)
-		panic("Misaligned access with C extension???");
+static void
+emulate_store(struct instr *instr)
+{
+	struct vcpu *vcpu;
+	struct mmio_dev **devs;
+	uint64 offset, vctx, pctx;
+	uint32 val;
 
-	if (funct3 == 2)
-		try_emulate_sw(vcpu, rs2, addr);
-	else
-		panic("Bad funct3 for store");
+	vcpu = get_vcpu();
+	devs = vcpu->conf->devices;
+	offset = instr->addr - DTB_PLIC;
+	vctx = 2 * vcpu->vhartid + 1;
+	pctx = 2 * get_hartid() + 1;
+	val = vcpu->regs.x[instr->rs2];
+	if (is_access_to_priority_reg(offset)) {
+		handle_priority_reg_store(devs, offset, val);
+	} else if (is_access_to_pending_regs(offset)) {
+		// nop (I am guessing pending is read only)
+	} else if (is_access_to_enable_regs(offset)) {
+		handle_enable_regs_store(devs, offset, val, vctx, pctx);
+	} else if (is_access_to_threshold_reg(offset)) {
+		handle_threshold_reg_store(offset, vctx, pctx, val);
+	} else if (is_access_to_claim_complete_reg(offset)) {
+		handle_complete_reg_store(vcpu, offset, vctx, pctx, val);
+	} else {
+		panic("Bad PLIC access");
+	}
 
-	if (CSRR(htinst) & 2)
-		CSRW(sepc, CSRR(sepc) + 4);	// uncompressed store / amo
+	// no need to edit VM's regs
+
+	if (instr->opcode & 2)
+		CSRW(sepc, CSRR(sepc) + 4);	// uncompressed store
 	else
 		CSRW(sepc, CSRR(sepc) + 2);	// compressed store
 }
 
 void
-vplic_handle_store_or_amo_page_fault()
+vplic_handle_store_or_amo_page_fault(uint64 addr)
 {
-	uint64 addr;
-	struct vcpu *vcpu;
+	struct instr instr;
+	parse_htinst(&instr);
 
-	addr = CSRR(stval);
-	vcpu = &vcpus[get_hartid()];
-	try_emulate_store_or_amo(vcpu, addr);
+	if ((instr.opcode | 2) != 0x23)	// replacing bit 1 with 1 (isa 8.6.3)
+		panic("Bad opcode for store");
+	if (instr.funct3 != 2)
+		panic("Bad funct3 for store");
+
+	instr.addr = addr;
+	emulate_store(&instr);
 }
 
-/*
-NOT COMPRESSED
-83008100	lb	ra, 8(sp)
-83408100	lbu	ra, 8(sp)
-83108100	lh	ra, 8(sp)
-83508100	lhu	ra, 8(sp)
-83208100	lw	ra, 8(sp)
-83608100	lwu	ra, 8(sp)
-83308100	ld	ra, 8(sp)
-23041100	sb	ra, 8(sp)
-23141100	sh	ra, 8(sp)
-23241100	sw	ra, 8(sp)
-23341100	sd	ra, 8(sp)
-13000000	nop
-
-COMPRESSED
-83008100	lb	ra, 8(sp)
-83408100	lbu	ra, 8(sp)
-83108100	lh	ra, 8(sp)
-83508100	lhu	ra, 8(sp)
-a240		lw	ra, 8(sp)
-83608100	lwu	ra, 8(sp)
-a260		ld	ra, 8(sp)
-23041100	sb	ra, 8(sp)
-23141100	sh	ra, 8(sp)
-06c4		sw	ra, 8(sp)
-06e4		sd	ra, 8(sp)
-0100		nop
-
-*/
+// injects interrupt to VS-level if plic_claim is successful
+// WARNING! -> do not use locks in interrupt (does not apply to exceptions)
+void
+vplic_handle_interrupt()
+{
+	uint64 hartid = get_hartid();
+	struct vcpu *vcpu = get_vcpu();
+	vcpu->last_claimed_irq_id = plic_claim(2 * hartid + 1);
+	if (vcpu->last_claimed_irq_id != 0)
+		CSRS(hvip, HVIP_VSEIP);
+}

@@ -31,7 +31,8 @@ init_hs_pgtable(struct vm_config *conf)
 		conf->memory_base,	// va
 		conf->image_base,	// pa
 		conf->image_size,	// size
-		PTE_U | PTE_R | PTE_W | PTE_X
+		PTE_U | PTE_R | PTE_W | PTE_X,
+		1
 	);
 
 	// map leftover memory
@@ -49,7 +50,8 @@ init_hs_pgtable(struct vm_config *conf)
 			dev->base_virt,
 			dev->base_phys,
 			dev->size,
-			dev->perm | PTE_U
+			dev->perm | PTE_U,
+			1
 		);
 		if (rv < 0) {
 			panic("Failed to map MMIO device %d", i);
@@ -135,7 +137,8 @@ vm_run(uint64 hartid)
 	}
 	wait_barrier(&bar);
 
-	vcpu = init_vcpu();
+	vcpu = get_vcpu();
+	init_vcpu(vcpu);
 	if (vcpu->vhartid == 0)
 		init_hs_pgtable(vcpu->conf);
 	wait_barrier(&vcpu->conf->bar);

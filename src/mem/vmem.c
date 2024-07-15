@@ -1,3 +1,4 @@
+#include "bits.h"
 #include "defs.h"
 #include "dtb.h"
 #include "cpu.h"
@@ -6,12 +7,27 @@
 #include "stdio.h"
 #include "string.h"
 
-static int map_gigapage(pte_t *pgtable, uint64 va, uint64 pa, int pte_flags);
+static int map_gigapage(
+	pte_t *pgtable,
+	uint64 va,
+	uint64 pa,
+	int pte_flags,
+	int x4
+);
+
+static uint64
+va2idx(uint64 va, int level, int x4)
+{
+	if (level == LEVELS - 1 && x4 != 0)	// root page table (sv39x4)
+			return get_value(va, level * 9 + PAGE_SHIFT, 11);
+	return get_value(va, level * 9 + PAGE_SHIFT, 9);
+}
 
 // returns page table entry on success or 0 on fail
 // currently does not support megapages or gigapages
+// if sv39x4 pgtable: x4 = true
 pte_t *
-walk(pte_t *pgtable, uint64 va, int alloc)
+walk(pte_t *pgtable, uint64 va, int alloc, int x4)
 {
 	pte_t *pte;	// page table entry
 	pte_t *kpa;	// not actual physical address (of page table)
@@ -21,7 +37,7 @@ walk(pte_t *pgtable, uint64 va, int alloc)
 
 	kpa = pgtable;
 	for (int level = LEVELS - 1; level > 0; level--) {
-		pte = &kpa[VA2IDX(level, va)];
+		pte = &kpa[va2idx(va, level, x4)];
 		if (*pte & PTE_V) {
 			kpa = (pte_t *)PA2KPA(PTE2PA(*pte));
 		} else {
@@ -31,16 +47,16 @@ walk(pte_t *pgtable, uint64 va, int alloc)
 			*pte = PA2PTE((uint64) KPA2PA((uint64) kpa)) | PTE_V;
 		}
 	}
-	return &kpa[VA2IDX(0, va)];
+	return &kpa[va2idx(va, 0, x4)];
 }
 
 // returns 0 on success, -1 on fail
 int
-map_page(pte_t *pgtable, uint64 va, uint64 pa, int pte_flags)
+map_page(pte_t *pgtable, uint64 va, uint64 pa, int pte_flags, int x4)
 {
 	pte_t *leaf;
 
-	if ((leaf = walk(pgtable, va, 1)) == 0)
+	if ((leaf = walk(pgtable, va, 1, x4)) == 0)
 		return -1;
 	if (*leaf & PTE_V)
 		panic("tried to remap page");
@@ -49,7 +65,7 @@ map_page(pte_t *pgtable, uint64 va, uint64 pa, int pte_flags)
 }
 
 static int
-map_gigapage(pte_t *pgtable, uint64 va, uint64 pa, int pte_flags)
+map_gigapage(pte_t *pgtable, uint64 va, uint64 pa, int pte_flags, int x4)
 {
 	if (pgtable == 0)
 		panic("root page table doesn't exist");
@@ -57,25 +73,25 @@ map_gigapage(pte_t *pgtable, uint64 va, uint64 pa, int pte_flags)
 	// check alignment (both va and pa must be aligned)
 	if (((va | pa) & 0x3fffffff) != 0)
 		return -1;
-	pgtable[VA2IDX(2, va)] = PA2PTE(pa) | pte_flags | PTE_V;
+	pgtable[va2idx(va, 2, x4)] = PA2PTE(pa) | pte_flags | PTE_V;
 	return 0;
 }
 
 // va, pa and size may not be page aligned
 // returns 0 on success, -1 on fail
 int
-map_pages(pte_t *pgtable, uint64 va, uint64 pa, uint64 size, int pte_flags)
+map_pages(pte_t *pgtable, uint64 va, uint64 pa, uint64 size, int pte_flags, int x4)
 {
 	// 0x40000000 -> 1GB
 	while (size >= 0x40000000) {
-		if (map_gigapage(pgtable, va, pa, pte_flags) < 0)
+		if (map_gigapage(pgtable, va, pa, pte_flags, x4) < 0)
 			return -1;
 		va += 0x40000000;
 		pa += 0x40000000;
 		size -= 0x40000000;
 	}
 	for (uint64 i = 0; i < PGROUNDUP(size); i += PAGE_SIZE) {
-		if (map_page(pgtable, va + i, pa + i, pte_flags) < 0) {
+		if (map_page(pgtable, va + i, pa + i, pte_flags, x4) < 0) {
 			return -1;
 		}
 	}
@@ -94,13 +110,13 @@ init_vmem()
 	memset(root, '\x00', PAGE_SIZE);
 
 	// map MMIO
-	rv = map_page(root, DTB_FLASH, DTB_FLASH, PTE_R | PTE_W | PTE_G);
-	rv += map_page(root, DTB_PLATFORM_BUS, DTB_PLATFORM_BUS, PTE_R | PTE_W | PTE_G);
-	rv += map_page(root, DTB_RTC, DTB_RTC, PTE_R | PTE_W | PTE_G);
-	rv += map_page(root, DTB_SERIAL, DTB_SERIAL, PTE_R | PTE_W | PTE_G);
-	rv += map_pages(root, DTB_PCI, DTB_PCI, DTB_PCI_SIZE, PTE_R | PTE_W | PTE_G);
-	rv += map_pages(root, DTB_PLIC, DTB_PLIC, DTB_PLIC_SIZE, PTE_R | PTE_W | PTE_G);
-	rv += map_pages(root, DTB_CLINT, DTB_CLINT, DTB_CLINT_SIZE, PTE_R | PTE_W | PTE_G);
+	rv = map_page(root, DTB_FLASH, DTB_FLASH, PTE_R | PTE_W | PTE_G, 0);
+	rv += map_page(root, DTB_PLATFORM_BUS, DTB_PLATFORM_BUS, PTE_R | PTE_W | PTE_G, 0);
+	rv += map_page(root, DTB_RTC, DTB_RTC, PTE_R | PTE_W | PTE_G, 0);
+	rv += map_page(root, DTB_SERIAL, DTB_SERIAL, PTE_R | PTE_W | PTE_G, 0);
+	rv += map_pages(root, DTB_PCI, DTB_PCI, DTB_PCI_SIZE, PTE_R | PTE_W | PTE_G, 0);
+	rv += map_pages(root, DTB_PLIC, DTB_PLIC, DTB_PLIC_SIZE, PTE_R | PTE_W | PTE_G, 0);
+	rv += map_pages(root, DTB_CLINT, DTB_CLINT, DTB_CLINT_SIZE, PTE_R | PTE_W | PTE_G, 0);
 	if (rv < 0)
 		panic("failed to map %s", "MMIO");
 
@@ -108,33 +124,33 @@ init_vmem()
 	va = (uint64) text;
 	pa = KVA2PA((uint64) text);
 	size = (unsigned int) (etext - text);
-	if (map_pages(root, va, pa, size, PTE_R | PTE_X | PTE_G))
+	if (map_pages(root, va, pa, size, PTE_R | PTE_X | PTE_G, 0))
 		panic("failed to map %s", ".text");
 
 	va = (uint64) rodata;
 	pa = KVA2PA((uint64) rodata);
 	size = (unsigned int) (erodata - rodata);
-	if (map_pages(root, va, pa, size, PTE_R | PTE_G))
+	if (map_pages(root, va, pa, size, PTE_R | PTE_G, 0))
 		panic("failed to map %s", ".rodata");
 
 	va = (uint64) data;
 	pa = KVA2PA((uint64) data);
 	size = (unsigned int) (edata - data);
-	if (map_pages(root, va, pa, size, PTE_R | PTE_W | PTE_G))
+	if (map_pages(root, va, pa, size, PTE_R | PTE_W | PTE_G, 0))
 		panic("failed to map %s", ".data");
 
 	// map stack
 	va = VAS_CPU_STRUCT;
 	pa = KVA2PA((uint64) mycpu());
 	size = sizeof(struct cpu);
-	if (map_pages(root, va, pa, size, PTE_R | PTE_W))
+	if (map_pages(root, va, pa, size, PTE_R | PTE_W, 0))
 		panic("failed to map %s", "cpu struct");
 
 	// map whole RAM
 	va = VAS_RAM;
 	pa = DTB_MEMORY;
 	size = DTB_MEMORY_SIZE;
-	if (map_pages(root, va, pa, size, PTE_R | PTE_W | PTE_G))
+	if (map_pages(root, va, pa, size, PTE_R | PTE_W | PTE_G, 0))
 		panic("failed to map %s", "RAM");
 
 	return root;

@@ -24,15 +24,21 @@ hs_interrupt_handler(uint64 scause)
 		sbi_set_timer(CSRR(time) + 10000000);
 		break;
 	case INT_SUPERVISOR_EXT:
-		uint32 id = plic_claim(1);
-		printf("HS grab\n");
-		vcpus[get_hartid()].last_claimed_irq_id = id;
-		CSRS(hvip, HVIP_VSEIP);
-		// plic_claim happens in vplic on store
+		vplic_handle_interrupt();
 		break;
 	default:
 		panic("unknown interrupt %d\n", scause);
 	}
+}
+
+static uint64
+get_pa(pte_t *pgtable)
+{
+	uint64 gpa = CSRR(htval) << 2;
+	pte_t *pte = walk(pgtable, gpa, 0, 1);
+	uint64 page_pa = PTE2PA(*pte);
+	uint64 pa = page_pa | get_value(gpa, 0, 12);
+	return pa;
 }
 
 static int
@@ -40,15 +46,18 @@ is_access_to_plic()
 {
 	// TODO: PLIC can be mapped anywhere, use config.device struct
 	//       to check correctly
-	uint64 addr = CSRR(stval);
-	if (addr < DTB_PLIC || DTB_PLIC + DTB_PLIC_SIZE < addr)
-		return 0;
-	return 1;
+	uint64 addr = get_pa(get_vcpu()->conf->vm_pgtable);
+	if (DTB_PLIC <= addr && addr < DTB_PLIC + DTB_PLIC_SIZE)
+		return addr;
+	return 0;
 }
+
 
 void
 hs_exception_handler(uint64 scause)
 {
+	uint64 addr;
+
 	switch (scause) {
 	case EXC_ECALL_FROM_VS:
 		//TODO: testing
@@ -57,14 +66,14 @@ hs_exception_handler(uint64 scause)
 		CSRW(sepc, CSRR(sepc) + 4);
 		break;
 	case EXC_LOAD_GUEST_PAGE_FAULT:
-		if (is_access_to_plic())
-			vplic_handle_load_page_fault();
+		if ((addr = is_access_to_plic()))
+			vplic_handle_load_page_fault(addr);
 		else
 			panic("Bad read access\n");
 		break;
 	case EXC_STORE_OR_AMO_GUEST_PAGE_FAULT:
-		if (is_access_to_plic())
-			vplic_handle_store_or_amo_page_fault();
+		if ((addr = is_access_to_plic()))
+			vplic_handle_store_or_amo_page_fault(addr);
 		else
 			panic("Bad write access\n");
 		break;

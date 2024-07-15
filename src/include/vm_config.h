@@ -6,7 +6,7 @@
 #include "types.h"
 #include "vcpu.h"
 
-#define MAX_DEVICES 10
+#define MAX_DEVS 10
 #define ADDRESS(vm_image_start) ((uint64) KVA2PA(vm_image_start))
 
 // https://developers.redhat.com/blog/2019/07/05/how-to-store-large-amounts-of-data-in-a-program#the_incbin_directive
@@ -29,8 +29,8 @@ struct mmio_dev {
 	uint64 base_virt;
 	uint64 size;
 	uint64 perm;	// emulated devices must have 0 permissions
-	int irq_phys;	// actual interrupt number (0 means no interrupt)
-	int irq_virt;	// virtualised interrupt number (1:1 mapping)
+	int phys_irq;	// actual interrupt number (0 means no interrupt)
+	int virt_irq;	// virtualised interrupt number (1:1 mapping)
 };
 
 struct vm_config {
@@ -41,7 +41,7 @@ struct vm_config {
 	uint64 memory_base;	// location of RAM
 	uint64 memory_size;	// allocated RAM for this VM
 	uint64 entry;
-	struct mmio_dev *devices[MAX_DEVICES];	// NULL terminated array
+	struct mmio_dev *devices[MAX_DEVS];	// NULL terminated array
 
 	// per vm memory allocations
 	struct barrier bar;

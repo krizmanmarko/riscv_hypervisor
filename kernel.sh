@@ -6,7 +6,6 @@ build_dir="./build/"
 /home/marko/shit/qemu-8.0.2/build/qemu-system-riscv64 \
 	-nographic \
 	-machine virt \
-        -device pci-serial,chardev=pciserial -chardev socket,id=pciserial,host=127.0.0.1,port=4444,server=on \
 	-kernel ${build_dir}hypervisor \
 	-cpu rv64 \
 	-smp $(grep DTB_NR_CPUS src/include/dtb.h | cut -d' ' -f3) \
@@ -14,6 +13,7 @@ build_dir="./build/"
 	-gdb tcp::1111 \
 	-S #-machine dumpdtb=dtb/double_uart.dts
 
+        #-device pci-serial,chardev=pciserial -chardev socket,id=pciserial,host=127.0.0.1,port=4444,server=on \
 
 # when changing smp value, do not forget to set DTB_NR_CPUS in include/dtb.h
 
