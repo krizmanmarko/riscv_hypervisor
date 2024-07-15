@@ -1,8 +1,6 @@
 .section ".boot", "ax"
 .globl _start
-
-#define CONTEXT 1
-#define DTB_SERIAL 0x10000000
+#include "dtb.h"
 
 _start:
 	mv tp, a0
@@ -23,18 +21,18 @@ _start:
 	call uartputc
 
 	# init plic (hartid=0)
-	li a0, 10
+	li a0, DTB_SERIAL_IRQ_NUM
 	li a1, 1
-	call plic_set_priority
+	call plic_set_priority	# interrupt_source, enabled
 	sll a0, tp, 1
 	add a0, a0, 1
-	li a1, 10
+	li a1, DTB_SERIAL_IRQ_NUM
 	li a2, 1
-	call plic_set_enabled
+	call plic_set_enabled	# context, interrupt_source, enabled
 	sll a0, tp, 1
 	add a0, a0, 1
 	li a1, 0
-	call plic_set_threshold
+	call plic_set_threshold	# context, threshold
 
 suspend:
 	wfi

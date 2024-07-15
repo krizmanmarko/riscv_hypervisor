@@ -1,6 +1,5 @@
-#include <types.h>
-
-#define DTB_PLIC 0xc000000
+#include "dtb.h"
+#include "types.h"
 
 // plic is a constant pointer to int (and not pointer to constant int)
 static volatile uint32 *const plic = (uint32 *)DTB_PLIC;
