@@ -36,7 +36,7 @@ set_timer:
 	csrr a0, time
 	li t2, 10000000
 	add a0, a0, t2
-	call sbi_set_timer
+	csrw stimecmp, a0
 	mv ra, t0
 	ret
 

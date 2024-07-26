@@ -2,7 +2,7 @@
 NAME=printer
 CROSS_COMPILE = /home/marko/shit/riscv-gnu-toolchain-from-source/mybuild/bin/riscv64-unknown-elf-
 BUILD_DIR = ./build
-CODE_DIRS = core lib
+CODE_DIRS = core
 ## END CONFIG
 
 # build directory creation
