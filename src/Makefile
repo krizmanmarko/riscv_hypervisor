@@ -5,9 +5,6 @@ BUILD_DIR = ../build
 CODE_DIRS = core driver guest lib mem virtual #test
 ## END CONFIG
 
-MAKEFLAGS := --jobs=$(shell nproc)
-MAKEFLAGS += --output-sync=target	# suppress recursive make output
-
 # build directory creation
 $(shell mkdir -p $(BUILD_DIR))
 $(foreach DIR,$(CODE_DIRS),$(shell mkdir -p $(BUILD_DIR)/$(DIR)))
@@ -77,5 +74,10 @@ clean:
 	@rm -f tags
 	@rm -rf $(BUILD_DIR)/*
 	@echo "[i] cleaned up"
+
+.PHONY: full-rebuild
+full-rebuild: clean
+	cd guest/imgs && ./refresh.sh
+	$(MAKE) default
 
 -include $(DEPFILES)

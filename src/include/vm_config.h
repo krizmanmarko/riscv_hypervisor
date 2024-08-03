@@ -7,7 +7,8 @@
 #include "vcpu.h"
 
 #define MAX_DEVS 10
-#define ADDRESS(vm_image_start) ((uint64) KVA2PA(vm_image_start))
+#define ADDRESS(vm_image) ((uint64) KVA2PA(vm_image))
+#define END_ADDRESS(vm_image) ((uint64) KVA2PA(vm_image##_end))
 
 // https://developers.redhat.com/blog/2019/07/05/how-to-store-large-amounts-of-data-in-a-program#the_incbin_directive
 // Note: cannot have do {} while (0) because it is used in top namespace.
@@ -36,9 +37,9 @@ struct mmio_dev {
 struct vm_config {
 	// config
 	uint64 cpu_affinity;
-	uint64 image_base;	// where binary in physical memory
-	uint64 image_size;	// size of binary
-	uint64 memory_base;	// location of RAM
+	uint64 image_base;	// where binary begins in KPA
+	uint64 image_end;	// where binary ends in KPA
+	uint64 memory_base;	// location of RAM (gpa)
 	uint64 memory_size;	// allocated RAM for this VM
 	uint64 entry;
 	struct mmio_dev *devices[MAX_DEVS];	// NULL terminated array

@@ -48,5 +48,6 @@ init_vcpu(struct vcpu *vcpu)
 	vcpu->vhartid = get_vhartid(hartid, vcpu->conf->cpu_affinity);
 	vcpu->last_claimed_irq_id = 0;
 	vcpu->regs.x[10] = vcpu->vhartid;
+	vcpu->regs.x[11] = 0xff;	// use paravirt drivers for virtio
 	CSRW(sscratch, &vcpu->regs);
 }

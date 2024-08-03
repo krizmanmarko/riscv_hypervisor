@@ -14,7 +14,10 @@ def get_pgdir(pa):
 	pgdir_text = gdb.execute('x/512gx ' + str(pa), to_string=True)
 	pgdir = []
 	for line in pgdir_text.split('\n'):
-		for entry in line.split()[1:]:
+		if len(line) < 1:
+			continue
+		line = line.split(':')[1].split()
+		for entry in line:
 			pgdir.append(int(entry, 16))
 	return pgdir
 
@@ -94,12 +97,13 @@ def print_pgtable_sv39(pa):
 							print_pte(root, l0entry, i, j, k)
 
 # supply the root page table address
-def pgtable(address):
+def pgtable(address, guest=False):
 	# disable memory protection, so I can traverse page table
 	satp = int(gdb.execute('info registers satp', to_string=True).split()[1], 16)
 	hgatp = int(gdb.execute('info registers hgatp', to_string=True).split()[1], 16)
 	gdb.execute('set $satp = 0')
-	gdb.execute('set $hgatp = 0')
+	if not guest:
+		gdb.execute('set $hgatp = 0')
 
 	pa = address
 	try:
@@ -107,4 +111,5 @@ def pgtable(address):
 	finally:
 		# on exit reenable satp and hgatp
 		gdb.execute('set $satp = ' + str(satp))
-		gdb.execute('set $hgatp = ' + str(hgatp))
+		if not guest:
+			gdb.execute('set $hgatp = ' + str(hgatp))

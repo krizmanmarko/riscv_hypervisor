@@ -3,7 +3,7 @@
 // current stage: somewhat primitive (no interrupts)
 // check out: https://www.lammertbies.nl/comm/info/serial-uart
 
-#define DTB_SERIAL 2*0x10000000
+#include "dtb.h"
 #define BASE DTB_SERIAL
 #define REG(reg) ((unsigned char *)(BASE + reg))
 #define R_REG(reg) (*REG(reg))

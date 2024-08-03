@@ -62,15 +62,19 @@ int map_pages(
 	int x4
 );
 pte_t *init_vmem();
+uint64 convert_va_to_pa(pte_t *pgtable, uint64 va, int x4);
 
 // virtual/vcpu.c
 struct vcpu *get_vcpu();
 void init_vcpu();
 
-//virtual/vplic.c
+// virtual/vplic.c
 void vplic_handle_load_page_fault(uint64 addr);
 void vplic_handle_store_or_amo_page_fault(uint64 addr);
 void vplic_handle_interrupt();
+
+// virtual/vvirtio_mmio.c
+void virtio_handle_store_or_amo_page_fault(uint64 addr);
 
 // linkerscript (phys)
 extern char boottext[];

@@ -5,6 +5,7 @@
 #include "lock.h"
 #include "memory.h"
 #include "stdio.h"
+#include "string.h"
 #include "types.h"
 
 // Wondering what on earth this is?
@@ -42,6 +43,8 @@ kmalloc()
 	if (page)
 		kmem.freelist = page->next;
 	release(&kmem.lk);
+	// must be memset to zero because xv6 expects memory to be initialized
+	memset(page, 0x41, PAGE_SIZE);	// does slow down, but prevents leaks
 
 	return (void *)page;
 }

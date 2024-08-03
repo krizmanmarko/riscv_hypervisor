@@ -11,6 +11,7 @@
 #define PAGE_SHIFT 12
 #define PAGE_SIZE (1 << PAGE_SHIFT)
 
+// DO NOT CHANGE -> stuff breaks...
 #define VAS_KERNEL (0xffffffc000000000)
 #define VAS_CPU_STRUCT (0xffffffc040000000)
 #define VAS_RAM (0xffffffe000000000)

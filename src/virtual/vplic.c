@@ -4,7 +4,7 @@
 #include "riscv.h"
 #include "stdio.h"
 #include "types.h"
-#include "vplic.h"
+#include "emulate.h"
 
 static int
 is_access_to_priority_reg(uint64 offset)

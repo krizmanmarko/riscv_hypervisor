@@ -22,26 +22,34 @@ init_hs_pgtable(struct vm_config *conf)
 {
 	int i, rv;
 	struct mmio_dev *dev;
+	uint64 image_size;
 
 	memset(conf->vm_pgtable, '\x00', PAGE_SIZE * 4);
+	image_size = PGROUNDUP(conf->image_end - conf->image_base);
 
-	// map vm image
-	map_pages(
+	// map kernel image
+	rv = map_pages(
 		conf->vm_pgtable,
-		conf->memory_base,	// va
-		conf->image_base,	// pa
-		conf->image_size,	// size
+		conf->memory_base,
+		conf->image_base,
+		image_size,
 		PTE_U | PTE_R | PTE_W | PTE_X,
 		1
 	);
+	if (rv < 0)
+		panic("failed to map VM kernel image");
 
-	// map leftover memory
-
-	// devices
-	// xv6 uses these MMIO devices:
-	// kvmmap(kpgtbl, UART0, UART0, PGSIZE, PTE_R | PTE_W);
-	// kvmmap(kpgtbl, VIRTIO0, VIRTIO0, PGSIZE, PTE_R | PTE_W);
-	// kvmmap(kpgtbl, PLIC, PLIC, 0x400000, PTE_R | PTE_W);
+	// map leftover RAM
+	rv = map_pages(
+		conf->vm_pgtable,
+		conf->memory_base + image_size,
+		0,
+		conf->memory_size - image_size,
+		PTE_U | PTE_R | PTE_W | PTE_X,
+		1
+	);
+	if (rv < 0)
+		panic("failed to map VM RAM");
 
 	i = 0;
 	while ((dev = conf->devices[i++]) != 0) {	// dev != 0
@@ -69,16 +77,30 @@ init_hs(struct vm_config *conf)
 	__asm__ volatile("hfence.gvma");
 
 	CSRW(hstatus, HSTATUS_VSXL | HSTATUS_SPV);
-	CSRW(hedeleg, 0ULL);
+	CSRW(hedeleg, 0
+		| HEDELEG_INSTRUCTION_ADDR_MISALIGNED
+		| HEDELEG_INSTRUCTION_ACCESS_FAULT
+		| HEDELEG_ILLEGAL_INSTRUCTION
+		| HEDELEG_BREAKPOINT
+		| HEDELEG_LOAD_ADDR_MISALIGNED
+		| HEDELEG_STORE_OR_AMO_ADDRESS_MISALIGNED
+		| HEDELEG_STORE_OR_AMO_ACCESS_FAULT
+		| HEDELEG_ECALL_FROM_U
+		| HEDELEG_INSTRUCTION_PAGE_FAULT
+		| HEDELEG_LOAD_PAGE_FAULT
+		| HEDELEG_STORE_OR_AMO_PAGE_FAULT
+	);
 	CSRW(hideleg, HIDELEG_VSTI | HIDELEG_VSEI);
 	CSRW(hvip, 0ULL);
 	CSRW(hip, 0ULL);
-	CSRW(hie, 0); // if set in hideleg cannot be set here
+	CSRW(hie, 0ULL); // actually translated restricted view of vsie
 	CSRW(hgeie, 0ULL);
 	CSRW(hcounteren, HCOUNTEREN_TM);	// vm can now read time
 	CSRW(htimedelta, 0ULL);
 	CSRW(htval, 0ULL);
 	CSRW(htinst, 0ULL);
+	// TODO: testing (enable sstc) <- stimecmp
+	CSRS(henvcfg, 1ULL << 63);
 }
 
 static void

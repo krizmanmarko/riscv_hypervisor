@@ -29,3 +29,9 @@ linux page tables
 	kernel image
 		0xffffffff80000000 -> 0x90400000
 		0xffffffff81800000 -> 0x91c00000
+
+
+xv6 process memory map
+        88072000[  0][  0][  0] 4K rwx ug: 0x0 -> 0x8806f000
+        88072000[255][511][510] 4K rw- --: 0x3fffffe000 -> 0x88073000
+        88072000[255][511][511] 4K r-x --: 0x3ffffff000 -> 0x80107000

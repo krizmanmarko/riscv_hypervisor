@@ -7,14 +7,6 @@
 #include "stdio.h"
 #include "string.h"
 
-static int map_gigapage(
-	pte_t *pgtable,
-	uint64 va,
-	uint64 pa,
-	int pte_flags,
-	int x4
-);
-
 static uint64
 va2idx(uint64 va, int level, int x4)
 {
@@ -43,7 +35,7 @@ walk(pte_t *pgtable, uint64 va, int alloc, int x4)
 		} else {
 			if (!alloc || (kpa = kmalloc()) == 0)
 				return 0;
-			memset(kpa, '\x00', PAGE_SIZE);
+			memset(kpa, 0x00, PAGE_SIZE);
 			*pte = PA2PTE((uint64) KPA2PA((uint64) kpa)) | PTE_V;
 		}
 	}
@@ -64,34 +56,19 @@ map_page(pte_t *pgtable, uint64 va, uint64 pa, int pte_flags, int x4)
 	return 0;
 }
 
-static int
-map_gigapage(pte_t *pgtable, uint64 va, uint64 pa, int pte_flags, int x4)
-{
-	if (pgtable == 0)
-		panic("root page table doesn't exist");
-
-	// check alignment (both va and pa must be aligned)
-	if (((va | pa) & 0x3fffffff) != 0)
-		return -1;
-	pgtable[va2idx(va, 2, x4)] = PA2PTE(pa) | pte_flags | PTE_V;
-	return 0;
-}
-
 // va, pa and size may not be page aligned
 // returns 0 on success, -1 on fail
 int
 map_pages(pte_t *pgtable, uint64 va, uint64 pa, uint64 size, int pte_flags, int x4)
 {
-	// 0x40000000 -> 1GB
-	while (size >= 0x40000000) {
-		if (map_gigapage(pgtable, va, pa, pte_flags, x4) < 0)
-			return -1;
-		va += 0x40000000;
-		pa += 0x40000000;
-		size -= 0x40000000;
-	}
+	uint64 tmp;
 	for (uint64 i = 0; i < PGROUNDUP(size); i += PAGE_SIZE) {
-		if (map_page(pgtable, va + i, pa + i, pte_flags, x4) < 0) {
+		if (pa == 0) {
+			tmp = KPA2PA((uint64) kmalloc());
+		} else {
+			tmp = pa + i;
+		}
+		if (map_page(pgtable, va + i, tmp, pte_flags, x4) < 0) {
 			return -1;
 		}
 	}
@@ -107,7 +84,7 @@ init_vmem()
 
 	if ((root = (pte_t *)kmalloc()) == 0)
 		panic("couldn't allocate root page table");
-	memset(root, '\x00', PAGE_SIZE);
+	memset(root, 0, PAGE_SIZE);
 
 	// map MMIO
 	rv = map_page(root, DTB_FLASH, DTB_FLASH, PTE_R | PTE_W | PTE_G, 0);
@@ -115,6 +92,7 @@ init_vmem()
 	rv += map_page(root, DTB_RTC, DTB_RTC, PTE_R | PTE_W | PTE_G, 0);
 	rv += map_page(root, DTB_SERIAL, DTB_SERIAL, PTE_R | PTE_W | PTE_G, 0);
 	rv += map_pages(root, DTB_PCI, DTB_PCI, DTB_PCI_SIZE, PTE_R | PTE_W | PTE_G, 0);
+	rv += map_pages(root, DTB_VIRTIO0, DTB_VIRTIO0, DTB_VIRTIO_SIZE, PTE_R | PTE_W | PTE_G, 0);
 	rv += map_pages(root, DTB_PLIC, DTB_PLIC, DTB_PLIC_SIZE, PTE_R | PTE_W | PTE_G, 0);
 	rv += map_pages(root, DTB_CLINT, DTB_CLINT, DTB_CLINT_SIZE, PTE_R | PTE_W | PTE_G, 0);
 	if (rv < 0)
@@ -154,4 +132,15 @@ init_vmem()
 		panic("failed to map %s", "RAM");
 
 	return root;
+}
+
+uint64
+convert_va_to_pa(pte_t *pgtable, uint64 va, int x4)
+{
+	pte_t *pte = walk(pgtable, va, 0, x4);
+	if (pte == 0)
+		panic("bad walk for va: %p", va);
+	uint64 page_pa = PTE2PA(*pte);
+	uint64 pa = page_pa | get_value(va, 0, 12);
+	return pa;
 }
