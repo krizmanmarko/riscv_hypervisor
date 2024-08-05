@@ -5,6 +5,9 @@ These are very common in standard operating systems.
 
 # Installation
 
+> NOTE: watch out for hardcoded absolute paths (qemu and gnu toolchain).
+> This is very crude documentation on how to get started
+
 1. install qemu 8.0.2 (https://download.qemu.org/qemu-8.0.2.tar.xz)
 2. install and compile https://github.com/riscv/riscv-gnu-toolchain (commit 8c969a9efe68a811cf524174d25255632029f3d3)
 3. git clone https://github.com/krizmanmarko/riscv_hypervisor
