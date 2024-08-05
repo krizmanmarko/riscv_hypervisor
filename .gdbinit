@@ -2,7 +2,7 @@ target extended-remote localhost:1111
 
 symbol-file src/guest/xv6-riscv/kernel/kernel
 add-symbol-file build/hypervisor
-add-symbol-file src/guest/xv6-riscv/user/_usertests
+add-symbol-file src/guest/xv6-riscv/user/_openiputtest
 
 set pagination off
 set confirm off
@@ -24,13 +24,3 @@ p proc[$i]->$arg2
 set $i = $i + 1
 end
 end
-
-#b vm_run
-#c
-
-#b openiputtest
-#c
-#disp/3i $pc
-#
-#b wakeup
-#c

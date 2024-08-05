@@ -8,7 +8,7 @@ build_dir="./build/"
 	-monitor tcp::6666,server=on,nowait \
 	-machine virt \
 	-global virtio-mmio.force-legacy=false \
-	-drive file=src/guest/xv6-riscv/fs.img,if=none,format=raw,id=x0 \
+	-drive file=src/guest/xv6-riscv-guest/fs.img,if=none,format=raw,id=x0 \
 	-device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0 \
 	-kernel ${build_dir}hypervisor \
 	-cpu rv64 \

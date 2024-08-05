@@ -1,3 +1,3 @@
-[submodule "src/src/guest/xv6-riscv-guest"]
-	path = src/src/guest/xv6-riscv-guest
+[submodule "src/guest/xv6-riscv-guest"]
+	path = src/guest/xv6-riscv-guest
 	url = https://github.com/krizmanmarko/xv6-riscv-guest
