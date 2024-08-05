@@ -3,6 +3,16 @@
 The following document describes some of the techniques used in this project.
 These are very common in standard operating systems.
 
+# Installation
+
+1. install qemu 8.0.2 (https://download.qemu.org/qemu-8.0.2.tar.xz)
+2. install and compile https://github.com/riscv/riscv-gnu-toolchain (commit 8c969a9efe68a811cf524174d25255632029f3d3)
+3. git clone https://github.com/krizmanmarko/riscv_hypervisor
+4. git submodule update --init --recursive
+5. build src/guest/xv6-riscv-guest
+  - `make kernel`
+  - `make fs.img`
+6. build other guests (use your imagination)
 
 ## Boot process
 
