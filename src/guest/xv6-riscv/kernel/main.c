@@ -30,6 +30,9 @@ main()
     iinit();         // inode table
     fileinit();      // file table
     virtio_disk_init(); // emulated hard disk
+    // timer init - first timer interrupt
+    printf("%ld\n", r_time());
+    w_stimecmp(r_time() + 1000000);
     userinit();      // first user process
     __sync_synchronize();
     started = 1;
