@@ -24,13 +24,3 @@ p proc[$i]->$arg2
 set $i = $i + 1
 end
 end
-
-#b vm_run
-#c
-
-#b openiputtest
-#c
-#disp/3i $pc
-#
-#b wakeup
-#c

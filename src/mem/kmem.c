@@ -43,8 +43,8 @@ kmalloc()
 	if (page)
 		kmem.freelist = page->next;
 	release(&kmem.lk);
-	// must be memset to zero because xv6 expects memory to be initialized
-	memset(page, 0x41, PAGE_SIZE);	// does slow down, but prevents leaks
+	// C standard assumes memory in .bss to be initialized (with zero)
+	memset(page, 0x00, PAGE_SIZE);	// does slow down, but prevents leaks
 
 	return (void *)page;
 }
