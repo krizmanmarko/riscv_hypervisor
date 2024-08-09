@@ -13,8 +13,8 @@ These are very common in standard operating systems.
 3. git clone https://github.com/krizmanmarko/riscv_hypervisor
 4. git submodule update --init --recursive
 5. build src/guest/xv6-riscv-guest
-  - `make kernel`
-  - `make fs.img`
+  - `cd src/guest/xv6-riscv-guest
+  - `make kernel/kernel fs.img`
 6. build other guests (use your imagination)
 
 ## Boot process

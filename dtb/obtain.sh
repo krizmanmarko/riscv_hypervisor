@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# https://elinux.org/Device_Tree_Usage
+
 src_dir=../src/
 build_dir=../build/
 

@@ -1,8 +1,8 @@
 target extended-remote localhost:1111
 
-symbol-file src/guest/xv6-riscv/kernel/kernel
+symbol-file src/guest/xv6-riscv-guest/kernel/kernel
 add-symbol-file build/hypervisor
-add-symbol-file src/guest/xv6-riscv/user/_usertests
+add-symbol-file src/guest/xv6-riscv-guest/user/_usertests
 
 set pagination off
 set confirm off

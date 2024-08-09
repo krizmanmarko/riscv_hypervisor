@@ -21,6 +21,7 @@ main(uint64 hartid)
 		init_kmem();
 		init_uart();
 		printf("Booting!\n");
+		init_pci();
 	}
 	wait_barrier(&bar);
 	pgtable = init_vmem();

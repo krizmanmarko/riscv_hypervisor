@@ -30,6 +30,9 @@ struct cpu *mycpu();
 uint64 get_hartid();
 void init_hart(pte_t *pgtable);
 
+// driver/pci.c
+void init_pci();
+
 // driver/plic.c
 uint32 plic_get_priority(int interrupt_source);
 void plic_set_priority(int interrupt_source, uint32 priority);

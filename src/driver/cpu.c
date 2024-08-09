@@ -41,9 +41,9 @@ init_hart(pte_t *pgtable)
 	CSRC(sie, SIE_STIE);	// pass-through timer (enable in hie)
 
 	reg = (uint64) hstrapvec;
-	reg &= TVEC_MODE;
+	reg &= ~TVEC_MODE;
 	reg |= TVEC_MODE_DIRECT;
-	CSRW(stvec, hstrapvec);
+	CSRW(stvec, reg);
 
 	reg = (KPA2PA((uint64) pgtable)) >> 12;
 	reg |= ATP_MODE_SV39;

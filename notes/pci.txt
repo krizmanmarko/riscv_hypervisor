@@ -1,0 +1,28 @@
+dtb entry (read https://elinux.org/Device_Tree_Usage#PCI_Address_Translation)
+
+#address-cells = <0x03>;
+#size-cells = <0x01>;
+pci.ranges = <	0x1000000 0x00 0x00		0x00 0x3000000		0x00 0x10000
+		0x2000000 0x00 0x40000000	0x00 0x40000000		0x00 0x40000000
+		0x3000000 0x04 0x00		0x04 0x00		0x04 0x00>;
+
+first three entries are address cells. addr.high are flags, addr.mid << 32 | addr.low is address
+second 2 entries represent address in CPU AS where this area is mapped.
+last 2 entries represent size of this area
+
+phys.hi cell: npt000ss bbbbbbbb dddddfff rrrrrrrr
+phys.mid cell: hhhhhhhh hhhhhhhh hhhhhhhh hhhhhhhh
+phys.low cell: llllllll llllllll llllllll llllllll
+
+n: relocatable region flag (doesn't play a role here)
+p: prefetchable (cacheable) region flag
+t: aliased address flag (doesn't play a role here)
+ss: space code
+	00: configuration space
+	01: I/O space
+	10: 32 bit memory space
+	11: 64 bit memory space
+bbbbbbbb: The PCI bus number
+ddddd: The device number, typically associated with IDSEL signal connections.
+fff: The function number. Used for multifunction PCI devices.
+rrrrrrrr: Register number; used for configuration cycles.
