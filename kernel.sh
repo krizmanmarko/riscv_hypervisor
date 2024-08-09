@@ -7,8 +7,8 @@ build_dir="./build/"
 	-nographic \
 	-monitor tcp::6666,server=on,nowait \
 	-machine virt \
+	-device pci-serial,chardev=pciserial1 -chardev socket,id=pciserial1,host=127.0.0.1,port=1337,server=on \
 	-global virtio-mmio.force-legacy=false \
-	-device pci-serial,chardev=pciserial -chardev socket,id=pciserial,host=127.0.0.1,port=1337,server=on \
 	-drive file=src/guest/xv6-riscv-guest/fs.img,if=none,format=raw,id=x0 \
 	-device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0 \
 	-drive file=src/guest/xv6-riscv-guest/fs2.img,if=none,format=raw,id=x1 \

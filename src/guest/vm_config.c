@@ -8,15 +8,6 @@ EMBED(vm_another_xv6, "guest/imgs/xv6.bin")
 EMBED(vm_keygrab, "guest/imgs/keygrab.bin");
 EMBED(vm_printer, "guest/imgs/printer.bin");
 
-struct mmio_dev serial = {
-	.base_phys = DTB_SERIAL,
-	.base_virt = DTB_SERIAL,
-	.size = PAGE_SIZE,
-	.perm = PTE_R | PTE_W,
-	.phys_irq = 10,
-	.virt_irq = 10
-};
-
 struct mmio_dev emulated_plic = {
 	.base_phys = DTB_PLIC,
 	.base_virt = DTB_PLIC,
@@ -26,7 +17,16 @@ struct mmio_dev emulated_plic = {
 	.virt_irq = 0
 };
 
-struct mmio_dev virtio_disk = {
+struct mmio_dev serial = {
+	.base_phys = DTB_SERIAL,
+	.base_virt = DTB_SERIAL,
+	.size = PAGE_SIZE,
+	.perm = PTE_R | PTE_W,
+	.phys_irq = 10,
+	.virt_irq = 10
+};
+
+struct mmio_dev virtio_disk_1 = {
 	.base_phys = 0x10001000,
 	.base_virt = 0x10001000,
 	.size = 0x1000,
@@ -35,8 +35,8 @@ struct mmio_dev virtio_disk = {
 	.virt_irq = 1
 };
 
-struct mmio_dev serial_2 = {
-	.base_phys = 0x3000000,
+struct mmio_dev pci_serial = {
+	.base_phys = DTB_PCI_IO,
 	.base_virt = DTB_SERIAL,
 	.size = PAGE_SIZE,
 	.perm = PTE_R | PTE_W,
@@ -64,18 +64,18 @@ struct vm_config config[] = {
 		.devices = {
 			&serial,
 			&emulated_plic,
-			&virtio_disk,
+			&virtio_disk_1,
 			0
 		}
 	}, {
 		.image_base = ADDRESS(vm_another_xv6),
 		.image_end = END_ADDRESS(vm_another_xv6),
-		.cpu_affinity = 0x2,
+		.cpu_affinity = 0x6,
 		.memory_base = 0x80100000,
 		.memory_size = 16 << 20,	// 16 megabytes
 		.entry = 0x80100000,
 		.devices = {
-			&serial_2,
+			&pci_serial,
 			&emulated_plic,
 			&virtio_disk_2,
 			0
