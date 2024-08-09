@@ -47,15 +47,6 @@ is_access_to_plic()
 	return 0;
 }
 
-static int
-is_access_to_virtio_0()
-{
-	uint64 addr = get_pa(get_vcpu()->conf->vm_pgtable);
-	if (DTB_VIRTIO0 <= addr && addr < DTB_VIRTIO0 + DTB_VIRTIO_SIZE)
-		return addr;
-	return 0;
-}
-
 static void
 perform_walk_for_guest()
 {
@@ -85,8 +76,6 @@ hs_exception_handler(uint64 scause)
 	case EXC_STORE_OR_AMO_GUEST_PAGE_FAULT:
 		if ((addr = is_access_to_plic()))
 			vplic_handle_store_or_amo_page_fault(addr);
-		else if ((addr = is_access_to_virtio_0()))
-			virtio_handle_store_or_amo_page_fault(addr);
 		else
 			panic("Bad write access\n");
 		break;

@@ -76,9 +76,6 @@ void vplic_handle_load_page_fault(uint64 addr);
 void vplic_handle_store_or_amo_page_fault(uint64 addr);
 void vplic_handle_interrupt();
 
-// virtual/vvirtio_mmio.c
-void virtio_handle_store_or_amo_page_fault(uint64 addr);
-
 // linkerscript (phys)
 extern char boottext[];
 extern char eboottext[];
