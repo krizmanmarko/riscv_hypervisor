@@ -1,8 +1,5 @@
 # Risc-V Hypervisor
 
-The following document describes some of the techniques used in this project.
-These are very common in standard operating systems.
-
 # Installation
 
 > NOTE: watch out for hardcoded absolute paths (qemu and gnu toolchain).
@@ -13,7 +10,7 @@ These are very common in standard operating systems.
 3. git clone https://github.com/krizmanmarko/riscv_hypervisor
 4. git submodule update --init --recursive
 5. build src/guest/xv6-riscv-guest
-  - `cd src/guest/xv6-riscv-guest
+  - `cd src/guest/xv6-riscv-guest`
   - `make kernel/kernel fs.img`
 6. build other guests (use your imagination)
 
