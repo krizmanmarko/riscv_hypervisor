@@ -108,4 +108,57 @@ Legend:
     + load guest page fault (21)
     + store or amo guest page fault (23)
 
+How to trigger each and every fault:
+instruction address misaligned (0)
+	with C extension this cannot happen
+
+instruction access fault (1)
+	execute instruction not marked executable by PMP
+
+illegall instruction (2)
+	access CSR for higher privilege level
+
+breakpoint (3)
+	execute ebreak
+
+load address misaligned (4)
+	with C extension this cannot happen
+
+load access fault (5)
+	load from location not marked readable by PMP
+
+store or amo address misaligned (6)
+	with C extension this cannot happen
+
+store or amo access fault (7)
+	store to location not marked writeable by PMP
+
+ecall from U-mode (8)
+	execute ecall in U-mode
+
+ecall from HS-mode (9)
+	execute ecall in HS-mode
+
+ecall from VS-mode (10)
+	execute ecall in VS-mode
+
+ecall from M-mode (11)
+	execute ecall in M-mode
+
+instruction page fault (12)
+	when address translation is active try to execute instruction in not
+	executable page
+
+load page fault (13)
+	when address translation is active try to load from not readable page
+
+store or amo page fault (15)
+	when address translation is active try to store to not writeable page
+
+instruction guest page fault (20)
+load guest page fault (21)
+virtual instruction (22)
+	execute illegal instruction as guest
+store or amo guest page fault (23)
+
 htval -> guest physical address that faulted (shifted right by 2)
