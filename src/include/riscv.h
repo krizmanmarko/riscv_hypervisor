@@ -41,33 +41,27 @@
 #define TVEC_MODE_DIRECT 0
 #define TVEC_MODE_VECTORED 1
 
-#define INT_HYPERVISOR_SW 0
 #define INT_SUPERVISOR_SW 1
 #define INT_VIRTUAL_SUPERVISOR_SW 2
 #define INT_MACHINE_SW 3
-#define INT_HYPERVISOR_TIM 4
 #define INT_SUPERVISOR_TIM 5
 #define INT_VIRTUAL_SUPERVISOR_TIM 6
 #define INT_MACHINE_TIM 7
-#define INT_HYPERVISOR_EXT 8
 #define INT_SUPERVISOR_EXT 9
 #define INT_VIRTUAL_SUPERVISOR_EXT 10
 #define INT_MACHINE_EXT 11
-#define INT_HYPERVISOR_GUEST_EXT 12	// check out section on hip, hie, hvip
+#define INT_SUPERVISOR_GUEST_EXT 12	// check out section on hip, hie, hvip
 
-#define INT_HSSI (1UL << INT_HYPERVISOR_SW)
 #define INT_SSI (1UL << INT_SUPERVISOR_SW)
 #define INT_VSSI (1UL << INT_VIRTUAL_SUPERVISOR_SW)
 #define INT_MSI (1UL << INT_MACHINE_SW)
-#define INT_HSTI (1UL << INT_HYPERVISOR_TIM)
 #define INT_STI (1UL << INT_SUPERVISOR_TIM)
 #define INT_VSTI (1UL << INT_VIRTUAL_SUPERVISOR_TIM)
 #define INT_MTI (1UL << INT_MACHINE_TIM)
-#define INT_HSEI (1UL << INT_HYPERVISOR_EXT)
 #define INT_SEI (1UL << INT_SUPERVISOR_EXT)
 #define INT_VSEI (1UL << INT_VIRTUAL_SUPERVISOR_EXT)
 #define INT_MEI (1UL << INT_MACHINE_EXT)
-#define INT_SGEI (1UL << INT_HYPERVISOR_GUEST_EXT)	// check out hypervisor mip
+#define INT_SGEI (1UL << INT_SUPERVISOR_GUEST_EXT)	// check out hypervisor mip
 
 #define COUNT_CY (1UL << 0)		// Cycle
 #define COUNT_TM (1UL << 1)		// Time
