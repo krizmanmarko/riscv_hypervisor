@@ -255,8 +255,8 @@ handle_complete_reg_store(struct vcpu *vcpu,
 		return;
 	phys_irq = virt_to_phys_irq(vcpu->conf->devices, val);
 	if (phys_irq == vcpu->last_claimed_irq_id) {
-		plic_complete(pctx, phys_irq);
 		vcpu->last_claimed_irq_id = 0;
+		plic_complete(pctx, phys_irq);
 		CSRC(hvip, HVIP_VSEIP);
 	}
 }
