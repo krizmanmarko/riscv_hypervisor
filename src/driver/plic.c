@@ -31,7 +31,8 @@ plic_get_pending(int interrupt_source)
 	if (interrupt_source < 1 || 1023 < interrupt_source)	// 0 not allowed
 		return 0;
 
-	offset = interrupt_source / (sizeof(uint32) * 8);
+	offset = 0x1000 / sizeof(uint32);	// base of pending regs
+	offset += interrupt_source / (sizeof(uint32) * 8);
 	mask = 1 << interrupt_source % (sizeof(uint32) * 8);
 	return plic[offset] & mask;
 }

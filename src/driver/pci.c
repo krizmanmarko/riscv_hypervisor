@@ -28,7 +28,7 @@ init_pci()
 {
 	enable_io_access(pci_serial);
 	set_io_base(pci_serial, 0);		// actually requires just 8 bytes, but we skip
-	*((char *)0x3000000) = 'B';	// test
+	//*((char *)0x3000000) = 'B';	// test (make sure this is mapped in HS)
 
 	// for now only 1 pci uart is supported -> interrupt handling is more difficult with 2
 	//enable_io_access(pci_serial_2);

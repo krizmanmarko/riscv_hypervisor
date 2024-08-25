@@ -92,7 +92,6 @@ init_vmem()
 	rv += map_page(root, DTB_RTC, DTB_RTC, PTE_R | PTE_W | PTE_G, 0);
 	rv += map_page(root, DTB_SERIAL, DTB_SERIAL, PTE_R | PTE_W | PTE_G, 0);
 	rv += map_pages(root, DTB_PCI, DTB_PCI, DTB_PCI_SIZE, PTE_R | PTE_W | PTE_G, 0);
-	rv += map_pages(root, DTB_PCI_IO, DTB_PCI_IO, DTB_PCI_IO_SIZE, PTE_R | PTE_W | PTE_G, 0);
 	rv += map_pages(root, DTB_VIRTIO0, DTB_VIRTIO0, DTB_VIRTIO_SIZE, PTE_R | PTE_W | PTE_G, 0);
 	rv += map_pages(root, DTB_PLIC, DTB_PLIC, DTB_PLIC_SIZE, PTE_R | PTE_W | PTE_G, 0);
 	rv += map_pages(root, DTB_CLINT, DTB_CLINT, DTB_CLINT_SIZE, PTE_R | PTE_W | PTE_G, 0);
