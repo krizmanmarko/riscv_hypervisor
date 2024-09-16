@@ -74,3 +74,12 @@ base + 0x3FFF004: Claim/complete for context 15871
 base + 0x3FFF008: Reserved
 ...
 base + 0x3FFFFFC: Reserved
+
+
+
+================================================================================
+VPLIC
+================================================================================
+
+PLIC can only interrupt M and HS modes. For VS level interrupts we must
+intercept, clear sip.SEIP with plic_claim and then inject interrupt to VS.
