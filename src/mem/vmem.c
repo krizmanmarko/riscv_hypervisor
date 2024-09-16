@@ -124,9 +124,9 @@ init_vmem()
 	if (map_pages(root, va, pa, size, PTE_R | PTE_W, 0))
 		panic("failed to map %s", "cpu struct");
 
-	// map whole RAM (except RO areas)
-	va = KVA2KPA((uint64) data);
-	pa = KVA2PA((uint64) data);
+	// map whole RAM (except kernel image)
+	va = KVA2KPA((uint64) dynamic);
+	pa = KVA2PA((uint64) dynamic);
 	size = DTB_MEMORY_SIZE - (pa - DTB_MEMORY);
 	if (map_pages(root, va, pa, size, PTE_R | PTE_W | PTE_G, 0))
 		panic("failed to map %s", "RAM");

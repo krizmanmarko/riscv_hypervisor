@@ -42,10 +42,7 @@
 
 .section ".boot.data", "aw"
 .globl bsp_root
-.globl init_for_c_sym
 
-.balign 8
-init_for_c_sym: .8byte text
 
 .section ".boot.bsp", "aw"
 .balign PAGE_SIZE
@@ -102,8 +99,8 @@ enter_vas:
 	srli t2, t2, 12
 	or t1, t1, t2
 	csrw satp, t1
-	sfence.vma
-	jr t0		# t0=PA2KVA(init_for_c)
+	sfence.vma	# not necessary because nothing is in TLB yet
+	jr t0		# t0 = PA2KVA(init_for_c)
 
 # WARNING!
 # when kernel image exceeds 1GB -> rework
@@ -124,8 +121,8 @@ sboot_fail:
 .globl relocate_stack
 
 init_for_c:
-	# init stack - last used, grows towards smaller, 16-bit aligned
-	la t0, cpus
+	# init stack - last used, grows towards smaller, 16-byte aligned
+	la t0, cpus		# t0 = KVA(cpus)
 	li t1, CPU_SIZE
 	addi t2, a0, 1
 	mul t2, t1, t2

@@ -6,7 +6,7 @@
 
 struct vcpu {
 	uint64 vhartid;
-	uint32 last_claimed_irq_id;		// vplic emulation (phys_irq)
+	uint32 last_claimed_irq_id;	// vplic emulation (phys_irq)
 	struct vm_config *conf;
 	struct __attribute__((__packed__, aligned(sizeof(uint64)))) {
 		uint64 x[32];

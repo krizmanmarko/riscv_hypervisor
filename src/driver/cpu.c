@@ -57,6 +57,4 @@ init_hart(pte_t *pgtable)
 	a0 -= (uint64) cpu_structs;
 	relocate_stack(a0);
 	// END OF WARNING: super delicate code section
-
-	return;
 }
