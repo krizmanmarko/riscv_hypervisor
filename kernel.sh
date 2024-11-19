@@ -18,7 +18,7 @@ build_dir="./build/"
 	-smp $(grep DTB_NR_CPUS src/include/dtb.h | cut -d' ' -f3) \
 	-m 256M \
 	-gdb tcp::1111 \
-	-S
+	#-S
 
 
 # pciserial is found by (where 0x00021b36 is from here https://www.qemu.org/docs/master/specs/pci-serial.html)

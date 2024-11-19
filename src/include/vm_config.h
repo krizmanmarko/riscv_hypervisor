@@ -26,8 +26,8 @@
 	extern char img_name##_end[];
 
 struct mmio_dev {
-	uint64 base_phys;
-	uint64 base_virt;
+	uint64 phys_base;
+	uint64 virt_base;
 	uint64 size;
 	uint64 perm;	// emulated devices must have 0 permissions
 	int phys_irq;	// actual interrupt number (0 means no interrupt)

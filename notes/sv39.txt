@@ -1,5 +1,10 @@
 source: RISC-V ISA - Sv32: Page-Based 32-bit Virtual-Memory Systems
 
+why paging
+	- recognize which pointer it is
+	- KASLR
+	- another layer of rwx
+
 VPN - virtual page number
 PPN - physical page number
 ASID - address space identifier (TLB checks this)

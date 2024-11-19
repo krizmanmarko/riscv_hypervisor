@@ -55,8 +55,8 @@ init_hs_pgtable(struct vm_config *conf)
 	while ((dev = conf->devices[i++]) != 0) {	// dev != 0
 		rv = map_pages(
 			conf->vm_pgtable,
-			dev->base_virt,
-			dev->base_phys,
+			dev->virt_base,
+			dev->phys_base,
 			dev->size,
 			dev->perm | PTE_U,
 			1
