@@ -1,0 +1,11 @@
+MXLEN, SXLEN always match XLEN
+	this way I can use types like xlen_t
+
+single physical CPU can run multiple VCPUS
+	otherwise single HART systems are useless...
+
+harts on system are from 0 onwards (contiguous)
+hartids are lowest possible numbers
+	0, 2 <- invalid
+	0, 1, 2 <- valid
+	this is for simple wakeup
