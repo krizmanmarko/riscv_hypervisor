@@ -11,7 +11,10 @@ add_custom_command(
 add_executable(hypervisor
 	entry.S
 	linkerscript.ld
+	$<TARGET_OBJECTS:mem>
 )
+
+add_dependencies(hypervisor mem)
 
 target_link_options(
 	hypervisor

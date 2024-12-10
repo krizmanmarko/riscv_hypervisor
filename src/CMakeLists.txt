@@ -16,5 +16,8 @@ set(CMAKE_C_COMPILER ${PREFIX}gcc)
 
 project(hypervisor LANGUAGES C ASM)
 
+include("${CMAKE_SOURCE_DIR}/platform/$ENV{PLATFORM}/platform.cmake")
+
+add_subdirectory(mem/${MEM_PROT})
+
 add_subdirectory(core)
-#add_subdirectory(platform)

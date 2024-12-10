@@ -1,4 +1,4 @@
-#define __LINKER_SCRIPT__
+#define __LINKER__
 
 OUTPUT_ARCH("riscv")
 ENTRY(setup)
