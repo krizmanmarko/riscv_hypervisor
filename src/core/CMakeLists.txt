@@ -12,6 +12,7 @@ add_executable(hypervisor
 	entry.S
 	linkerscript.ld
 	$<TARGET_OBJECTS:mem>
+	cpu.c
 )
 
 add_dependencies(hypervisor mem)

@@ -19,4 +19,8 @@ SECTIONS
 	.bss ALIGN(0x1000) : {
 		*(.bss .bss.*)
 	}
+
+	.cpu_stacks ALIGN(0x1000) : {
+		*(.cpu_stacks .cpu_stacks.*)
+	}
 }

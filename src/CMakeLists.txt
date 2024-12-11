@@ -15,9 +15,10 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=rv32imaf_zicsr_zifencei_sstc")
 set(CMAKE_C_COMPILER ${PREFIX}gcc)
 
 project(hypervisor LANGUAGES C ASM)
+include(${CMAKE_SOURCE_DIR}/platform/$ENV{PLATFORM}/platform.cmake)
 
-include("${CMAKE_SOURCE_DIR}/platform/$ENV{PLATFORM}/platform.cmake")
+include_directories(include)
+include_directories(platform/$ENV{PLATFORM}/include)
 
 add_subdirectory(mem/${MEM_PROT})
-
 add_subdirectory(core)
