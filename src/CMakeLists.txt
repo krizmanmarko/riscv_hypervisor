@@ -48,4 +48,5 @@ include_directories(platform/$ENV{PLATFORM}/include)
 
 add_subdirectory(mem/${PLATFORM_MEM_PROT})
 add_subdirectory(driver)
+add_subdirectory(lib)
 add_subdirectory(core)

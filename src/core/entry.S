@@ -15,7 +15,7 @@ setup:
 
 	call early_mem_prot_init
 	call init_for_c
-#	j early_boot	# C code
+	j early_boot
 #	call mem_prot_init
 
 	j .

@@ -12,10 +12,12 @@ add_executable(hypervisor
 	entry.S
 	linkerscript.ld
 	cpu.c
+	early_boot.c
 )
 
 target_link_libraries(hypervisor
 	PRIVATE mem
+	PRIVATE printf
 )
 
 target_link_options(hypervisor
