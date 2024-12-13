@@ -5,7 +5,7 @@ ENTRY(setup)
 
 SECTIONS
 {
-	. = 0x3000;
+	. = 0x30000;
 
 	.text ALIGN(0x1000) : {
 		*(.boot)
