@@ -11,14 +11,14 @@ add_custom_command(
 add_executable(hypervisor
 	entry.S
 	linkerscript.ld
-	$<TARGET_OBJECTS:mem>
 	cpu.c
 )
 
-add_dependencies(hypervisor mem)
+target_link_libraries(hypervisor
+	PRIVATE mem
+)
 
-target_link_options(
-	hypervisor
+target_link_options(hypervisor
 	PRIVATE "-T${CMAKE_CURRENT_BINARY_DIR}/linkerscript.ld"
 	PRIVATE "-nostartfiles"
 )
