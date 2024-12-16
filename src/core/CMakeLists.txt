@@ -17,7 +17,7 @@ add_executable(hypervisor
 
 target_link_libraries(hypervisor
 	PRIVATE mem
-	PRIVATE printf
+	PRIVATE print
 )
 
 target_link_options(hypervisor
