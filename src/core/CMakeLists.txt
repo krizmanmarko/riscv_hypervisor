@@ -2,6 +2,7 @@
 add_custom_command(
 	OUTPUT linkerscript.ld
 	COMMAND ${CMAKE_C_COMPILER}
+		-I${CMAKE_SOURCE_DIR}/platform/$ENV{PLATFORM}/include
 		-P
 		-E ${CMAKE_CURRENT_SOURCE_DIR}/linkerscript.c
 		-o linkerscript.ld

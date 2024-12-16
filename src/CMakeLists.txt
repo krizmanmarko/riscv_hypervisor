@@ -31,9 +31,14 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -nostartfiles")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -nostdlib")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -nodefaultlibs")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffreestanding")
+if (PLATFORM_ARCH STREQUAL "riscv64")
+	# fix relocation issues (accessing global symbol above 0x80000000)
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mcmodel=medany")
+endif()
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${PLATFORM_MARCH}")
 set(PREFIX ${PLATFORM_ARCH}-unknown-elf-)
 set(CMAKE_C_COMPILER ${PREFIX}gcc)
+
 
 
 ###########

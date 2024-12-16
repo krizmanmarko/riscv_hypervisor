@@ -1,11 +1,12 @@
 #define __LINKER__
+#include "dtb.h"
 
 OUTPUT_ARCH("riscv")
 ENTRY(setup)
 
 SECTIONS
 {
-	. = 0x30000;
+	. = DTB_MEMORY;
 
 	.text ALIGN(0x1000) : {
 		*(.boot)
