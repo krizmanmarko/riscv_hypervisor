@@ -1,8 +1,9 @@
 # make sure linkerscript is pre-processed (for #include directive)
 add_custom_command(
 	OUTPUT linkerscript.ld
-	COMMAND ${CMAKE_C_COMPILER}
+	COMMAND ${CMAKE_C_COMPILER} ${CMAKE_CFLAGS}
 		-I${CMAKE_SOURCE_DIR}/platform/$ENV{PLATFORM}/include
+		-I${CMAKE_SOURCE_DIR}/mem/${PLATFORM_MEM_PROT}/include
 		-P
 		-E ${CMAKE_CURRENT_SOURCE_DIR}/linkerscript.c
 		-o linkerscript.ld
@@ -23,5 +24,4 @@ target_link_libraries(hypervisor
 
 target_link_options(hypervisor
 	PRIVATE "-T${CMAKE_CURRENT_BINARY_DIR}/linkerscript.ld"
-	PRIVATE "-nostartfiles"
 )

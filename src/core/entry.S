@@ -1,8 +1,6 @@
 #include <cpu.h>
 
-.section ".boot", "ax"
-
-# Trenuten setup ima na voljo 512KB spomina (0x000000 - 0x80000). UART se začne na naslovu 0x10700000.
+.section ".boot.entry", "ax"
 
 .globl setup
 setup:

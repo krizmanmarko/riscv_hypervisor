@@ -4,6 +4,8 @@
 #define DTB_NR_CPUS 1
 #define DTB_CPU_MASTER 0	// useful for beagleV-fire with monitor HART
 
-#define DTB_MEMORY 0x30000
+#define DTB_MEMORY 0x00000000
+#define FIRMWARE_SIZE 0x30000
+
 
 #endif // DTB_H
