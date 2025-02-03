@@ -76,7 +76,7 @@ init_hs(struct vm_config *conf)
 	CSRW(hgatp, ATP_MODE_SV39 | pgtable_pa >> 12);
 	__asm__ volatile("hfence.gvma");
 
-	CSRW(hstatus, HSTATUS_VSXL | HSTATUS_SPV);
+	CSRW(hstatus, HSTATUS_VSXL_64 | HSTATUS_SPV);
 	CSRW(hedeleg, 0
 		| HEDELEG_INSTRUCTION_ADDR_MISALIGNED
 		| HEDELEG_INSTRUCTION_ACCESS_FAULT
