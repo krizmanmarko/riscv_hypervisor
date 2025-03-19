@@ -81,9 +81,9 @@ plic_set_enabled(int context, int interrupt_source, int enable)
 	offset += context_offset * context;
 	offset += source_offset;
 	if (enable == 0)
-		plic[offset] &= ~source_mask;
+		__asm__ volatile ("amoand.w %0, %[rs1], (%[rs2]);" :: [rs1] "r" (~source_mask), [rs2] "r" (&plic[offset]));
 	else
-		plic[offset] |= source_mask;
+		__asm__ volatile ("amoor.w %0, %[rs1], (%[rs2]);" :: [rs1] "r" (source_mask), [rs2] "r" (&plic[offset]));
 }
 
 uint32
