@@ -214,6 +214,9 @@
 
 // Hypervisor Environment Configuration Register
 #define HENVCFG_FIOM ENVCFG_FIOM
+#define HENVCFG_SSTC (1ULL << 63)
+#define HENVCFG_PBMTE (1ULL << 62)
+#define HENVCFG_ADUE (1ULL << 61)
 
 // Hypervisor Counter-Enable Register
 #define HCOUNTEREN_CY COUNT_CY

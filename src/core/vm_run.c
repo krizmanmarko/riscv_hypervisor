@@ -103,7 +103,7 @@ init_hs(struct vm_config *conf)
 	// TODO: testing
 	// (enable sstc) <- stimecmp
 	// QEMU 8.0.2 -> 9.2.0 adds some extensions and paging breaks, Svadu extension - bit ADUE
-	CSRS(henvcfg, (1ULL << 63) | (1ULL << 61));
+	CSRS(henvcfg, HENVCFG_SSTC | HENVCFG_ADUE);
 }
 
 static void

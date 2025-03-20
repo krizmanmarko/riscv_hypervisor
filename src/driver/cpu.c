@@ -36,9 +36,11 @@ init_hart(pte_t *pgtable)
 	mycpu()->hartid = tp;
 
 	// ACTUAL HART INIT (sstatus, sie, sip, satp, stvec)
-	CSRS(sstatus, SSTATUS_SIE);
 	CSRS(sie, SIE_SEIE);	// PLIC does not support VS level irqs
 	CSRC(sie, SIE_STIE);	// pass-through timer (enable in hie)
+
+	// not necessary because higher privilege mode interrupts are always globally enabled
+	//CSRS(sstatus, SSTATUS_SIE);
 
 	reg = (uint64) hstrapvec;
 	reg &= ~TVEC_MODE;
