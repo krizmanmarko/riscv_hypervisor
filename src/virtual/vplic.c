@@ -303,6 +303,11 @@ vplic_handle_store_or_amo_page_fault(uint64 addr)
 	struct instr instr;
 	parse_htinst(&instr);
 
+	// TODO: handle AMO instructions, but make sure AMO operations are
+	// actually atomic
+	// PROBLEM: we are enabling phys irqs 0 and 100
+	//       -> this operation cannot be atomic without locks (in vplic)
+
 	if ((instr.opcode | 2) != 0x23)	// replacing bit 1 with 1 (isa 8.6.3)
 		panic("Bad opcode for store");
 	if (instr.funct3 != 2)
@@ -313,7 +318,8 @@ vplic_handle_store_or_amo_page_fault(uint64 addr)
 }
 
 // injects interrupt to VS-level if plic_claim is successful
-// WARNING! -> do not use locks in interrupt (does not apply to exceptions)
+// WARNING! -> do not use locks in interrupt
+// (does not apply to exceptions) -> well, actually... all traps disable irqs
 void
 vplic_handle_interrupt()
 {
